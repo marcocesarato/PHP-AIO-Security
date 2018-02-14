@@ -35,6 +35,8 @@ php_flag session.use_only_cookies on
 	Header set X-UA-Compatible "IE=edge,chrome=1"
 	Header set X-Permitted-Cross-Domain-Policies "master-only"
 	Header set X-Content-Type-Options "nosniff"
+	Header set X-Download-Options "noopen"
+    	Header set Access-Control-Allow-Methods "GET, POST, HEAD"
 	# Content policy
 	# SECURE: Header set Content-Security-Policy "default-src 'self'"
 	Header set Content-Security-Policy "default-src 'self'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src *; font-src *; object-src 'none'"
