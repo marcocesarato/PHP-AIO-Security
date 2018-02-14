@@ -37,7 +37,7 @@ php_flag session.use_only_cookies on
 	Header set X-Content-Type-Options "nosniff"
 	# Content policy
 	# SECURE: Header set Content-Security-Policy "default-src 'self'"
-	Header set Content-Security-Policy "default-src 'self'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src *; font-src *"
+	Header set Content-Security-Policy "default-src 'self'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src *; font-src *; object-src 'none'"
 
 </IfModule>
 
@@ -58,7 +58,7 @@ php_flag session.use_only_cookies on
     RewriteRule .*\.git.* - [L]
 
     # Disable some dangerous methods
-    RewriteCond %{REQUEST_METHOD} ^(HEAD|TRACE|DELETE|TRACK|DEBUG) [NC]
+    RewriteCond %{REQUEST_METHOD} ^(HEAD|TRACE|DELETE|TRACK|DEBUG|OPTIONS) [NC]
     RewriteRule . - [L]
 
     # User agent filtering
