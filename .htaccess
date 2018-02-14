@@ -1,0 +1,110 @@
+# htaccess
+# @author: Marco Cesarato <cesarato.developer@gmail.com>
+
+IndexIgnore *
+Options All -Indexes
+
+# Hide server informations
+ServerSignature Off
+
+LimitRequestBody 10240000
+
+# Security php settings
+php_flag expose_php off
+php_flag allow_url_fopen off
+php_flag magic_quotes_gpc  off
+php_flag register_globals off
+php_flag session.cookie_httponly on
+php_flag session.use_only_cookies on
+
+# Headers protection/improvements
+<IfModule mod_headers.c>
+
+    	# XSS Protection
+	Header set X-XSS-Protection "1; mode=block"
+	# Clickjacking
+	Header set X-Frame-Options "sameorigin"
+  	# Hide server informations
+  	Header unset X-Powered-By
+
+	Header set Accept-Encoding "gzip, deflate"
+	Header set Cache-Control "max-age=15552000, must-revalidate"
+
+	Header set Referer-Policy "origin"
+	Header set Strict-Transport-Security "max-age=16070400; includeSubDomains"
+	Header set X-UA-Compatible "IE=edge,chrome=1"
+	Header set X-Permitted-Cross-Domain-Policies "master-only"
+	Header set X-Content-Type-Options "nosniff"
+	# Content policy
+	# SECURE: Header set Content-Security-Policy "default-src 'self'"
+	Header set Content-Security-Policy "default-src 'self'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src *; font-src *"
+
+</IfModule>
+
+<IfModule mod_rewrite.c>
+
+    # Enable URL Rewriter
+    RewriteEngine On
+    Options +FollowSymlinks
+    Options +SymLinksIfOwnerMatch
+
+    # URL Rewrite
+    #RewriteBase /
+    #RewriteRule ^index\.php$ - [L]
+    #RewriteCond %{REQUEST_FILENAME} !-f
+    #RewriteCond %{REQUEST_FILENAME} !-d
+    #RewriteRule . index.php [L]
+
+    RewriteRule .*\.git.* - [L]
+
+    # Disable some dangerous methods
+    RewriteCond %{REQUEST_METHOD} ^(HEAD|TRACE|DELETE|TRACK|DEBUG) [NC]
+    RewriteRule . - [L]
+
+    # User agent filtering
+    RewriteCond %{HTTP_USER_AGENT} (havij|libwww-perl|wget|python|nikto|curl|scan|java|winhttp|clshttp|loader) [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} (%0A|%0D|%27|%3C|%3E|%00) [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} (;|<|>|'|"|\)|\(|%0A|%0D|%22|%27|%28|%3C|%3E|%00).*(libwww-perl|wget|python|nikto|curl|scan|java|winhttp|HTTrack|clshttp|archiver|loader|email|harvest|extract|grab|miner) [NC,OR]
+
+    # REQUEST_URI - Injection Prevention
+    RewriteCond %{REQUEST_URI} (<|%3C)([^s]*s)+cript.*(>|%3E) [NC,OR]
+    RewriteCond %{REQUEST_URI} (<|%3C)([^e]*e)+mbed.*(>|%3E) [NC,OR]
+    RewriteCond %{REQUEST_URI} (<|%3C)([^o]*o)+bject.*(>|%3E) [NC,OR]
+    RewriteCond %{REQUEST_URI} (<|%3C)([^i]*i)+frame.*(>|%3E) [NC,OR]
+    RewriteCond %{REQUEST_URI} base64_(en|de)code[^(]*\([^)]*\) [NC,OR]
+    RewriteCond %{REQUEST_URI} (%0A|%0D|\\r|\\n) [NC,OR]
+    RewriteCond %{REQUEST_URI} union([^a]*a)+ll([^s]*s)+elect [NC]
+    RewriteRule . - [L]
+
+    # QUERY_STRING - Injection Prevention
+    RewriteCond %{QUERY_STRING} (<|%3C)([^s]*s)+cript.*(>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} (<|%3C)([^e]*e)+mbed.*(>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} (<|%3C)([^o]*o)+bject.*(>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} (<|%3C)([^i]*i)+frame.*(>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} base64_(en|de)code[^(]*\([^)]*\) [NC,OR]
+    RewriteCond %{QUERY_STRING} (%0A|%0D|\\r|\\n) [NC,OR]
+    RewriteCond %{QUERY_STRING} (\.\.\/|\.\.\\|%2e%2e%2f|%2e%2e\/|\.\.%2f|%2e%2e%5c) [NC,OR]
+    RewriteCond %{QUERY_STRING} (;|<|>|'|"|\)|%0A|%0D|%22|%27|%3C|%3E|%00).*(/\*|union|select|insert|cast|set|declare|drop|update|md5|benchmark).* [NC,OR]
+    RewriteCond %{QUERY_STRING} union([^a]*a)+ll([^s]*s)+elect [NC]
+    RewriteRule . - [L]
+
+</IfModule>
+
+# File protection
+<Files ~ "^(config)\.php">
+	Order Allow,Deny
+	Deny from all
+</Files>
+<Files ~ "^.*\.([Hh][Tt][Aa])">
+	Order Allow,Deny
+	Deny from all
+	Satisfy all
+</Files>
+
+# Robots file protection
+<Files ~ "\.pdf$">
+	Header set X-Robots-Tag "noindex, nofollow"
+</Files>
+<Files ~ "\.(png|jpe?g|gif|bmp|psd)$">
+	Header set X-Robots-Tag "noindex"
+</Files>
