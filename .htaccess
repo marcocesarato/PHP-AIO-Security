@@ -20,26 +20,26 @@ php_flag session.use_only_cookies on
 # Headers protection/improvements
 <IfModule mod_headers.c>
 
-  # XSS Protection
-  Header set X-XSS-Protection "1; mode=block"
-  # Clickjacking
-  Header set X-Frame-Options "sameorigin"
-  # Hide server informations
-  Header unset X-Powered-By
+    # XSS Protection
+    Header set X-XSS-Protection "1; mode=block"
+    # Clickjacking
+    Header set X-Frame-Options "sameorigin"
+    # Hide server informations
+    Header unset X-Powered-By
 
-	Header set Accept-Encoding "gzip, deflate"
-	Header set Cache-Control "max-age=15552000, must-revalidate"
+    Header set Accept-Encoding "gzip, deflate"
+    Header set Cache-Control "max-age=15552000, must-revalidate"
 
-	Header set Referer-Policy "origin"
-	Header set Strict-Transport-Security "max-age=16070400; includeSubDomains"
-	Header set X-UA-Compatible "IE=edge,chrome=1"
-	Header set X-Permitted-Cross-Domain-Policies "master-only"
-	Header set X-Content-Type-Options "nosniff"
-	Header set X-Download-Options "noopen"
-  Header set Access-Control-Allow-Methods "GET, POST"
-	# Content policy
-	# SECURE: Header set Content-Security-Policy "default-src 'self'"
-	Header set Content-Security-Policy "default-src 'self'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src *; font-src *; object-src 'none'"
+    Header set Referer-Policy "origin"
+    Header set Strict-Transport-Security "max-age=16070400; includeSubDomains"
+    Header set X-UA-Compatible "IE=edge,chrome=1"
+    Header set X-Permitted-Cross-Domain-Policies "master-only"
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Download-Options "noopen"
+    Header set Access-Control-Allow-Methods "GET, POST"
+    # Content policy
+    # SECURE: Header set Content-Security-Policy "default-src 'self'"
+    Header set Content-Security-Policy "default-src 'self'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src *; font-src *; object-src 'none'"
 
 </IfModule>
 
@@ -94,19 +94,19 @@ php_flag session.use_only_cookies on
 
 # File protection
 <Files ~ "^(config)\.php">
-	Order Allow,Deny
-	Deny from all
+  Order Allow,Deny
+  Deny from all
 </Files>
 <Files ~ "^.*\.([Hh][Tt][Aa])">
-	Order Allow,Deny
-	Deny from all
-	Satisfy all
+  Order Allow,Deny
+  Deny from all
+  Satisfy all
 </Files>
 
 # Robots file protection
 <Files ~ "\.pdf$">
-	Header set X-Robots-Tag "noindex, nofollow"
+  Header set X-Robots-Tag "noindex, nofollow"
 </Files>
 <Files ~ "\.(png|jpe?g|gif|bmp|psd)$">
-	Header set X-Robots-Tag "noindex"
+  Header set X-Robots-Tag "noindex"
 </Files>
