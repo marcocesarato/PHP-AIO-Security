@@ -9,9 +9,9 @@
  */
 class Security
 {
-	private static $csrf_session = "enicsrf_token";
-	private static $csrf_formtoken = "eniform_token";
-	private static $hijacking_salt = "ENI";
+	private static $csrf_session = "_CSRFTOKEN";
+	private static $csrf_formtoken = "_FORMTOKEN";
+	private static $hijacking_salt = "_SALT";
 	private static $headers_cache_days = 30;
 	private static $escape_string = true; // If you use PDO I recommend to set this to false
 	/**
