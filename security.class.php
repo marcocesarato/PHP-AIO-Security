@@ -3,7 +3,7 @@
  * Security Class
  * @category  Security
  * @author    Marco Cesarato <cesarato.developer@gmail.com>
- * @copyright Copyright (c) 2015-2018
+ * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @version   0.1.1
  */
@@ -196,7 +196,7 @@ class Security
 	 */
 	private static function secureVar($data, $html = true, $quotes = true, $escape = true) {
 		if (!$quotes) $data = str_replace(array('\'', '"'), '', $data);
-		if (!$html) $data = self::recursiveStripTagsContent($data);
+		if (!$html) $data = self::recursiveStripTags(self::recursiveStripTagsContent($data));
 		$data = self::cleanXSS($data);
 		if($escape && self::$escape_string) {
 			$data = self::recursiveStripslashes($data);
@@ -220,6 +220,36 @@ class Security
 				$replace = array("\\\\", "\\0", "\\n", "\\r", "\'", '\"', "\\Z");
 				$data = str_replace($search, $replace, $data);
 			}
+		}
+		return $data;
+	}
+	/**
+	 * Strip tags recursive
+	 * @param $data
+	 * @return mixed
+	 */
+	public static function recursiveStripTags($data) {
+		if (is_array($data)) {
+			foreach ($data as $k => $v) {
+				$data[$k] = self::srecursiveStripTags($v);
+			}
+		} else {
+			$data = trim(strip_tags($data));
+		}
+		return $data;
+	}
+	/**
+	 * Trim recursive
+	 * @param $data
+	 * @return mixed
+	 */
+	public static function recursiveTrim($data) {
+		if (is_array($data)) {
+			foreach ($data as $k => $v) {
+				$data[$k] = self::recursiveTrim($v);
+			}
+		} else {
+			$data = trim($data);
 		}
 		return $data;
 	}
@@ -398,7 +428,7 @@ class Security
 	/**
 	 * Hijacking prevention
 	 */
-	private static function secureHijacking() {
+	public static function secureHijacking() {
 		if (!empty($_SESSION['HTTP_USER_TOKEN']) && $_SESSION['HTTP_USER_TOKEN'] != md5($_SERVER['HTTP_USER_TOKEN'] . ':' . self::clientIP() . ':' . self::$hijacking_salt)) {
 			http_response_code(403);
 			die("Permission denied!");

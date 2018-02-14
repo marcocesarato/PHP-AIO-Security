@@ -51,31 +51,32 @@ Enjoy!
 
 ## Methods available:
 
-| Method                                                       | Description                                               |
-| :----------------------------------------------------------- | --------------------------------------------------------- |
+| Method                                                       | Description                                                  |
+| :----------------------------------------------------------- | ------------------------------------------------------------ |
 | cleanGlobals()                                               | Clean in automatic \$_POST, \$_GET, \$_REQUEST and \$_COOKIE |
-| output($buffer)                                              | Fix some elements on output buffer (to use with ob_start) |
-| putInSafety()                                                | Put in safety the page                                    |
-| headers()                                                    | Set some headers and php setting with secure values       |
-| secureCookies()                                              | Set cookies in root path and with SameSite=Strict         |
-| headersCache()                                               | Set cache cookies                                         |
-| compressHTML($html)                                          | Compress HTML                                             |
-| compressJS($js)                                              | Compress JS                                               |
-| compressCSS($css)                                            | Compress CSS                                              |
-| secureHTML(\$html)                                           | Repair security issue on template                         |
-| clean(\$data, \$html = true, \$quotes = true)                | Clean variables (recursive)                               |
-| stringEscape($var)                                           | String escape similar at mysql_real_escape                |
-| recursiveStripTagsContent($data)                             | Strip tags and contents (recursive)                       |
-| cleanXSS($data)                                              | Strip XSS code (recursive)                                |
-| recursiveTrim($data)                                         | Trim (recursive)                                          |
-| recursiveStripslashes(\$data)                                | Stripslashes (recursive)                                  |
-| secureCSRF()                                                 | Check for CSRF                                            |
-| clientIP()                                                   | Get Real client IP Address                                |
-| secureHijacking()                                            | Hijacking prevention                                      |
-| getCookie($name)                                             | Get encrypted cookie                                      |
-| setCookie(\$name, \$value, \$expires = 2592000, \$path = "/", \$domain = null, \$secure = false, \$httponly = true) | Set encrypted cookie                                      |
-| crypt(['encrypt'\|'decrypt'], \$string)                      | Encrypt and Decrypt                                       |
-| secureDownload($filename)                                    | Safe Download                                             |
-| secureUpload($file, $path)                                   | Safe Upload                                               |
+| output($buffer)                                              | Fix some elements on output buffer (to use with ob_start)    |
+| putInSafety()                                                | Put in safety the page                                       |
+| headers()                                                    | Set some headers and php setting with secure values          |
+| secureCookies()                                              | Set cookies in root path and with SameSite=Strict            |
+| headersCache()                                               | Set cache cookies                                            |
+| compressHTML($html)                                          | Compress HTML                                                |
+| compressJS($js)                                              | Compress JS                                                  |
+| compressCSS($css)                                            | Compress CSS                                                 |
+| secureHTML(\$html)                                           | Repair security issue on template                            |
+| clean(\$data, \$html = true, \$quotes = true)                | Clean variables (recursive)                                  |
+| stringEscape($var)                                           | String escape similar at mysql_real_escape                   |
+| recursiveStripTagsContent($data)                             | Strip tags and contents (recursive)                          |
+| recursiveStripTags($data)                                    | Strip tags  (recursive)                                      |
+| cleanXSS($data)                                              | Strip XSS code (recursive)                                   |
+| recursiveTrim($data)                                         | Trim (recursive)                                             |
+| recursiveStripslashes(\$data)                                | Stripslashes (recursive)                                     |
+| secureCSRF()                                                 | Check for CSRF                                               |
+| clientIP()                                                   | Get Real client IP Address                                   |
+| secureHijacking()                                            | Hijacking prevention                                         |
+| getCookie($name)                                             | Get encrypted cookie                                         |
+| setCookie(\$name, \$value, \$expires = 2592000, \$path = "/", \$domain = null, \$secure = false, \$httponly = true) | Set encrypted cookie                                         |
+| crypt(['encrypt'\|'decrypt'], \$string)                      | Encrypt and Decrypt                                          |
+| secureDownload($filename)                                    | Safe Download                                                |
+| secureUpload($file, $path)                                   | Safe Upload                                                  |
 
 
