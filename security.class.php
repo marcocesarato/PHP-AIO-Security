@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Security Class
  * @category  Security
@@ -14,12 +15,14 @@ class Security
 	private static $hijacking_salt = "_SALT";
 	private static $headers_cache_days = 30;
 	private static $escape_string = true; // If you use PDO I recommend to set this to false
+
 	/**
 	 * Security constructor.
 	 */
 	function __construct() {
 		self::putInSafety();
 	}
+
 	/**
 	 * Secure initialization
 	 */
@@ -33,6 +36,7 @@ class Security
 		self::headersCache();
 		self::secureCookies();
 	}
+
 	/**
 	 * Clean all input globals received
 	 * ### BE CAREFUL THIS METHOD COULD COMPROMISE HTML DATA ###
@@ -41,8 +45,9 @@ class Security
 		$_COOKIE = self::clean($_COOKIE);
 		$_GET = self::clean($_GET, false, false);
 		$_POST = self::clean($_POST);
-		$_REQUEST = array_merge($_GET,$_POST);
+		$_REQUEST = array_merge($_GET, $_POST);
 	}
+
 	/**
 	 * Fix some elements on output buffer (to use with ob_start)
 	 * @param $buffer
@@ -58,6 +63,7 @@ class Security
 		header('Content-Length: ' . strlen($buffer)); // For cache header
 		return $buffer;
 	}
+
 	/**
 	 * Security Headers
 	 */
@@ -79,6 +85,7 @@ class Security
 		ini_set('session.cookie_httponly', 'on');
 		ini_set('session.use_only_cookies', 'on');
 	}
+
 	/**
 	 * Security Cookies
 	 */
@@ -89,47 +96,49 @@ class Security
 			setcookie($key, $value, 0, '/; SameSite=Strict');
 		}
 	}
+
 	/**
 	 * Check if the request is secure
 	 */
-	public static function secureRequest(){
+	public static function secureRequest() {
 
 		// Disable methods
-		if( preg_match("/^(HEAD|TRACE|DELETE|TRACK|DEBUG|OPTIONS)/",$_SERVER['REQUEST_METHOD']))
+		if (preg_match("/^(HEAD|TRACE|DELETE|TRACK|DEBUG|OPTIONS)/", $_SERVER['REQUEST_METHOD']))
 			self::permission_denied();
 
 		// Disable User Agents
-		if( preg_match("/(havij|libwww-perl|wget|python|nikto|curl|scan|java|winhttp|clshttp|loader)/",$_SERVER['HTTP_USER_AGENT']) ||
-			preg_match("/(%0A|%0D|%27|%3C|%3E|%00)/",$_SERVER['HTTP_USER_AGENT']) ||
-			preg_match("/(;|<|>|'|\"|\)|\(|%0A|%0D|%22|%27|%28|%3C|%3E|%00).*(libwww-perl|wget|python|nikto|curl|scan|java|winhttp|HTTrack|clshttp|archiver|loader|email|harvest|extract|grab|miner)/",$_SERVER['HTTP_USER_AGENT']))
+		if (preg_match("/(havij|libwww-perl|wget|python|nikto|curl|scan|java|winhttp|clshttp|loader)/", $_SERVER['HTTP_USER_AGENT']) ||
+			preg_match("/(%0A|%0D|%27|%3C|%3E|%00)/", $_SERVER['HTTP_USER_AGENT']) ||
+			preg_match("/(;|<|>|'|\"|\)|\(|%0A|%0D|%22|%27|%28|%3C|%3E|%00).*(libwww-perl|wget|python|nikto|curl|scan|java|winhttp|HTTrack|clshttp|archiver|loader|email|harvest|extract|grab|miner)/", $_SERVER['HTTP_USER_AGENT']))
 			self::permission_denied();
 
 		$_REQUEST_URI = urldecode($_SERVER['REQUEST_URI']);
 
-		if( preg_match("/(<|%3C)([^s]*s)+cript.*(>|%3E)/",$_REQUEST_URI) ||
-			preg_match("/(<|%3C)([^e]*e)+mbed.*(>|%3E)/",$_REQUEST_URI) ||
-			preg_match("/(<|%3C)([^o]*o)+bject.*(>|%3E)/",$_REQUEST_URI) ||
-			preg_match("/(<|%3C)([^i]*i)+frame.*(>|%3E)/",$_REQUEST_URI) ||
-			preg_match("/(<|%3C)([^o]*o)+bject.*(>|%3E)/",$_REQUEST_URI) ||
-			preg_match("/base64_(en|de)code[^(]*\([^)]*\)/",$_REQUEST_URI) ||
-			preg_match("/(%0A|%0D|\\r|\\n)/",$_REQUEST_URI) ||
-			preg_match("/union([^a]*a)+ll([^s]*s)+elect/",$_REQUEST_URI))
+		if (preg_match("/(<|%3C)([^s]*s)+cript.*(>|%3E)/", $_REQUEST_URI) ||
+			preg_match("/(<|%3C)([^e]*e)+mbed.*(>|%3E)/", $_REQUEST_URI) ||
+			preg_match("/(<|%3C)([^o]*o)+bject.*(>|%3E)/", $_REQUEST_URI) ||
+			preg_match("/(<|%3C)([^i]*i)+frame.*(>|%3E)/", $_REQUEST_URI) ||
+			preg_match("/(<|%3C)([^o]*o)+bject.*(>|%3E)/", $_REQUEST_URI) ||
+			preg_match("/base64_(en|de)code[^(]*\([^)]*\)/", $_REQUEST_URI) ||
+			preg_match("/(%0A|%0D|\\r|\\n)/", $_REQUEST_URI) ||
+			preg_match("/union([^a]*a)+ll([^s]*s)+elect/", $_REQUEST_URI))
 			self::permission_denied();
 
 		$_QUERY_STRING = urldecode($_SERVER['QUERY_STRING']);
 
-		if( preg_match("/(<|%3C)([^s]*s)+cript.*(>|%3E)/",$_QUERY_STRING) ||
-			preg_match("/(<|%3C)([^e]*e)+mbed.*(>|%3E)/",$_QUERY_STRING) ||
-			preg_match("/(<|%3C)([^o]*o)+bject.*(>|%3E)/",$_QUERY_STRING) ||
-			preg_match("/(<|%3C)([^i]*i)+frame.*(>|%3E)/",$_QUERY_STRING) ||
-			preg_match("/(<|%3C)([^o]*o)+bject.*(>|%3E)/",$_QUERY_STRING) ||
-			preg_match("/base64_(en|de)code[^(]*\([^)]*\)/",$_QUERY_STRING) ||
-			preg_match("/(%0A|%0D|\\r|\\n)/",$_QUERY_STRING) ||
-			preg_match("/(\.\.\/|\.\.\\|%2e%2e%2f|%2e%2e\/|\.\.%2f|%2e%2e%5c)/",$_QUERY_STRING) ||
-			preg_match("/(;|<|>|'|\"|\)|%0A|%0D|%22|%27|%3C|%3E|%00).*(/\*|union|select|insert|cast|set|declare|drop|update|md5|benchmark).*/",$_QUERY_STRING) ||
-			preg_match("/union([^a]*a)+ll([^s]*s)+elect/",$_QUERY_STRING))
+		if (preg_match("/(<|%3C)([^s]*s)+cript.*(>|%3E)/", $_QUERY_STRING) ||
+			preg_match("/(<|%3C)([^e]*e)+mbed.*(>|%3E)/", $_QUERY_STRING) ||
+			preg_match("/(<|%3C)([^o]*o)+bject.*(>|%3E)/", $_QUERY_STRING) ||
+			preg_match("/(<|%3C)([^i]*i)+frame.*(>|%3E)/", $_QUERY_STRING) ||
+			preg_match("/(<|%3C)([^o]*o)+bject.*(>|%3E)/", $_QUERY_STRING) ||
+			preg_match("/base64_(en|de)code[^(]*\([^)]*\)/", $_QUERY_STRING) ||
+			preg_match("/(%0A|%0D|\\r|\\n)/", $_QUERY_STRING) ||
+			preg_match("/(\.\.\/|\.\.\\|%2e%2e%2f|%2e%2e\/|\.\.%2f|%2e%2e%5c)/", $_QUERY_STRING) ||
+			preg_match("/(;|<|>|'|\"|\)|%0A|%0D|%22|%27|%3C|%3E|%00).*(/\*|union|select|insert|cast|set|declare|drop|update|md5|benchmark).*/", $_QUERY_STRING) ||
+			preg_match("/union([^a]*a)+ll([^s]*s)+elect/", $_QUERY_STRING))
 			self::permission_denied();
-    }
+	}
+
 	/**
 	 * Cache Headers
 	 */
@@ -141,6 +150,7 @@ class Security
 		@header("Pragma: cache");
 		@header("Cache-Control: max-age=$days_to_cache, must-revalidate");
 	}
+
 	/**
 	 * Compress HTML
 	 * @param $buf
@@ -153,6 +163,7 @@ class Security
 			$buf = preg_replace(array('/<!--[^\[](.*)[^\]]-->/Uis', "/[[:blank:]]+/", '/\s+/'), array('', ' ', ' '), str_replace(array("\n", "\r", "\t"), '', $buf));
 		return $buf;
 	}
+
 	/**
 	 * Compress CSS
 	 * @param $buffer
@@ -163,6 +174,7 @@ class Security
 		ini_set("zlib.output_compression_level", "9");
 		return preg_replace(array('#\/\*[\s\S]*?\*\/#', '/\s+/'), array('', ' '), str_replace(array("\n", "\r", "\t"), '', $buffer));
 	}
+
 	/**
 	 * Compress Javascript
 	 * @param $buffer
@@ -173,6 +185,7 @@ class Security
 		ini_set("zlib.output_compression_level", "9");
 		return str_replace(array("\n", "\r", "\t"), '', preg_replace(array('#\/\*[\s\S]*?\*\/|([^:]|^)\/\/.*$#m', '/\s+/'), array('', ' '), $buffer));
 	}
+
 	/**
 	 * Check if string is HTML
 	 * @param $string
@@ -182,6 +195,7 @@ class Security
 		//return self::secureStripTagsContent($string) == '' ? true : false;
 		return preg_match('/<html.*>/', $string) ? true : false;
 	}
+
 	/**
 	 * Repair security issue on template
 	 * @param $buffer
@@ -210,6 +224,7 @@ class Security
 		$output = $doc->saveHTML();
 		return $output;
 	}
+
 	/**
 	 * Clean variables (recursive)
 	 * @param $data
@@ -228,6 +243,7 @@ class Security
 		}
 		return $data;
 	}
+
 	/**
 	 * Clean variable
 	 * @param $data
@@ -240,12 +256,13 @@ class Security
 		if (!$quotes) $data = str_replace(array('\'', '"'), '', $data);
 		if (!$html) $data = self::recursiveStripTags(self::recursiveStripTagsContent($data));
 		$data = self::cleanXSS($data);
-		if($escape && self::$escape_string) {
+		if ($escape && self::$escape_string) {
 			$data = self::recursiveStripslashes($data);
 			$data = self::stringEscape($data);
 		}
 		return $data;
 	}
+
 	/**
 	 * String escape
 	 * @param $data
@@ -265,6 +282,7 @@ class Security
 		}
 		return $data;
 	}
+
 	/**
 	 * Strip tags recursive
 	 * @param $data
@@ -280,6 +298,7 @@ class Security
 		}
 		return $data;
 	}
+
 	/**
 	 * Trim recursive
 	 * @param $data
@@ -295,6 +314,7 @@ class Security
 		}
 		return $data;
 	}
+
 	/**
 	 * Strip tags and contents recursive
 	 * @param $data
@@ -310,6 +330,7 @@ class Security
 		}
 		return $data;
 	}
+
 	/**
 	 * Strip tags and contents
 	 * @param $text
@@ -331,6 +352,7 @@ class Security
 		}
 		return $text;
 	}
+
 	/**
 	 * XSS escape
 	 * @param $data
@@ -346,6 +368,7 @@ class Security
 		}
 		return $data;
 	}
+
 	/**
 	 * Fix XSS
 	 * @param $data
@@ -376,6 +399,7 @@ class Security
 		$data = preg_replace('/&amp;([A-Za-z][A-Za-z0-9]*;)/', '&\1', $data);
 		return $data;
 	}
+
 	/**
 	 * Stripslashes recursive
 	 * @param $data
@@ -391,6 +415,7 @@ class Security
 		}
 		return $data;
 	}
+
 	/**
 	 * CSRF token compare only on POST REQUEST
 	 */
@@ -403,6 +428,7 @@ class Security
 			self::secureCSRFGenerate();
 		}
 	}
+
 	/**
 	 * CSRF token compare
 	 * @return bool
@@ -418,6 +444,7 @@ class Security
 			return false;
 		}
 	}
+
 	/**
 	 * Generate CSRF Token
 	 */
@@ -425,6 +452,7 @@ class Security
 		$random = uniqid(mt_rand(1, mt_getrandmax()));
 		$_SESSION[self::$csrf_session] = md5($random . time() . ":" . session_id());
 	}
+
 	/**
 	 * Get CSRF Token
 	 * @return mixed
@@ -433,6 +461,7 @@ class Security
 		$token = $_SESSION[self::$csrf_session];
 		return $token;
 	}
+
 	/**
 	 * Print CSRF token as hidden input
 	 * @param $output
@@ -444,6 +473,7 @@ class Security
 		$output = preg_replace("/(<([^>]*)\/form([^>]*)>)/i", $input . "$1", $output);
 		return $output;
 	}
+
 	/**
 	 * Get Real IP Address
 	 * @return string
@@ -465,6 +495,7 @@ class Security
 			$ipaddress = '0.0.0.0';
 		return $ipaddress;
 	}
+
 	/**
 	 * Hijacking prevention
 	 */
@@ -473,6 +504,7 @@ class Security
 			self::permission_denied();
 		$_SESSION['HTTP_USER_TOKEN'] = md5($_SERVER['HTTP_USER_TOKEN'] . ':' . self::clientIP() . ':' . self::$hijacking_salt);
 	}
+
 	/**
 	 * Secure Upload
 	 * @param $file
@@ -488,6 +520,7 @@ class Security
 			return false;
 		}
 	}
+
 	/**
 	 * Secure download
 	 * @param $filename
@@ -500,6 +533,7 @@ class Security
 		echo file_get_contents($filename);
 		ob_end_flush();
 	}
+
 	/**
 	 * Crypt
 	 * @param $action
@@ -523,6 +557,7 @@ class Security
 		}
 		return $output;
 	}
+
 	/**
 	 * Set Cookie
 	 * @param $name
@@ -539,6 +574,7 @@ class Security
 		if (!setcookie($name, $newValue, $expires, $path, $domain, $secure, $httponly)) return false;
 		return true;
 	}
+
 	/**
 	 * Get Cookie
 	 * @param $name
@@ -552,17 +588,19 @@ class Security
 			return NULL;
 		}
 	}
+
 	/**
 	 * Error 403
 	 */
-	private static function permission_denied(){
+	private static function permission_denied() {
 		http_response_code(403);
 		die("Permission denied!");
 	}
+
 	/**
 	 * Error 404
 	 */
-	private static function not_found(){
+	private static function not_found() {
 		http_response_code(404);
 		die("Not found!");
 	}

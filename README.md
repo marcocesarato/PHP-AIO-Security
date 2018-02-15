@@ -11,7 +11,7 @@ This is a security class in php with some userfull static methods
 include 'security.class.php';
 ```
 
-3) Just create a new object to be more at safe (the constructor filter \$_REQUEST and \$_GET globals, add some userfull headers for security and check if there is an **Hijacking**)
+3) Just create a new object to be more at safe (the constructor filter \$_REQUEST and \$_GET globals, add some userfull headers for security and check if there is an **Hijacking** and check the URL Request)
 ```php
 $security = new Security();
 ```
@@ -54,6 +54,7 @@ Enjoy!
 | Method                                                       | Description                                                  |
 | :----------------------------------------------------------- | ------------------------------------------------------------ |
 | cleanGlobals()                                               | Clean in automatic \$_POST, \$_GET, \$_REQUEST and \$_COOKIE |
+| secureRequest()                                              | URL request XSS/SQL Injections prevention                    |
 | output($buffer)                                              | Fix some elements on output buffer (to use with ob_start)    |
 | putInSafety()                                                | Put in safety the page                                       |
 | headers()                                                    | Set some headers and php setting with secure values          |
