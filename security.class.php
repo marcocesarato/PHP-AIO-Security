@@ -41,7 +41,6 @@ class Security
 
 		self::secureHijacking();
 		self::headers();
-		self::headersCache();
 		self::secureCookies();
 
 	}
@@ -80,6 +79,8 @@ class Security
 			self::secureCSRF();
 			$buffer = self::secureHTML($buffer);
 			$buffer = self::compressHTML($buffer);
+		} else {
+			self::headersCache();
 		}
 		header('Content-Length: ' . strlen($buffer)); // For cache header
 		return $buffer;
