@@ -14,6 +14,7 @@ class Security
 	private static $csrf_formtoken = "_FORMTOKEN";
 	private static $hijacking_salt = "_SALT";
 	private static $headers_cache_days = 30;
+	private static $block_tor = true;
 	private static $escape_string = true; // If you use PDO I recommend to set this to false
 
 	/**
@@ -27,14 +28,20 @@ class Security
 	 * Secure initialization
 	 */
 	public static function putInSafety() {
+
 		self::secureRequest();
+		self::secureBots();
+		self::secureBlockTor();
+
 		$_GET = self::clean($_GET, false, false);
 		$_REQUEST = array_diff($_REQUEST, $_COOKIE);
 		$_REQUEST = self::clean($_REQUEST);
+
 		self::secureHijacking();
 		self::headers();
 		self::headersCache();
 		self::secureCookies();
+
 	}
 
 	/**
@@ -291,7 +298,7 @@ class Security
 	public static function recursiveStripTags($data) {
 		if (is_array($data)) {
 			foreach ($data as $k => $v) {
-				$data[$k] = self::srecursiveStripTags($v);
+				$data[$k] = self::recursiveStripTags($v);
 			}
 		} else {
 			$data = trim(strip_tags($data));
@@ -475,33 +482,97 @@ class Security
 	}
 
 	/**
+	 * Check if clients use Tor
+	 * @return bool
+	 */
+	public static function clientIsTor(){
+		$ip = self::clientIP();
+		$ip_server = gethostbyname($_SERVER['SERVER_NAME']);
+
+		$query = array(
+			implode('.', array_reverse(explode('.', $ip))),
+			$_SERVER["SERVER_PORT"],
+			implode('.', array_reverse(explode('.', $ip_server))),
+			'ip-port.exitlist.torproject.org'
+		);
+
+		$torExitNode = implode('.', $query);
+
+		$dns = dns_get_record($torExitNode, DNS_A);
+
+		if (array_key_exists(0, $dns) && array_key_exists('ip', $dns[0])) {
+			if ($dns[0]['ip'] == '127.0.0.2') return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Block Tor clients
+	 */
+	public static function secureBlockTor(){
+		if(self::clientIsTor() && self::$block_tor)
+			self::permission_denied();
+	}
+
+	/**
 	 * Get Real IP Address
 	 * @return string
 	 */
 	public static function clientIP() {
-		if ($_SERVER['HTTP_CLIENT_IP'])
-			$ipaddress = $_SERVER['HTTP_CLIENT_IP'];
-		else if ($_SERVER['HTTP_X_FORWARDED_FOR'])
-			$ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
-		else if ($_SERVER['HTTP_X_FORWARDED'])
-			$ipaddress = $_SERVER['HTTP_X_FORWARDED'];
-		else if ($_SERVER['HTTP_FORWARDED_FOR'])
-			$ipaddress = $_SERVER['HTTP_FORWARDED_FOR'];
-		else if ($_SERVER['HTTP_FORWARDED'])
-			$ipaddress = $_SERVER['HTTP_FORWARDED'];
-		else if ($_SERVER['REMOTE_ADDR'])
-			$ipaddress = $_SERVER['REMOTE_ADDR'];
-		else
-			$ipaddress = '0.0.0.0';
-		return $ipaddress;
+		foreach (
+			array(
+				'HTTP_CLIENT_IP',
+				'HTTP_X_FORWARDED_FOR',
+				'HTTP_X_FORWARDED',
+				'HTTP_X_CLUSTER_CLIENT_IP',
+				'HTTP_FORWARDED_FOR',
+				'HTTP_FORWARDED',
+				'REMOTE_ADDR'
+			) as $key) {
+			if (array_key_exists($key, $_SERVER) === true) {
+				foreach (explode(',', $_SERVER[$key]) as $ip) {
+					if($ip == "::1") return "127.0.0.1";
+					return $ip;
+				}
+			}
+		}
+		return "0.0.0.0";
+	}
+
+	/**
+	 * Prevent bad bots
+	 */
+	public static function secureBots() {
+		self::blockFakeGoogleBots();
+	}
+
+	/**
+	 * Prevent Fake Google Bots
+	 */
+	private static function blockFakeGoogleBots() {
+		$user_agent = (isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '');
+		if (preg_match('/Googlebot/i', $user_agent, $matches)){
+			$ip = self::clientIP();
+			$name = gethostbyaddr($ip);
+			$host_ip = gethostbyname($name);
+			if(preg_match('/Googlebot/i', $name, $matches)){
+				if ($host_ip == $ip){
+				} else self::permission_denied();
+			} else self::permission_denied();
+		}
 	}
 
 	/**
 	 * Hijacking prevention
 	 */
 	public static function secureHijacking() {
-		if (!empty($_SESSION['HTTP_USER_TOKEN']) && $_SESSION['HTTP_USER_TOKEN'] != md5($_SERVER['HTTP_USER_TOKEN'] . ':' . self::clientIP() . ':' . self::$hijacking_salt))
+		if (!empty($_SESSION['HTTP_USER_TOKEN']) && $_SESSION['HTTP_USER_TOKEN'] != md5($_SERVER['HTTP_USER_TOKEN'] . ':' . self::clientIP() . ':' . self::$hijacking_salt)) {
+			session_unset();
+			session_destroy();
 			self::permission_denied();
+		}
+
 		$_SESSION['HTTP_USER_TOKEN'] = md5($_SERVER['HTTP_USER_TOKEN'] . ':' . self::clientIP() . ':' . self::$hijacking_salt);
 	}
 
@@ -514,11 +585,11 @@ class Security
 	public static function secureUpload($file, $path) {
 		if (!file_exists($file)) return false;
 		if (!is_uploaded_file($_FILES[$file]["tmp_name"])) return false;
+		// Scan file coming...
 		if (move_uploaded_file($_FILES[$file]["tmp_name"], $path)) {
 			return true;
-		} else {
-			return false;
 		}
+		return false;
 	}
 
 	/**
@@ -584,9 +655,8 @@ class Security
 		if (isset($_COOKIE[$name])) {
 			$cookie = self::crypt('decrypt', $_COOKIE[$name]);
 			return $cookie;
-		} else {
-			return NULL;
 		}
+		return null;
 	}
 
 	/**

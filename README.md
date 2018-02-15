@@ -81,6 +81,8 @@ Enjoy!
 | setCookie(\$name, \$value, \$expires = 2592000, \$path = "/", \$domain = null, \$secure = false, \$httponly = true) | Set encrypted cookie                                         |
 | crypt(['encrypt'\|'decrypt'], \$string)                      | Encrypt and Decrypt                                          |
 | secureDownload($filename)                                    | Safe Download                                                |
-| secureUpload($file, $path)                                   | Safe Upload                                                  |
-
+| secureUpload(\$file, $path)                                  | Safe Upload                                                  |
+| secureBots()                                                 | Check and block bad bots                                     |
+| secureBlockTor()                                             | Block Tor clients                                            |
+| clientIsTor()                                                | Check if client use Tor (return bool)                        |
 
