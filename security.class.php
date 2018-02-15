@@ -99,6 +99,8 @@ class Security
 		@header("X-Content-Type-Options: nosniff");
 		@header("X-Permitted-Cross-Domain-Policies: master-only");
 		@header("Referer-Policy: origin");
+		@header("X-Download-Options: noopen");
+		@header("Access-Control-Allow-Methods: GET, POST");
 		// Php settings
 		ini_set('expose_php', 'off');
 		ini_set('allow_url_fopen', 'off');
