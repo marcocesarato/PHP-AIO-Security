@@ -11,7 +11,8 @@ This is a security class in php with some userfull static methods
 include 'security.class.php';
 ```
 
-3) Just create a new object to be more at safe (the constructor filter \$_REQUEST and \$_GET globals, add some userfull headers for security and check if there is an **Hijacking** and check the URL Request)
+3) Just create a new object to be more at safe (the **constructor/putInSafety** filter \$_REQUEST and \$_GET globals, add some userfull headers for security, check if there is an **Hijacking** and check the URL Request)
+
 ```php
 $security = new Security();
 ```
@@ -21,6 +22,8 @@ or just call
 ```php
 Security::putInSafety();
 ```
+
+*PS: These methods are the same things*
 
 4) Prevent **XSS/SQL Injection** on your variables with:
 
