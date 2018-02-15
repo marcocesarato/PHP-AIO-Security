@@ -10,6 +10,7 @@
  */
 class Security
 {
+	private static $session_name = "XSESSID";
 	private static $csrf_session = "_CSRFTOKEN";
 	private static $csrf_formtoken = "_FORMTOKEN";
 	private static $hijacking_salt = "_SALT";
@@ -29,6 +30,7 @@ class Security
 	 */
 	public static function putInSafety() {
 
+		self::secureSession();
 		self::secureRequest();
 		self::secureBots();
 		self::secureBlockTor();
@@ -42,6 +44,19 @@ class Security
 		self::headersCache();
 		self::secureCookies();
 
+	}
+
+	/**
+	 * Custom session name for prevent the fast identification of php
+	 */
+	public static function secureSession(){
+		session_name(self::$session_name);
+		if(isset($_COOKIE['PHPSESSID'])) {
+			unset($_COOKIE['PHPSESSID']);
+			setcookie('PHPSESSID', null, -1, '/');
+		}
+		session_start();
+		setcookie(self::$session_name, session_id(), 0, '/; SameSite=Strict', null, true, true);
 	}
 
 	/**
@@ -77,8 +92,8 @@ class Security
 	public static function headers() {
 		// Headers
 		@header("Accept-Encoding: gzip, deflate");
-		@header("Strict-Transport-Security: max-age=16070400; includeSubDomains");
-		@header("X-UA-Compatible: IE=edge,chrome=1"); // MIE
+		@header("Strict-Transport-Security: max-age=16070400; includeSubDomains; preload");
+		@header("X-UA-Compatible: IE=edge,chrome=1");
 		@header("X-XSS-Protection: 1; mode=block");
 		@header("X-Frame-Options: sameorigin");
 		@header("X-Content-Type-Options: nosniff");
@@ -98,9 +113,8 @@ class Security
 	 */
 	public static function secureCookies() {
 		foreach ($_COOKIE as $key => $value) {
-			$value = self::clean($value, false, false);
-			$_COOKIE[$key] = $value;
-			setcookie($key, $value, 0, '/; SameSite=Strict');
+			$value = self::clean(self::getCookie($key), false, false);
+			self::setCookie($key, $value, 0, '/; SameSite=Strict', null, false, true);
 		}
 	}
 
@@ -119,8 +133,8 @@ class Security
 			preg_match("/(;|<|>|'|\"|\)|\(|%0A|%0D|%22|%27|%28|%3C|%3E|%00).*(libwww-perl|wget|python|nikto|curl|scan|java|winhttp|HTTrack|clshttp|archiver|loader|email|harvest|extract|grab|miner)/i", $_SERVER['HTTP_USER_AGENT']))
 			self::permission_denied();
 
+		// Check REQUEST_URI
 		$_REQUEST_URI = urldecode($_SERVER['REQUEST_URI']);
-
 		if (preg_match("/(<|%3C)([^s]*s)+cript.*(>|%3E)/i", $_REQUEST_URI) ||
 			preg_match("/(<|%3C)([^e]*e)+mbed.*(>|%3E)/i", $_REQUEST_URI) ||
 			preg_match("/(<|%3C)([^o]*o)+bject.*(>|%3E)/i", $_REQUEST_URI) ||
@@ -131,8 +145,8 @@ class Security
 			preg_match("/union([^a]*a)+ll([^s]*s)+elect/i", $_REQUEST_URI))
 			self::permission_denied();
 
+		// Check QUERY_STRING
 		$_QUERY_STRING = urldecode($_SERVER['QUERY_STRING']);
-
 		if (preg_match("/(<|%3C)([^s]*s)+cript.*(>|%3E)/i", $_QUERY_STRING) ||
 			preg_match("/(<|%3C)([^e]*e)+mbed.*(>|%3E)/i", $_QUERY_STRING) ||
 			preg_match("/(<|%3C)([^o]*o)+bject.*(>|%3E)/i", $_QUERY_STRING) ||
@@ -614,10 +628,13 @@ class Security
 	public static function crypt($action, $string) {
 		$output = false;
 		$encrypt_method = "AES-256-CBC";
+
 		if (empty($_SESSION['HTTP_USER_KEY']))
 			$_SESSION['HTTP_USER_KEY'] = md5(uniqid(mt_rand(1, mt_getrandmax()), true));
+
 		$secret_key = $_SESSION['HTTP_USER_KEY'] . ':KEY';
 		$secret_iv = $_SESSION['HTTP_USER_KEY'] . ':IV';
+
 		$key = hash('sha512', $secret_key);
 		$iv = substr(hash('sha512', $secret_iv), 0, 16);
 		if ($action == 'encrypt') {
@@ -641,9 +658,13 @@ class Security
 	 * @return bool
 	 */
 	public static function setCookie($name, $value, $expires = 2592000, $path = "/", $domain = null, $secure = false, $httponly = true) {
-		$newValue = self::crypt('encrypt', $value);
-		if (!setcookie($name, $newValue, $expires, $path, $domain, $secure, $httponly)) return false;
-		return true;
+		if($name != session_name()) {
+			$newValue = self::crypt('encrypt', $value);
+			if (!setcookie($name, $newValue, $expires, $path, $domain, $secure, $httponly)) return false;
+			$_COOKIE[$name] = $value;
+			return true;
+		}
+		return false;
 	}
 
 	/**
