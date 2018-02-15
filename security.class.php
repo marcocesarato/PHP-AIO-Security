@@ -78,8 +78,8 @@ class Security
 			$buffer = self::compressHTML($buffer);
 		} else {
 			self::headersCache();
+			header('Content-Length: ' . strlen($buffer)); // For cache header
 		}
-		header('Content-Length: ' . strlen($buffer)); // For cache header
 		return $buffer;
 	}
 
