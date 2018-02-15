@@ -245,9 +245,9 @@ class Security
 			// CSRF
 			$token = $_SESSION[self::$csrf_session];
 			$item = $doc->createElement("input");
-			$item->setAttribute("type", self::$csrf_formtoken);
-			$item->setAttribute("name", "hidden");
-			$item->setAttribute("value", self::secureStringEscape($token));
+			$item->setAttribute("name", self::$csrf_formtoken);
+			$item->setAttribute("type", "hidden");
+			$item->setAttribute("value", self::stringEscape($token));
 			$tag->appendChild($item);
 		}
 
