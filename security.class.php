@@ -49,10 +49,10 @@ class Security
 	 * Custom session name for prevent fast identification of php
 	 */
 	public static function secureSession(){
-		session_name(self::$session_name);
 		self::unsetCookie('PHPSESSID');
+		session_name(self::$session_name);
 		session_start();
-		setcookie(self::$session_name, session_id(), 0, '/; SameSite=Strict', null, true, true);
+		setcookie(self::$session_name, session_id(), 0, '/; SameSite=Strict', null, false, true);
 	}
 
 	/**
@@ -156,7 +156,7 @@ class Security
 			preg_match("/base64_(en|de)code[^(]*\([^)]*\)/i", $_QUERY_STRING) ||
 			preg_match("/(%0A|%0D|\\r|\\n)/i", $_QUERY_STRING) ||
 			preg_match("/(\.\.\/|\.\.\\|%2e%2e%2f|%2e%2e\/|\.\.%2f|%2e%2e%5c)/i", $_QUERY_STRING) ||
-			preg_match("/(;|<|>|'|\"|\)|%0A|%0D|%22|%27|%3C|%3E|%00).*(/\*|union|select|insert|cast|set|declare|drop|update|md5|benchmark).*/i", $_QUERY_STRING) ||
+			preg_match("/(;|<|>|'|\"|\)|%0A|%0D|%22|%27|%3C|%3E|%00).*(\*|union|select|insert|cast|set|declare|drop|update|md5|benchmark).*/i", $_QUERY_STRING) ||
 			preg_match("/union([^a]*a)+ll([^s]*s)+elect/i", $_QUERY_STRING))
 			self::permission_denied();
 	}
@@ -580,13 +580,13 @@ class Security
 	 * Hijacking prevention
 	 */
 	public static function secureHijacking() {
-		if (!empty($_SESSION['HTTP_USER_TOKEN']) && $_SESSION['HTTP_USER_TOKEN'] != md5($_SERVER['HTTP_USER_TOKEN'] . ':' . self::clientIP() . ':' . self::$hijacking_salt)) {
+		if (!empty($_SESSION['HTTP_USER_TOKEN']) && $_SESSION['HTTP_USER_TOKEN'] != md5($_SERVER['HTTP_USER_AGENT'] . ':' . self::clientIP() . ':' . self::$hijacking_salt)) {
 			session_unset();
 			session_destroy();
 			self::permission_denied();
 		}
 
-		$_SESSION['HTTP_USER_TOKEN'] = md5($_SERVER['HTTP_USER_TOKEN'] . ':' . self::clientIP() . ':' . self::$hijacking_salt);
+		$_SESSION['HTTP_USER_TOKEN'] = md5($_SERVER['HTTP_USER_AGENT'] . ':' . self::clientIP() . ':' . self::$hijacking_salt);
 	}
 
 	/**
@@ -656,7 +656,7 @@ class Security
 	 * @param bool $httponly
 	 * @return bool
 	 */
-	public static function setCookie($name, $value, $expires = 2592000, $path = "/", $domain = null, $secure = false, $httponly = true) {
+	public static function setCookie($name, $value, $expires = 2592000, $path = "/", $domain = null, $secure = false, $httponly = false) {
 		if($name != session_name()) {
 			$newValue = self::crypt('encrypt', $value);
 			if (!setcookie($name, $newValue, $expires, $path, $domain, $secure, $httponly)) return false;
