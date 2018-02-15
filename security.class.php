@@ -103,39 +103,39 @@ class Security
 	public static function secureRequest() {
 
 		// Disable methods
-		if (preg_match("/^(HEAD|TRACE|DELETE|TRACK|DEBUG|OPTIONS)/", $_SERVER['REQUEST_METHOD']))
+		if (preg_match("/^(HEAD|TRACE|DELETE|TRACK|DEBUG|OPTIONS)/i", $_SERVER['REQUEST_METHOD']))
 			self::permission_denied();
 
 		// Disable User Agents
-		if (preg_match("/(havij|libwww-perl|wget|python|nikto|curl|scan|java|winhttp|clshttp|loader)/", $_SERVER['HTTP_USER_AGENT']) ||
-			preg_match("/(%0A|%0D|%27|%3C|%3E|%00)/", $_SERVER['HTTP_USER_AGENT']) ||
-			preg_match("/(;|<|>|'|\"|\)|\(|%0A|%0D|%22|%27|%28|%3C|%3E|%00).*(libwww-perl|wget|python|nikto|curl|scan|java|winhttp|HTTrack|clshttp|archiver|loader|email|harvest|extract|grab|miner)/", $_SERVER['HTTP_USER_AGENT']))
+		if (preg_match("/(havij|libwww-perl|wget|python|nikto|curl|scan|java|winhttp|clshttp|loader)/i", $_SERVER['HTTP_USER_AGENT']) ||
+			preg_match("/(%0A|%0D|%27|%3C|%3E|%00)/i", $_SERVER['HTTP_USER_AGENT']) ||
+			preg_match("/(;|<|>|'|\"|\)|\(|%0A|%0D|%22|%27|%28|%3C|%3E|%00).*(libwww-perl|wget|python|nikto|curl|scan|java|winhttp|HTTrack|clshttp|archiver|loader|email|harvest|extract|grab|miner)/i", $_SERVER['HTTP_USER_AGENT']))
 			self::permission_denied();
 
 		$_REQUEST_URI = urldecode($_SERVER['REQUEST_URI']);
 
-		if (preg_match("/(<|%3C)([^s]*s)+cript.*(>|%3E)/", $_REQUEST_URI) ||
-			preg_match("/(<|%3C)([^e]*e)+mbed.*(>|%3E)/", $_REQUEST_URI) ||
-			preg_match("/(<|%3C)([^o]*o)+bject.*(>|%3E)/", $_REQUEST_URI) ||
-			preg_match("/(<|%3C)([^i]*i)+frame.*(>|%3E)/", $_REQUEST_URI) ||
-			preg_match("/(<|%3C)([^o]*o)+bject.*(>|%3E)/", $_REQUEST_URI) ||
-			preg_match("/base64_(en|de)code[^(]*\([^)]*\)/", $_REQUEST_URI) ||
+		if (preg_match("/(<|%3C)([^s]*s)+cript.*(>|%3E)/i", $_REQUEST_URI) ||
+			preg_match("/(<|%3C)([^e]*e)+mbed.*(>|%3E)/i", $_REQUEST_URI) ||
+			preg_match("/(<|%3C)([^o]*o)+bject.*(>|%3E)/i", $_REQUEST_URI) ||
+			preg_match("/(<|%3C)([^i]*i)+frame.*(>|%3E)/i", $_REQUEST_URI) ||
+			preg_match("/(<|%3C)([^o]*o)+bject.*(>|%3E)/i", $_REQUEST_URI) ||
+			preg_match("/base64_(en|de)code[^(]*\([^)]*\)/i", $_REQUEST_URI) ||
 			preg_match("/(%0A|%0D|\\r|\\n)/", $_REQUEST_URI) ||
-			preg_match("/union([^a]*a)+ll([^s]*s)+elect/", $_REQUEST_URI))
+			preg_match("/union([^a]*a)+ll([^s]*s)+elect/i", $_REQUEST_URI))
 			self::permission_denied();
 
 		$_QUERY_STRING = urldecode($_SERVER['QUERY_STRING']);
 
-		if (preg_match("/(<|%3C)([^s]*s)+cript.*(>|%3E)/", $_QUERY_STRING) ||
-			preg_match("/(<|%3C)([^e]*e)+mbed.*(>|%3E)/", $_QUERY_STRING) ||
-			preg_match("/(<|%3C)([^o]*o)+bject.*(>|%3E)/", $_QUERY_STRING) ||
-			preg_match("/(<|%3C)([^i]*i)+frame.*(>|%3E)/", $_QUERY_STRING) ||
-			preg_match("/(<|%3C)([^o]*o)+bject.*(>|%3E)/", $_QUERY_STRING) ||
-			preg_match("/base64_(en|de)code[^(]*\([^)]*\)/", $_QUERY_STRING) ||
-			preg_match("/(%0A|%0D|\\r|\\n)/", $_QUERY_STRING) ||
-			preg_match("/(\.\.\/|\.\.\\|%2e%2e%2f|%2e%2e\/|\.\.%2f|%2e%2e%5c)/", $_QUERY_STRING) ||
-			preg_match("/(;|<|>|'|\"|\)|%0A|%0D|%22|%27|%3C|%3E|%00).*(/\*|union|select|insert|cast|set|declare|drop|update|md5|benchmark).*/", $_QUERY_STRING) ||
-			preg_match("/union([^a]*a)+ll([^s]*s)+elect/", $_QUERY_STRING))
+		if (preg_match("/(<|%3C)([^s]*s)+cript.*(>|%3E)/i", $_QUERY_STRING) ||
+			preg_match("/(<|%3C)([^e]*e)+mbed.*(>|%3E)/i", $_QUERY_STRING) ||
+			preg_match("/(<|%3C)([^o]*o)+bject.*(>|%3E)/i", $_QUERY_STRING) ||
+			preg_match("/(<|%3C)([^i]*i)+frame.*(>|%3E)/i", $_QUERY_STRING) ||
+			preg_match("/(<|%3C)([^o]*o)+bject.*(>|%3E)/i", $_QUERY_STRING) ||
+			preg_match("/base64_(en|de)code[^(]*\([^)]*\)/i", $_QUERY_STRING) ||
+			preg_match("/(%0A|%0D|\\r|\\n)/i", $_QUERY_STRING) ||
+			preg_match("/(\.\.\/|\.\.\\|%2e%2e%2f|%2e%2e\/|\.\.%2f|%2e%2e%5c)/i", $_QUERY_STRING) ||
+			preg_match("/(;|<|>|'|\"|\)|%0A|%0D|%22|%27|%3C|%3E|%00).*(/\*|union|select|insert|cast|set|declare|drop|update|md5|benchmark).*/i", $_QUERY_STRING) ||
+			preg_match("/union([^a]*a)+ll([^s]*s)+elect/i", $_QUERY_STRING))
 			self::permission_denied();
 	}
 
