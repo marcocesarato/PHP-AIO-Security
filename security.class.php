@@ -113,8 +113,10 @@ class Security
 	 */
 	public static function secureCookies() {
 		foreach ($_COOKIE as $key => $value) {
-			$value = self::clean(self::getCookie($key), false, false);
-			self::setCookie($key, $value, 0, '/; SameSite=Strict', null, false, true);
+			//$value = self::clean(self::getCookie($key), false, false);
+			//self::setCookie($key, $value, 0, '/; SameSite=Strict', null, false, true);
+			if($key != self::$session_name)
+				setcookie($key, $value, 0, '/; SameSite=Strict', null, false, true);
 		}
 	}
 
