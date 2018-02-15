@@ -46,14 +46,11 @@ class Security
 	}
 
 	/**
-	 * Custom session name for prevent the fast identification of php
+	 * Custom session name for prevent fast identification of php
 	 */
 	public static function secureSession(){
 		session_name(self::$session_name);
-		if(isset($_COOKIE['PHPSESSID'])) {
-			unset($_COOKIE['PHPSESSID']);
-			setcookie('PHPSESSID', null, -1, '/');
-		}
+		self::unsetCookie('PHPSESSID');
 		session_start();
 		setcookie(self::$session_name, session_id(), 0, '/; SameSite=Strict', null, true, true);
 	}
@@ -667,6 +664,19 @@ class Security
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * Unset Cookie
+	 * @param $name
+	 * @return null
+	 */
+	public static function unsetCookie($name) {
+		if (isset($_COOKIE[$name])) {
+			unset($_COOKIE[$name]);
+			setcookie($name, null, -1, '/');
+		}
+		return null;
 	}
 
 	/**
