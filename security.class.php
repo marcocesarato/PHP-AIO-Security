@@ -81,7 +81,6 @@ class Security
 			$buffer = self::secureHTML($buffer);
 			$buffer = self::compressHTML($buffer);
 		}
-		$buffer = self::secureCSRFPrint($buffer);
 		header('Content-Length: ' . strlen($buffer)); // For cache header
 		return $buffer;
 	}
@@ -231,6 +230,7 @@ class Security
 		$doc->formatOutput = true;
 		$doc->preserveWhiteSpace = false;
 		$doc->loadHTML($buffer);
+
 		$tags = $doc->getElementsByTagName('input');
 		foreach ($tags as $tag) {
 			$type = array("text", "search", "password", "datetime", "date", "month", "week", "time", "datetime-local", "number", "range", "email", "color");
@@ -238,10 +238,19 @@ class Security
 				$tag->setAttribute("autocomplete", "off");
 			}
 		}
+
 		$tags = $doc->getElementsByTagName('form');
 		foreach ($tags as $tag) {
 			$tag->setAttribute("autocomplete", "off");
+			// CSRF
+			$token = $_SESSION[self::$csrf_session];
+			$item = $doc->createElement("input");
+			$item->setAttribute("type", self::$csrf_formtoken);
+			$item->setAttribute("name", "hidden");
+			$item->setAttribute("value", self::secureStringEscape($token));
+			$tag->appendChild($item);
 		}
+
 		$tags = $doc->getElementsByTagName('a');
 		foreach ($tags as $tag) {
 			$tag->setAttribute("rel", "noopener noreferrer");
@@ -485,18 +494,6 @@ class Security
 	public static function secureCSRFToken() {
 		$token = $_SESSION[self::$csrf_session];
 		return $token;
-	}
-
-	/**
-	 * Print CSRF token as hidden input
-	 * @param $output
-	 * @return mixed
-	 */
-	private static function secureCSRFPrint($output) {
-		$token = $_SESSION[self::$csrf_session];
-		$input = '<input type="hidden" name="' . self::$csrf_formtoken . '" value="' . self::stringEscape($token) . '">';
-		$output = preg_replace("/(<([^>]*)\/form([^>]*)>)/i", $input . "$1", $output);
-		return $output;
 	}
 
 	/**
