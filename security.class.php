@@ -396,10 +396,8 @@ class Security
 	 */
 	public static function secureCSRF() {
 		if ($_SERVER["REQUEST_METHOD"] == "POST") {
-			if (!self::secureCSRFCompare()) {
-				http_response_code(403);
-				die("Permission denied!");
-			}
+			if (!self::secureCSRFCompare())
+				self::permission_denied();
 		}
 		if (!isset($_SESSION[self::$csrf_session])) {
 			self::secureCSRFGenerate();
@@ -471,10 +469,8 @@ class Security
 	 * Hijacking prevention
 	 */
 	public static function secureHijacking() {
-		if (!empty($_SESSION['HTTP_USER_TOKEN']) && $_SESSION['HTTP_USER_TOKEN'] != md5($_SERVER['HTTP_USER_TOKEN'] . ':' . self::clientIP() . ':' . self::$hijacking_salt)) {
-			http_response_code(403);
-			die("Permission denied!");
-		}
+		if (!empty($_SESSION['HTTP_USER_TOKEN']) && $_SESSION['HTTP_USER_TOKEN'] != md5($_SERVER['HTTP_USER_TOKEN'] . ':' . self::clientIP() . ':' . self::$hijacking_salt))
+			self::permission_denied();
 		$_SESSION['HTTP_USER_TOKEN'] = md5($_SERVER['HTTP_USER_TOKEN'] . ':' . self::clientIP() . ':' . self::$hijacking_salt);
 	}
 	/**
