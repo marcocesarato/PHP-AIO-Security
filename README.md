@@ -103,11 +103,11 @@ Enjoy!
 
 | Method                    | Params         | Return | Description                                                  |
 | ------------------------- | -------------- | ------ | ------------------------------------------------------------ |
-| __construct / putInSafety | $isAPI = false | Void   | Call some methods:<br /><br />headers \$isAPI<br />secureSession \$isAPI<br />secureFormRequest \$isAPI<br />secureBots<br />secureRequest<br />secureBlockTor<br />secureHijacking<br />secureCookies |
+| __construct / putInSafety | $isAPI = false | Void   | Call some methods:<br /><br />headers `$isAPI`<br />secureSession `$isAPI`<br />secureFormRequest `$isAPI`<br />secureBots<br />secureRequest<br />secureBlockTor<br />secureHijacking<br />secureCookies |
 | secureCSRF                | -              | Void   | Check for CSRF                                               |
 | secureRequest             | -              | Void   | Check the request method, the user agent, and the URL to prevent some XSS/SQL Injections |
 | secureFormRequest         | $isAPI = false | Void   | Check if the REFERER is equal to the origin                  |
-| secureSession             | -              | Void   | Set custom session name for prevent fast identification of php and add some secure param to session cookie |
+| secureSession             | -              | Void   | Set custom session name for prevent fast identification of php and add some secure param to session cookie. PS: This method call `session_start` |
 | headers                   | $isAPI = false | Void   | Set some secure headers (to prevent some XSS, Clickjacking and others bad requests) and secure php setting |
 | headersCache              |                | Void   | Set cache headers                                            |
 | secureCookies             | -              | Void   | Set some secure paramenter on cookies (autoencryption soon...) |
@@ -120,7 +120,7 @@ Enjoy!
 | Method                    | Params                                 | Return | Description                                                  |
 | ------------------------- | -------------------------------------- | ------ | ------------------------------------------------------------ |
 | clean                     | \$data, \$html = true, \$quotes = true | Mixed  | Clean value form XSS, SQL Injection etc...                   |
-| cleanGlobals              | -                                      | Void   | Clean all input global vars ($_REQUEST,$_*POST,*$_GET,_$_COOKIE) |
+| cleanGlobals              | -                                      | Void   | Clean all input global vars (\$\__REQUEST,\$\__*POST,*\$\__GET,_\$\_COOKIE) |
 | cleanXSS                  | $data                                  | Mixed  | Clean value from XSS                                         |
 | stringEscape              | $data                                  | Mixed  | Clean from SQL Injection (similar at mysql_real_escape)      |
 | recursiveStripTagsContent | $data                                  | Mixed  | Strip tags and contents                                      |
