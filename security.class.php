@@ -14,23 +14,26 @@ class Security
 	private static $csrf_session = "_CSRFTOKEN";
 	private static $csrf_formtoken = "_FORMTOKEN";
 	private static $hijacking_salt = "_SALT";
-	private static $headers_cache_days = 30;
-	private static $block_tor = true;
+	private static $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
+	private static $block_tor = true; // If you want block TOR clients
 	private static $escape_string = true; // If you use PDO I recommend to set this to false
 
 	/**
 	 * Security constructor.
 	 */
-	function __construct() {
-		self::putInSafety();
+	function __construct($API = false) {
+		self::putInSafety($API);
 	}
 
 	/**
 	 * Secure initialization
 	 */
-	public static function putInSafety() {
+	public static function putInSafety($API = false) {
 
-		self::secureSession();
+		if(!$API) {
+			self::secureSession();
+			self::secureFormRequest();
+		}
 		self::secureRequest();
 		self::secureBots();
 		self::secureBlockTor();
@@ -40,7 +43,7 @@ class Security
 		$_REQUEST = self::clean($_REQUEST);
 
 		self::secureHijacking();
-		self::headers();
+		self::headers($API);
 		self::secureCookies();
 
 	}
@@ -86,7 +89,7 @@ class Security
 	/**
 	 * Security Headers
 	 */
-	public static function headers() {
+	public static function headers($API = false) {
 		// Headers
 		@header("Accept-Encoding: gzip, deflate");
 		@header("Strict-Transport-Security: max-age=16070400; includeSubDomains; preload");
@@ -97,7 +100,10 @@ class Security
 		@header("X-Permitted-Cross-Domain-Policies: master-only");
 		@header("Referer-Policy: origin");
 		@header("X-Download-Options: noopen");
-		@header("Access-Control-Allow-Methods: GET, POST");
+
+		if(!$API) @header("Access-Control-Allow-Methods: GET, POST");
+		else @header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
+
 		// Php settings
 		ini_set('expose_php', 'off');
 		ini_set('allow_url_fopen', 'off');
@@ -125,7 +131,7 @@ class Security
 	public static function secureRequest() {
 
 		// Disable methods
-		if (preg_match("/^(HEAD|TRACE|DELETE|TRACK|DEBUG|OPTIONS)/i", $_SERVER['REQUEST_METHOD']))
+		if (preg_match("/^(HEAD|TRACE|TRACK|DEBUG|OPTIONS)/i", $_SERVER['REQUEST_METHOD']))
 			self::permission_denied();
 
 		// Disable User Agents
@@ -159,6 +165,18 @@ class Security
 			preg_match("/(;|<|>|'|\"|\)|%0A|%0D|%22|%27|%3C|%3E|%00).*(\*|union|select|insert|cast|set|declare|drop|update|md5|benchmark).*/i", $_QUERY_STRING) ||
 			preg_match("/union([^a]*a)+ll([^s]*s)+elect/i", $_QUERY_STRING))
 			self::permission_denied();
+	}
+
+
+	/**
+	 * Secure Form Request check if the referer is equal to the origin
+	 */
+	public static function secureFormRequest(){
+		if ($_SERVER["REQUEST_METHOD"] == "POST"){
+			$referer = $_SERVER["HTTP_REFERER"];
+			if (!isset($referer) || strpos($_SERVER["SERVER_NAME"], $referer) != 0)
+				self::permission_denied();
+		}
 	}
 
 	/**
@@ -535,6 +553,7 @@ class Security
 	public static function clientIP() {
 		foreach (
 			array(
+				'HTTP_CF_CONNECTING_IP',
 				'HTTP_CLIENT_IP',
 				'HTTP_X_FORWARDED_FOR',
 				'HTTP_X_FORWARDED',
@@ -565,13 +584,13 @@ class Security
 	 */
 	private static function blockFakeGoogleBots() {
 		$user_agent = (isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '');
-		if (preg_match('/Googlebot/i', $user_agent, $matches)){
+		if (preg_match('/googlebot/i', $user_agent, $matches)){
 			$ip = self::clientIP();
 			$name = gethostbyaddr($ip);
 			$host_ip = gethostbyname($name);
-			if(preg_match('/Googlebot/i', $name, $matches)){
-				if ($host_ip == $ip){
-				} else self::permission_denied();
+			if(preg_match('/googlebot/i', $name, $matches)){
+				if ($host_ip != $ip)
+					self::permission_denied();
 			} else self::permission_denied();
 		}
 	}
@@ -599,6 +618,7 @@ class Security
 		if (!file_exists($file)) return false;
 		if (!is_uploaded_file($_FILES[$file]["tmp_name"])) return false;
 		// Scan file coming...
+		// if($this->scanner->scanFile($_FILE[$file]["tmp_name"]) != true) return false;
 		if (move_uploaded_file($_FILES[$file]["tmp_name"], $path)) {
 			return true;
 		}
