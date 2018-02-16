@@ -7,10 +7,9 @@ This is a security class in php with some userfull static methods
 
 
 
-* 1) Move **.htaccess** on your ROOT directory
+1) Move **.htaccess** on your ROOT directory
 
-
-* 1.1) Move the class on directory and config the class. These are the options:
+1-1) Move the class on directory and config the class. These are the options:
 
 ```php
 $session_name = "XSESSID";
@@ -22,7 +21,7 @@ $block_tor = true; // If you want block TOR clients
 $escape_string = true; // If you use PDO I recommend to set this to false
 ```
 
-* 1.2) Include the class
+1-2) Include the class
 
 ```php
 include 'security.class.php';
@@ -32,7 +31,7 @@ include 'security.class.php';
 
 
 
-* 2) Just create a new object to be more at safe (the **constructor/putInSafety** filter \$_REQUEST and \$_GET globals, add some userfull headers for security, check if there is an **Hijacking** and check the URL Request)
+2) Just create a new object to be more at safe (the **constructor/putInSafety** filter \$_REQUEST and \$_GET globals, add some userfull headers for security, check if there is an **Hijacking** and check the URL Request)
 
 ```php
 $is_api = false; // default is FALSE (this remove some check that could block API request)
@@ -60,7 +59,7 @@ Security::putInSafety($is_api);
 
 
 
-* 3) Prevent **XSS/SQL Injection** on your variables with:
+3) Prevent **XSS/SQL Injection** on your variables with:
 
 ```php
 $is_html = true;        // deafult is TRUE
@@ -77,7 +76,7 @@ Security::cleanGlobals();
 
 
 
-* 4) Use **output** method to filter your output (it also check for **CSRF**)
+4) Use **output** method to filter your output (it also check for **CSRF**)
 
 ```php
 ob_start()
