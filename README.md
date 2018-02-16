@@ -99,54 +99,52 @@ Enjoy!
 
 ## Methods available:
 
-*Sorry for bad order this will be fix soon*. Work in progress...
-
 ### Generic Methods
 
-| Methods                   | Params         | Description                                                  |
-| ------------------------- | -------------- | ------------------------------------------------------------ |
-| __construct / putInSafety | $isAPI = false | Call some methods:<br /><br />headers \$isAPI<br />secureSession \$isAPI<br />secureFormRequest \$isAPI<br />secureBots<br />secureRequest<br />secureBlockTor<br />secureHijacking<br />secureCookies |
-| cleanGlobals              | -              | Clean all input global vars (\$\_REQUEST,\$\__POST,_\$\_GET,_\$\_COOKIE) |
-| secureRequest             | -              | Check Request Method, UA, URL to prevent XSS/SQL Injections  |
-| secureFormRequest         | $isAPI = false | Check if the REFERER is equal to the origin                  |
-| headers                   | $isAPI = false | Set some secure headers (to prevent some XSS, Clickjacking and others bad requests) and secure php setting |
-| secureCookies             | -              | Set some secure paramenter on cookies (autoencryption soon...) |
-| secureBots                | -              | Block some bad bot                                           |
-| secureBlockTor            | -              | Block Tor client if in class settings is set to TRUE         |
-| secureHijacking           | -              | Prevent Hijacking and delete session                         |
+| Method                    | Params         | Return | Description                                                  |
+| ------------------------- | -------------- | ------ | ------------------------------------------------------------ |
+| __construct / putInSafety | $isAPI = false | Void   | Call some methods:<br /><br />headers \$isAPI<br />secureSession \$isAPI<br />secureFormRequest \$isAPI<br />secureBots<br />secureRequest<br />secureBlockTor<br />secureHijacking<br />secureCookies |
+| secureCSRF                | -              | Void   | Check for CSRF                                               |
+| secureRequest             | -              | Void   | Check the request method, the user agent, and the URL to prevent some XSS/SQL Injections |
+| secureFormRequest         | $isAPI = false | Void   | Check if the REFERER is equal to the origin                  |
+| secureSession             | -              | Void   | Set custom session name for prevent fast identification of php and add some secure param to session cookie |
+| headers                   | $isAPI = false | Void   | Set some secure headers (to prevent some XSS, Clickjacking and others bad requests) and secure php setting |
+| headersCache              |                | Void   | Set cache headers                                            |
+| secureCookies             | -              | Void   | Set some secure paramenter on cookies (autoencryption soon...) |
+| secureBots                | -              | Void   | Block some bad bot                                           |
+| secureBlockTor            | -              | Void   | Block Tor client if in class settings is set to TRUE         |
+| secureHijacking           | -              | Void   | Prevent Hijacking and delete session                         |
 
+### Cleaning Methods
 
+| Method                    | Params                                 | Return | Description                                                  |
+| ------------------------- | -------------------------------------- | ------ | ------------------------------------------------------------ |
+| clean                     | \$data, \$html = true, \$quotes = true | Mixed  | Clean value form XSS, SQL Injection etc...                   |
+| cleanGlobals              | -                                      | Void   | Clean all input global vars ($_REQUEST,$_*POST,*$_GET,_$_COOKIE) |
+| cleanXSS                  | $data                                  | Mixed  | Clean value from XSS                                         |
+| stringEscape              | $data                                  | Mixed  | Clean from SQL Injection (similar at mysql_real_escape)      |
+| recursiveStripTagsContent | $data                                  | Mixed  | Strip tags and contents                                      |
+| recursiveTrim             | $data                                  | Mixed  | Trim                                                         |
+| recursiveStripslashes     | $data                                  | Mixed  | Strip slashes                                                |
 
-| Method                                                       | Description                                               |
-| :----------------------------------------------------------- | --------------------------------------------------------- |
-|                                                              |                                                           |
-|                                                              |                                                           |
-|                                                              |                                                           |
-| output($buffer)                                              | Fix some elements on output buffer (to use with ob_start) |
-|                                                              |                                                           |
-|                                                              |                                                           |
-|                                                              |                                                           |
-| headersCache()                                               | Set cache cookies                                         |
-| compressHTML($html)                                          | Compress HTML                                             |
-| compressJS($js)                                              | Compress JS                                               |
-| compressCSS($css)                                            | Compress CSS                                              |
-| secureHTML(\$html)                                           | Repair security issue on template                         |
-| clean(\$data, \$html = true, \$quotes = true)                | Clean variables (recursive)                               |
-| stringEscape($var)                                           | String escape similar at mysql_real_escape                |
-| recursiveStripTagsContent($data)                             | Strip tags and contents (recursive)                       |
-| recursiveStripTags($data)                                    | Strip tags  (recursive)                                   |
-| cleanXSS($data)                                              | Strip XSS code (recursive)                                |
-| recursiveTrim($data)                                         | Trim (recursive)                                          |
-| recursiveStripslashes(\$data)                                | Stripslashes (recursive)                                  |
-| secureCSRF()                                                 | Check for CSRF                                            |
-| clientIP()                                                   | Get Real client IP Address                                |
-|                                                              |                                                           |
-| getCookie($name)                                             | Get encrypted cookie                                      |
-| setCookie(\$name, \$value, \$expires = 2592000, \$path = "/", \$domain = null, \$secure = false, \$httponly = true) | Set encrypted cookie                                      |
-| crypt(['encrypt'\|'decrypt'], \$string)                      | Encrypt and Decrypt                                       |
-| secureDownload($filename)                                    | Safe Download                                             |
-| secureUpload(\$file, $path)                                  | Safe Upload                                               |
-|                                                              |                                                           |
-|                                                              |                                                           |
-| clientIsTor()                                                | Check if client use Tor (return bool)                     |
+### Output Methods
 
+| Method       | Params  | Return | Description                                                  |
+| ------------ | ------- | ------ | ------------------------------------------------------------ |
+| output       | $buffer | String | Put in safety HTML if is HTML, compress HTML if is HTML, check for CSRF and add cache headers if isn't HTML (usually used with ob_start) |
+| secureHTML   | $buffer | String | Put in safety some html elements on output buffer and add automatically the CSRF token |
+| compressHTML | $html   | String | Compression of HTML                                          |
+| compressJS   | $js     | String | Compression of JS                                            |
+| compressCSS  | $css    | String | Compression of CSS                                           |
+
+### Utility Methods
+
+| Method         | Params                                                       | Return  | Description                                                  |
+| -------------- | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+| crypt          | (encrypt\|decrypt), \$string                                 | String  | Encrypt and decrypt strings                                  |
+| getCookie      | $name                                                        | String  | Get decrypted cookie                                         |
+| setCookie      | \$name, \$value, \$expires = 2592000, \$path = "/", \$domain = null, \$secure = false, \$httponly = true |         | Set encrypted cookie                                         |
+| clientIP       | -                                                            | String  | Get real client IP address                                   |
+| clientIsTor    | -                                                            | Boolean | Check if client use TOR                                      |
+| secureDownload | \$filename                                                   | Void    | Secure headers for download request                          |
+| secureUpload   | \$file, \$path                                               | Boolean | At the moment is a simple upload (Soon will be implemented the file scan) |
