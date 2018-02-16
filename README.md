@@ -143,7 +143,7 @@ Enjoy!
 | -------------- | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
 | crypt          | (encrypt\|decrypt), \$string                                 | String  | Encrypt and decrypt strings                                  |
 | getCookie      | $name                                                        | String  | Get decrypted cookie                                         |
-| setCookie      | \$name, \$value, \$expires = 2592000, \$path = "/", \$domain = null, \$secure = false, \$httponly = true |         | Set encrypted cookie                                         |
+| setCookie      | \$name, \$value, \$expires = 2592000, \$path = "/", \$domain = null, \$secure = false, \$httponly = true | Boolean | Set encrypted cookie                                         |
 | clientIP       | -                                                            | String  | Get real client IP address                                   |
 | clientIsTor    | -                                                            | Boolean | Check if client use TOR                                      |
 | secureDownload | \$filename                                                   | Void    | Secure headers for download request                          |
