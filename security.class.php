@@ -717,7 +717,7 @@ class Security
 	 */
 	private static function permission_denied() {
 		http_response_code(403);
-		die("Permission denied!");
+		die("Access Denied!");
 	}
 
 	/**

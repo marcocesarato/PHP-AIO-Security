@@ -5,8 +5,6 @@ This is a security class in php with some userfull static methods
 
 
 
-
-
 1-0 - Move **.htaccess** on your ROOT directory
 
 1-1 - Move the class on directory and config the class. These are the options:
@@ -26,8 +24,6 @@ $escape_string = true; // If you use PDO I recommend to set this to false
 ```php
 include 'security.class.php';
 ```
-
-
 
 
 
@@ -57,8 +53,6 @@ Security::putInSafety($isAPI);
 
 
 
-
-
 3 - Prevent **XSS/SQL Injection** on your variables with:
 
 ```php
@@ -68,11 +62,13 @@ $escape_string = true;  // deafult is TRUE except if you set FALSE in class conf
 $var = Security::clean($_POST['var'], $is_html, $have_quotes, $escape_string);
 echo = $var; 
 ```
-or (THIS COULD COMPROMISE THE DATA IF YOU SEND HTML)
+or 
+
 ```php
 Security::cleanGlobals();
 ```
 
+(THIS COULD COMPROMISE DATA IF YOU SEND HTML WITH INLINE JAVASCRIPT)
 
 
 
@@ -86,8 +82,6 @@ ob_start()
 $output = Security::output(ob_get_clean());
 echo = $output; 
 ```
-
-
 
 
 
@@ -120,7 +114,7 @@ Enjoy!
 | Method                    | Params                                 | Return | Description                                                  |
 | ------------------------- | -------------------------------------- | ------ | ------------------------------------------------------------ |
 | clean                     | \$data, \$html = true, \$quotes = true | Mixed  | Clean value form XSS, SQL Injection etc...                   |
-| cleanGlobals              | -                                      | Void   | Clean all input global vars (\$\__REQUEST,\$\__*POST,*\$\__GET,_\$\_COOKIE) |
+| cleanGlobals              | -                                      | Void   | Clean all input global vars (\$\__REQUEST,\$\__*POST,*\$\__GET,_\$\_COOKIE)<br />THIS COULD COMPROMISE DATA IF YOU SEND HTML WITH INLINE JAVASCRIPT |
 | cleanXSS                  | $data                                  | Mixed  | Clean value from XSS                                         |
 | stringEscape              | $data                                  | Mixed  | Clean from SQL Injection (similar at mysql_real_escape)      |
 | recursiveStripTagsContent | $data                                  | Mixed  | Strip tags and contents                                      |
