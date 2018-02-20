@@ -53,7 +53,7 @@ Security::putInSafety($isAPI);
 
 **NOTES:**
 
-<sup>1</sup> You can also call only the methods that you need instead this method*
+*<sup>1</sup> You can also call only the methods that you need instead this method*
 
 *<sup>2</sup> Constructor and putInSafety are the **same** thing*
 
@@ -154,5 +154,6 @@ Enjoy!
 | clientIsTor    | -                                                            | Boolean | Check if client use TOR                                      |
 | secureDownload | \$filename                                                   | Void    | Secure headers for download request                          |
 | secureUpload   | \$file, \$path                                               | Boolean | File upload with scan                                        |
+| secureScan     | $path                                                        | Void    | Scan files in directory recursively and rename bad files if detected |
 | secureScanFile | $filepath                                                    | Boolean | Scan file (detect for shell or php code infected)            |
 | secureScanPath | $path                                                        | Array   | Scan files in directory recursively (detect for shell or php code infected) |

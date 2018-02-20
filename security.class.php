@@ -17,7 +17,8 @@ class Security
 	private static $hijacking_salt = "_SALT";
 	private static $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
 	private static $escape_string = true; // If you use PDO I recommend to set this to false
-	private static $scan_path = "./*.php"; // Folder to scan at start and optionally the file extension
+	private static $scanner_path = "./*.php"; // Folder to scan at start and optionally the file extension
+	private static $scanner_whitelist = array('./includes','./admin'); // Example of scan whitelist
 	// Autostart
 	private static $auto_session_manager = true; // Run session at start
 	private static $auto_scanner = false; // Could have a bad performance impact (anyway you can try and decide after)
@@ -39,7 +40,7 @@ class Security
 			if(self::$auto_session_manager)
 				self::secureSession();
 			if(self::$auto_scanner)
-				self::secureScanPath(self::$scan_path);
+				self::secureScan(self::$scanner_path);
 			self::secureFormRequest();
 		}
 		self::secureRequest();
@@ -848,6 +849,19 @@ class Security
 				$potentially_infected[] = $file;
 		}
 		return $potentially_infected;
+	}
+
+	/**
+	 * Scan and rename bad files
+	 * @param $pattern
+	 * @return array
+	 */
+	public static function secureScan($path) {
+		$files = self::secureScanPath($path);
+		foreach ($files as $file){
+			if(!preg_grep('/'.preg_quote(dirname($file)).'/i', self::$scanner_whitelist))
+				rename($file,$file.".bad");
+		}
 	}
 
 	/**
