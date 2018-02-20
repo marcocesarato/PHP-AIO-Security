@@ -644,10 +644,9 @@ class Security
 	 * @return bool
 	 */
 	public static function secureUpload($file, $path) {
-		if (!file_exists($file)) return false;
+		if (!file_exists($path)) return false;
 		if (!is_uploaded_file($_FILES[$file]["tmp_name"])) return false;
-		// Scan file coming...
-		// if($this->scanner->scanFile($_FILE[$file]["tmp_name"]) != true) return false;
+		if(!self::secureScanFile($_FILES[$file]["tmp_name"])) return false;
 		if (move_uploaded_file($_FILES[$file]["tmp_name"], $path)) {
 			return true;
 		}
@@ -755,5 +754,108 @@ class Security
 	private static function not_found() {
 		http_response_code(404);
 		die("Not found!");
+	}
+
+	/**
+	 * File scanner
+	 * @param $pattern
+	 * @return boolean
+	 */
+	public static function secureScanFile($file) {
+		$search =
+			array(
+				"/(e(\'\.\')?v(\'\.\')?a(\'\.\')?l(\'\.\')?[\s\r\n]?\()/i",
+				"/([^curl\_]exec[\s\r\n]?\()/i", //ftp_exec,hell_exec,exec
+				"/(create_function[\s\r\n]?\()/i",
+				"/(sqlite_create_aggregate[\s\r\n]?\()/i",
+				"/(sqlite_create_function[\s\r\n]?\()/i",
+				"/(assert[\s\r\n]?\()/i",
+				"/(system[\s\r\n]?\()/i",
+				"/(syslog[\s\r\n]?\()/i",
+				"/(passthru[\s\r\n]?\()/i",
+				"/(dl[\s\r\n]?\()/i",
+				"/(define_syslog_variables[\s\r\n]?\()/i",
+				"/(debugger_off[\s\r\n]?\()/i",
+				"/(debugger_on[\s\r\n]?\()/i",
+				"/(stream_select[\s\r\n]?\()/i",
+				"/(parse_ini_file[\s\r\n]?\()/i",
+				"/(show_source[\s\r\n]?\()/i",
+				"/(symlink[\s\r\n]?\()/i",
+				"/(popen[\s\r\n]?\()/i",
+				"/(posix_getpwuid[\s\r\n]?\()/i",
+				"/(posix_kill[\s\r\n]?\()/i",
+				"/(posix_mkfifo[\s\r\n]?\()/i",
+				"/(posix_setpgid[\s\r\n]?\()/i",
+				"/(posix_setsid[\s\r\n]?\()/i",
+				"/(posix_setuid[\s\r\n]?\()/i",
+				"/(posix_uname[\s\r\n]?\()/i",
+				"/(proc_close[\s\r\n]?\()/i",
+				"/(proc_get_status[\s\r\n]?\()/i",
+				"/(proc_nice[\s\r\n]?\()/i",
+				"/(proc_open[\s\r\n]?\()/i",
+				"/(proc_terminate[\s\r\n]?\()/i",
+				"/(eval(base64_decode[\s\r\n]?\()/i",
+				"/(eval[\s\r\n]?\()/i",
+				"/(ini_alter[\s\r\n]?\()/i",
+				"/(ini_get_all[\s\r\n]?\()/i",
+				"/(ini_restore[\s\r\n]?\()/i",
+				"/(inject_code[\s\r\n]?\()/i",
+				"/(apache_child_terminate[\s\r\n]?\()/i",
+				"/(apache_setenv[\s\r\n]?\()/i",
+				"/(apache_note[\s\r\n]?\()/i",
+				"/(define_syslog_variables[\s\r\n]?\()/i",
+				"/(escapeshellarg[\s\r\n]?\()/i",
+				"/(escapeshellcmd[\s\r\n]?\()/i",
+				//"/(ob_start[\s\r\n]?\()/i",
+				//"/(ftp_connect[\s\r\n]?\()/i",
+				//"/(ftp_get[\s\r\n]?\()/i",
+				//"/(ftp_login[\s\r\n]?\()/i",
+				//"/(ftp_nb_fput[\s\r\n]?\()/i",
+				//"/(ftp_put[\s\r\n]?\()/i",
+				//"/(ftp_raw[\s\r\n]?\()/i",
+				//"/(ftp_rawlist[\s\r\n]?\()/i",
+				//"/(mysql_pconnect[\s\r\n]?\()/i",
+			);
+		if (empty($path) || !glob($path))
+			return false;
+		if (preg_match("/^text/i", mime_content_type($file))) {
+			$contents = file_get_contents($file);
+			foreach ($search as $pattern) {
+				if (preg_match($pattern, $contents))
+					return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Directory scanner
+	 * @param $pattern
+	 * @return array
+	 */
+	public static function secureScanPath($path) {
+		$potentially_infected = array();
+		if (empty($path) || !glob($path))
+			return array();
+		$files = self::recursiveGlob($path);
+		foreach ($files as $file) {
+			if(!self::secureScanFile($file))
+				$potentially_infected[] = $file;
+		}
+		return $potentially_infected;
+	}
+
+	/**
+	 * Glob recursive
+	 * @param $pattern
+	 * @param int $flags
+	 * @return array
+	 */
+	private static function recursiveGlob($pattern, $flags = 0){
+		$files = glob($pattern, $flags);
+		foreach (glob(dirname($pattern).'/*', GLOB_ONLYDIR|GLOB_NOSORT) as $dir){
+			$files = array_merge($files, self::recursiveGlob($dir.'/'.basename($pattern), $flags));
+		}
+		return $files;
 	}
 }
