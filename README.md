@@ -71,7 +71,7 @@ or
 Security::cleanGlobals();
 ```
 
-__PS: __ THIS COULD COMPROMISE DATA IF YOU SEND HTML WITH INLINE JAVASCRIPT
+__PS:__ THIS COULD COMPROMISE DATA IF YOU SEND HTML WITH INLINE JAVASCRIPT
 
 _send with htmlentities could be a solution if you want inline js and clean globals_
 
