@@ -81,7 +81,7 @@ Security::cleanGlobals();
 
 __PS:__ THIS COULD COMPROMISE DATA IF YOU SEND HTML WITH INLINE JAVASCRIPT
 
-_send with htmlentities could be a solution if you want inline js and clean globals_
+_send with htmlentities could be a solution if you want inline js and clean globals at the same time_
 
 
 
@@ -112,6 +112,7 @@ Enjoy!
 | ------------------------- | -------------- | ------ | ------------------------------------------------------------ |
 | __construct / putInSafety | $isAPI = false | Void   | Call some methods:<br /><br />headers `$isAPI`<br />secureSession `$isAPI`<br />secureFormRequest `$isAPI`<br />secureBots<br />secureRequest<br />secureBlockTor<br />secureHijacking<br />secureCookies |
 | secureCSRF                | -              | Void   | Check for CSRF                                               |
+| secureCSRFToken           | -              | String | Get CSRF Token                                               |
 | secureRequest             | -              | Void   | Check the request method, the user agent, and the URL to prevent some XSS/SQL Injections |
 | secureFormRequest         | $isAPI = false | Void   | Check if the REFERER is equal to the origin                  |
 | secureSession             | -              | Void   | Set custom session name for prevent fast identification of php and add some secure param to session cookie. PS: This method call `session_start` |
@@ -124,15 +125,16 @@ Enjoy!
 
 ### Cleaning Methods
 
-| Method                    | Params                                 | Return | Description                                                  |
-| ------------------------- | -------------------------------------- | ------ | ------------------------------------------------------------ |
-| clean                     | \$data, \$html = true, \$quotes = true | Mixed  | Clean value form XSS, SQL Injection etc...                   |
-| cleanGlobals              | -                                      | Void   | Clean all input global vars (\$\__REQUEST,\$\__*POST,*\$\__GET,_\$\_COOKIE)<br />THIS COULD COMPROMISE DATA IF YOU SEND HTML WITH INLINE JAVASCRIPT |
-| cleanXSS                  | $data                                  | Mixed  | Clean value from XSS                                         |
-| stringEscape              | $data                                  | Mixed  | Clean from SQL Injection (similar at mysql_real_escape)      |
-| recursiveStripTagsContent | $data                                  | Mixed  | Strip tags and contents                                      |
-| recursiveTrim             | $data                                  | Mixed  | Trim                                                         |
-| recursiveStripslashes     | $data                                  | Mixed  | Strip slashes                                                |
+| Method           | Params                                 | Return | Description                                                  |
+| ---------------- | -------------------------------------- | ------ | ------------------------------------------------------------ |
+| clean            | \$data, \$html = true, \$quotes = true | Mixed  | Clean value form XSS, SQL Injection etc… recursively         |
+| cleanGlobals     | -                                      | Void   | Clean all input global vars (\$\__REQUEST,\$\__*POST,*\$\__GET,_\$\_COOKIE)<br />THIS COULD COMPROMISE DATA IF YOU SEND HTML WITH INLINE JAVASCRIPT |
+| cleanXSS         | $data                                  | Mixed  | Clean value from XSS recursively                             |
+| stringEscape     | $data                                  | Mixed  | Clean from SQL Injection (similar at mysql_real_escape) recursively |
+| stripTags        | $data                                  | Mixed  | Strip tags recursively                                       |
+| stripTagsContent | \$data, \$tags = '', \$invert = false  | Mixed  | Strip tags and contents recursively                          |
+| trim             | $data                                  | Mixed  | Trim recursively                                             |
+| stripslashes     | $data                                  | Mixed  | Strip slashes recursively                                    |
 
 ### Output Methods
 
@@ -151,6 +153,7 @@ Enjoy!
 | crypt          | (encrypt\|decrypt), \$string                                 | String  | Encrypt and decrypt strings                                  |
 | getCookie      | $name                                                        | String  | Get decrypted cookie                                         |
 | setCookie      | \$name, \$value, \$expires = 2592000, \$path = "/", \$domain = null, \$secure = false, \$httponly = true | Boolean | Set encrypted cookie                                         |
+| unsetCookie    | $name                                                        | String  | Unset a cookie                                               |
 | clientIP       | -                                                            | String  | Get real client IP address                                   |
 | clientIsTor    | -                                                            | Boolean | Check if client use TOR                                      |
 | secureDownload | \$filename                                                   | Void    | Secure headers for download request                          |

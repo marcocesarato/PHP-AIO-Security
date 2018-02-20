@@ -24,6 +24,7 @@ class Security
 	private static $auto_scanner = false; // Could have a bad performance impact (anyway you can try and decide after)
 	private static $auto_block_tor = true; // If you want block TOR clients
 	private static $auto_clean_global = false; // Global clean at start
+
 	/**
 	 * Security constructor.
 	 */
@@ -342,10 +343,10 @@ class Security
 	 */
 	private static function secureVar($data, $html = true, $quotes = true, $escape = true) {
 		if (!$quotes) $data = str_replace(array('\'', '"'), '', $data);
-		if (!$html) $data = self::recursiveStripTags(self::recursiveStripTagsContent($data));
+		if (!$html) $data = self::stripTags(self::stripTagsContent($data));
 		$data = self::cleanXSS($data);
 		if ($escape && self::$escape_string) {
-			$data = self::recursiveStripslashes($data);
+			$data = self::stripslashes($data);
 			$data = self::stringEscape($data);
 		}
 		return $data;
@@ -376,10 +377,10 @@ class Security
 	 * @param $data
 	 * @return mixed
 	 */
-	public static function recursiveStripTags($data) {
+	public static function stripTags($data) {
 		if (is_array($data)) {
 			foreach ($data as $k => $v) {
-				$data[$k] = self::recursiveStripTags($v);
+				$data[$k] = self::stripTags($v);
 			}
 		} else {
 			$data = trim(strip_tags($data));
@@ -392,10 +393,10 @@ class Security
 	 * @param $data
 	 * @return mixed
 	 */
-	public static function recursiveTrim($data) {
+	public static function trim($data) {
 		if (is_array($data)) {
 			foreach ($data as $k => $v) {
-				$data[$k] = self::recursiveTrim($v);
+				$data[$k] = self::trim($v);
 			}
 		} else {
 			$data = trim($data);
@@ -408,13 +409,13 @@ class Security
 	 * @param $data
 	 * @return mixed
 	 */
-	public static function recursiveStripTagsContent($data, $tags = '', $invert = false) {
+	public static function stripTagsContent($data, $tags = '', $invert = false) {
 		if (is_array($data)) {
 			foreach ($data as $k => $v) {
-				$data[$k] = self::recursiveStripTagsContent($v, $tags, $invert);
+				$data[$k] = self::stripTagsContent($v, $tags, $invert);
 			}
 		} else {
-			$data = trim(self::stripTagsContent($data, $tags, $invert));
+			$data = trim(self::_stripTagsContent($data, $tags, $invert));
 		}
 		return $data;
 	}
@@ -426,7 +427,7 @@ class Security
 	 * @param bool $invert
 	 * @return string
 	 */
-	private static function stripTagsContent($text, $tags = '', $invert = false) {
+	private static function _stripTagsContent($text, $tags = '', $invert = false) {
 		preg_match_all('/<(.+?)[\s]*\/?[\s]*>/si', trim($tags), $tags);
 		$tags = array_unique($tags[1]);
 		if (is_array($tags) AND count($tags) > 0) {
@@ -493,10 +494,10 @@ class Security
 	 * @param $data
 	 * @return mixed
 	 */
-	public static function recursiveStripslashes($data) {
+	public static function stripslashes($data) {
 		if (is_array($data)) {
 			foreach ($data as $k => $v) {
-				$data[$k] = self::recursiveStripslashes($v);
+				$data[$k] = self::stripslashes($v);
 			}
 		} else {
 			if (get_magic_quotes_gpc()) $data = stripslashes($data);
