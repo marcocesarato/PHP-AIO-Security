@@ -20,12 +20,14 @@ php_flag session.use_only_cookies on
 # Headers protection/improvements
 <IfModule mod_headers.c>
 
+    # Hide server informations
+    Header always unset X-Powered-By
+    Header unset X-Powered-By
+
     # XSS Protection
     Header set X-XSS-Protection "1; mode=block"
     # Clickjacking
     Header set X-Frame-Options "sameorigin"
-    # Hide server informations
-    Header unset X-Powered-By
 
     Header set Accept-Encoding "gzip, deflate"
     Header set Cache-Control "max-age=15552000, must-revalidate"
@@ -38,7 +40,7 @@ php_flag session.use_only_cookies on
     Header set X-Download-Options "noopen"
     Header set Access-Control-Allow-Methods "GET, POST"
     # Content policy
-    # SECURE: Header set Content-Security-Policy "default-src 'self'"
+    #Header set Content-Security-Policy "default-src 'self'"
     Header set Content-Security-Policy "default-src 'self'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src *; font-src *; object-src 'none'"
 
 </IfModule>
@@ -51,6 +53,7 @@ php_flag session.use_only_cookies on
     Options +SymLinksIfOwnerMatch
 
     # URL Rewrite
+    # Remove comment from here if you use a url rewriter
     #RewriteBase /
     #RewriteRule ^index\.php$ - [L]
     #RewriteCond %{REQUEST_FILENAME} !-f
@@ -58,6 +61,8 @@ php_flag session.use_only_cookies on
     #RewriteRule . index.php [L]
 
     RewriteRule .*\.git.* index.php [L]
+    RewriteRule .*\.svn.* index.php [L]
+    RewriteRule .*\.hg.* index.php [L]
 
 </IfModule>
 

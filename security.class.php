@@ -17,6 +17,7 @@ class Security
 	private static $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
 	private static $block_tor = true; // If you want block TOR clients
 	private static $escape_string = true; // If you use PDO I recommend to set this to false
+	private static $global_clean = false; // Global clean at start
 
 	/**
 	 * Security constructor.
@@ -38,9 +39,14 @@ class Security
 		self::secureBots();
 		self::secureBlockTor();
 
-		$_GET = self::clean($_GET, false, false);
-		$_REQUEST = array_diff($_REQUEST, $_COOKIE);
-		$_REQUEST = self::clean($_REQUEST);
+		if(self::$global_clean){
+			self::cleanGlobals();
+		} else {
+			$_GET = self::clean($_GET, false, false);
+			$_REQUEST = self::clean($_REQUEST);
+			$_REQUEST = array_merge($_REQUEST, $_GET);
+			$_REQUEST = array_diff($_REQUEST, $_COOKIE);
+		}
 
 		self::secureHijacking();
 		self::headers($API);
@@ -60,10 +66,11 @@ class Security
 
 	/**
 	 * Clean all input globals received
-	 * ### BE CAREFUL THIS METHOD COULD COMPROMISE HTML DATA ###
+	 * BE CAREFUL THIS METHOD COULD COMPROMISE HTML DATA IF SENT WITH INLINE JS
+	 * (send with htmlentities could be a solution if you want send inline js and clean globals)
 	 */
 	public static function cleanGlobals() {
-		$_COOKIE = self::clean($_COOKIE);
+		$_COOKIE = self::clean($_COOKIE, false, false, false);
 		$_GET = self::clean($_GET, false, false);
 		$_POST = self::clean($_POST);
 		$_REQUEST = array_merge($_GET, $_POST);
@@ -100,9 +107,11 @@ class Security
 		@header("X-Permitted-Cross-Domain-Policies: master-only");
 		@header("Referer-Policy: origin");
 		@header("X-Download-Options: noopen");
-
 		if(!$API) @header("Access-Control-Allow-Methods: GET, POST");
 		else @header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
+
+		header_remove("X-Powered-By");
+		header_remove("Server");
 
 		// Php settings
 		ini_set('expose_php', 'off');
@@ -246,6 +255,27 @@ class Security
 		$doc->formatOutput = true;
 		$doc->preserveWhiteSpace = false;
 		$doc->loadHTML($buffer);
+
+		$days_to_cache = self::$headers_cache_days * (60 * 60 * 24);
+		$ts = gmdate("D, d M Y H:i:s", time() + $days_to_cache) . " GMT";
+		$tags = $doc->getElementsByTagName('head');
+		foreach ($tags as $tag) {
+
+			$item = $doc->createElement("meta");
+			$item->setAttribute("http-equiv", "cache-control");
+			$item->setAttribute("content", "max-age=$days_to_cache, must-revalidate");
+			$tag->appendChild($item);
+
+			$item = $doc->createElement("meta");
+			$item->setAttribute("http-equiv", "expires");
+			$item->setAttribute("content", $ts);
+			$tag->appendChild($item);
+
+			$item = $doc->createElement("meta");
+			$item->setAttribute("http-equiv", "pragma");
+			$item->setAttribute("content", "cache");
+			$tag->appendChild($item);
+		}
 
 		$tags = $doc->getElementsByTagName('input');
 		foreach ($tags as $tag) {
@@ -490,9 +520,8 @@ class Security
 		$token = $_SESSION[self::$csrf_session];
 		if ($_POST[self::$csrf_formtoken] == $token) {
 			return true;
-		} else {
-			return false;
 		}
+		return false;
 	}
 
 	/**

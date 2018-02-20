@@ -7,7 +7,9 @@ This is a security class in php with some userfull static methods
 
 1-0 - Move **.htaccess** on your ROOT directory
 
-1-1 - Move the class on directory and config the class. These are the options:
+1-1 - Move the class on directory and config the class if you need it. 
+
+These are the options:
 
 ```php
 $session_name = "XSESSID";
@@ -17,6 +19,7 @@ $hijacking_salt = "_SALT";
 $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
 $block_tor = true; // If you want block TOR clients
 $escape_string = true; // If you use PDO I recommend to set this to false
+$global_clean = false; // Global clean at start
 ```
 
 1-2 - Include the class
@@ -68,7 +71,9 @@ or
 Security::cleanGlobals();
 ```
 
-(THIS COULD COMPROMISE DATA IF YOU SEND HTML WITH INLINE JAVASCRIPT)
+__PS: __THIS COULD COMPROMISE DATA IF YOU SEND HTML WITH INLINE JAVASCRIPT
+
+_send with htmlentities could be a solution if you want inline js and clean globals_
 
 
 
