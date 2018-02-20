@@ -12,20 +12,25 @@ This is a security class in php with some userfull static methods
 These are the options:
 
 ```php
+// Config
 $session_name = "XSESSID";
 $csrf_session = "_CSRFTOKEN";
 $csrf_formtoken = "_FORMTOKEN";
 $hijacking_salt = "_SALT";
 $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
-$block_tor = true; // If you want block TOR clients
 $escape_string = true; // If you use PDO I recommend to set this to false
-$global_clean = false; // Global clean at start
+$scan_path = "./*.php"; // Folder to scan at start
+// Autostart
+$auto_session_manager = true; // Run session at start
+$auto_scanner = false; // Could have a bad performance impact (anyway you can try)
+$auto_block_tor = true; // If you want block TOR clients
+$auto_clean_global = false; // Global clean at start
 ```
 
 1-2 - Include the class
 
 ```php
-include 'security.class.php';
+include 'classes/security.class.php';
 ```
 
 
@@ -48,11 +53,13 @@ Security::putInSafety($isAPI);
 
 **NOTES:**
 
-*Constructor and putInSafety are the **same** thing*
+<sup>1</sup> You can also call only the methods that you need instead this method*
 
-*These methods call **session_start** then **don't** use it before/after*
+*<sup>2</sup> Constructor and putInSafety are the **same** thing*
 
-*The global **$_POST** is not filtered. If you want it I could add this if someone will request this feature. Anyway if you want filter it write* `$_POST = Security::clean($_POST);` 
+*<sup>3</sup> These methods call **session_start** then **don't** use it before/after*
+
+*<sup>4</sup> global **$_POST** is not filtered. If you want it I could add this if someone will request this feature. Anyway if you want filter it write* `$_POST = Security::clean($_POST);` 
 
 
 

@@ -10,15 +10,19 @@
  */
 class Security
 {
+	// Config
 	private static $session_name = "XSESSID";
 	private static $csrf_session = "_CSRFTOKEN";
 	private static $csrf_formtoken = "_FORMTOKEN";
 	private static $hijacking_salt = "_SALT";
 	private static $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
-	private static $block_tor = true; // If you want block TOR clients
 	private static $escape_string = true; // If you use PDO I recommend to set this to false
-	private static $global_clean = false; // Global clean at start
-
+	private static $scan_path = "./*.php"; // Folder to scan at start and optionally the file extension
+	// Autostart
+	private static $auto_session_manager = true; // Run session at start
+	private static $auto_scanner = false; // Could have a bad performance impact (anyway you can try and decide after)
+	private static $auto_block_tor = true; // If you want block TOR clients
+	private static $auto_clean_global = false; // Global clean at start
 	/**
 	 * Security constructor.
 	 */
@@ -32,14 +36,17 @@ class Security
 	public static function putInSafety($API = false) {
 
 		if(!$API) {
-			self::secureSession();
+			if(self::$auto_session_manager)
+				self::secureSession();
+			if(self::$auto_scanner)
+				self::secureScanPath(self::$scan_path);
 			self::secureFormRequest();
 		}
 		self::secureRequest();
 		self::secureBots();
 		self::secureBlockTor();
 
-		if(self::$global_clean){
+		if(self::$auto_clean_global){
 			self::cleanGlobals();
 		} else {
 			$_GET = self::clean($_GET, false, false);
@@ -67,10 +74,10 @@ class Security
 	/**
 	 * Clean all input globals received
 	 * BE CAREFUL THIS METHOD COULD COMPROMISE HTML DATA IF SENT WITH INLINE JS
-	 * (send with htmlentities could be a solution if you want send inline js and clean globals)
+	 * (send with htmlentities could be a solution if you want send inline js and clean globals at the same time)
 	 */
 	public static function cleanGlobals() {
-		$_COOKIE = self::clean($_COOKIE, false, false, false);
+		$_COOKIE = self::clean($_COOKIE, false);
 		$_GET = self::clean($_GET, false, false);
 		$_POST = self::clean($_POST);
 		$_REQUEST = array_merge($_GET, $_POST);
@@ -571,7 +578,7 @@ class Security
 	 * Block Tor clients
 	 */
 	public static function secureBlockTor(){
-		if(self::clientIsTor() && self::$block_tor)
+		if(self::clientIsTor() && self::$auto_block_tor)
 			self::permission_denied();
 	}
 
@@ -765,7 +772,7 @@ class Security
 		$search =
 			array(
 				"e(\'\.\')?v(\'\.\')?a(\'\.\')?l(\'\.\')?",
-				"[^curl\_]exec", //ftp_exec,hell_exec,exec
+				"exec", //ftp_exec,hell_exec,exec
 				"create_function",
 				"sqlite_create_aggregate",
 				"sqlite_create_function",
