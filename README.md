@@ -81,7 +81,7 @@ $is_html = true;        // deafult is TRUE
 $have_quotes = true;    // deafult is TRUE
 $escape_string = true;  // deafult is TRUE except if you set FALSE in class config
 $var = Security::clean($_POST['var'], $is_html, $have_quotes, $escape_string);
-echo = $var; 
+echo $var; 
 ```
 or 
 
