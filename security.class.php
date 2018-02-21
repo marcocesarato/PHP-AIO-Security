@@ -825,13 +825,21 @@ class Security
 				//"ftp_rawlist",
 				//"mysql_pconnect",
 			);
-		if (empty($path) || !glob($path))
+
+		if (empty($file) || !glob($file))
 			return false;
-		if (preg_match("/^text/i", mime_content_type($file))) {
+
+		foreach (self::$scanner_whitelist as $value) {
+			if(preg_match('#'.preg_quote(realpath(trim($value,"/"))).'#i', realpath(dirname($file))))
+				return true;
+		}
+
+		if (preg_match("/^text/i", mime_content_type($file))){
 			$contents = file_get_contents($file);
 			foreach ($search as $pattern) {
 				if (preg_match("/(".$pattern."[\s\r\n]?\()/i", $contents))
 					return false;
+					//return array($pattern,realpath($file));
 			}
 		}
 		return true;
@@ -862,7 +870,6 @@ class Security
 	public static function secureScan($path) {
 		$files = self::secureScanPath($path);
 		foreach ($files as $file){
-			if(!preg_grep('/'.preg_quote(dirname($file)).'/i', self::$scanner_whitelist))
 				rename($file,$file.".bad");
 		}
 	}
