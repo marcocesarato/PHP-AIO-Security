@@ -6,7 +6,7 @@
  * @author    Marco Cesarato <cesarato.developer@gmail.com>
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
- * @version   0.1.1
+ * @version   0.2.0
  */
 class Security
 {
@@ -45,8 +45,9 @@ class Security
 			self::secureFormRequest();
 		}
 		self::secureRequest();
-		self::secureBots();
-		self::secureBlockTor();
+		self::secureBlockBots();
+		if(self::$auto_block_tor)
+			self::secureBlockTor();
 
 		if(self::$auto_clean_global){
 			self::cleanGlobals();
@@ -150,12 +151,6 @@ class Security
 
 		// Disable methods
 		if (preg_match("/^(HEAD|TRACE|TRACK|DEBUG|OPTIONS)/i", $_SERVER['REQUEST_METHOD']))
-			self::permission_denied();
-
-		// Disable User Agents
-		if (preg_match("/(havij|libwww-perl|wget|python|nikto|curl|scan|java|winhttp|clshttp|loader)/i", $_SERVER['HTTP_USER_AGENT']) ||
-			preg_match("/(%0A|%0D|%27|%3C|%3E|%00)/i", $_SERVER['HTTP_USER_AGENT']) ||
-			preg_match("/(;|<|>|'|\"|\)|\(|%0A|%0D|%22|%27|%28|%3C|%3E|%00).*(libwww-perl|wget|python|nikto|curl|scan|java|winhttp|HTTrack|clshttp|archiver|loader|email|harvest|extract|grab|miner)/i", $_SERVER['HTTP_USER_AGENT']))
 			self::permission_denied();
 
 		// Check REQUEST_URI
@@ -580,7 +575,7 @@ class Security
 	 * Block Tor clients
 	 */
 	public static function secureBlockTor(){
-		if(self::clientIsTor() && self::$auto_block_tor)
+		if(self::clientIsTor())
 			self::permission_denied();
 	}
 
@@ -613,7 +608,14 @@ class Security
 	/**
 	 * Prevent bad bots
 	 */
-	public static function secureBots() {
+	public static function secureBlockBots() {
+		// Block bots
+		if (preg_match("/(spider|crawler|slurp|teoma|archive|track|snoopy|lwp|client|libwww)/i", $_SERVER['HTTP_USER_AGENT']) ||
+			preg_match("/(havij|libwww-perl|wget|python|nikto|curl|scan|java|winhttp|clshttp|loader)/i", $_SERVER['HTTP_USER_AGENT']) ||
+			preg_match("/(%0A|%0D|%27|%3C|%3E|%00)/i", $_SERVER['HTTP_USER_AGENT']) ||
+			preg_match("/(;|<|>|'|\"|\)|\(|%0A|%0D|%22|%27|%28|%3C|%3E|%00).*(libwww-perl|wget|python|nikto|curl|scan|java|winhttp|HTTrack|clshttp|archiver|loader|email|harvest|extract|grab|miner)/i", $_SERVER['HTTP_USER_AGENT']))
+			self::permission_denied();
+		// Block Fake google bot
 		self::blockFakeGoogleBots();
 	}
 

@@ -1,4 +1,6 @@
 # PHP Security Class
+__Version 0.2.0__
+
 _IF YOU USE ON YOUR PROJECT SOME OF THESE METHODS PLEASE TO CREDIT ME :) THANK YOU!_
 
 This is a security class in php with some userfull static methods
@@ -113,13 +115,13 @@ Enjoy!
 | __construct / putInSafety | $isAPI = false | Void   | Call some methods:<br /><br />headers `$isAPI`<br />secureSession `$isAPI`<br />secureFormRequest `$isAPI`<br />secureBots<br />secureRequest<br />secureBlockTor<br />secureHijacking<br />secureCookies |
 | secureCSRF                | -              | Void   | Check for CSRF                                               |
 | secureCSRFToken           | -              | String | Get CSRF Token                                               |
-| secureRequest             | -              | Void   | Check the request method, the user agent, and the URL to prevent some XSS/SQL Injections |
-| secureFormRequest         | $isAPI = false | Void   | Check if the REFERER is equal to the origin                  |
+| secureRequest             | -              | Void   | Enable the WAF (Firewall) then check the request method and the URL to prevent some XSS/SQL Injections and bad requests |
+| secureFormRequest         | $isAPI = false | Void   | Check if the form origin come from the same website          |
 | secureSession             | -              | Void   | Set custom session name for prevent fast identification of php and add some secure param to session cookie. PS: This method call `session_start` |
 | headers                   | $isAPI = false | Void   | Set some secure headers (to prevent some XSS, Clickjacking and others bad requests) and secure php setting |
 | headersCache              |                | Void   | Set cache headers                                            |
 | secureCookies             | -              | Void   | Set some secure paramenter on cookies (autoencryption soon...) |
-| secureBots                | -              | Void   | Block some bad bot                                           |
+| secureBlockBots           | -              | Void   | Block some generic bad bots/crawler/spiders                  |
 | secureBlockTor            | -              | Void   | Block Tor client if in class settings is set to TRUE         |
 | secureHijacking           | -              | Void   | Prevent Hijacking and delete session                         |
 
