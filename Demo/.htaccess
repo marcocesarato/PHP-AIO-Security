@@ -1,0 +1,86 @@
+# htaccess
+# @author: Marco Cesarato <cesarato.developer@gmail.com>
+
+IndexIgnore *
+Options All -Indexes
+
+# Hide server informations
+ServerSignature Off
+
+LimitRequestBody 10240000
+
+# Security php settings
+php_flag expose_php off
+php_flag allow_url_fopen off
+php_flag magic_quotes_gpc  off
+php_flag register_globals off
+php_flag session.cookie_httponly on
+php_flag session.use_only_cookies on
+
+# Headers protection/improvements
+<IfModule mod_headers.c>
+
+    # Hide server informations
+    Header always unset X-Powered-By
+    Header unset X-Powered-By
+
+    # XSS Protection
+    Header set X-XSS-Protection "1; mode=block"
+    # Clickjacking
+    Header set X-Frame-Options "sameorigin"
+
+    Header set Accept-Encoding "gzip, deflate"
+    Header set Cache-Control "max-age=15552000, must-revalidate"
+
+    Header set Referer-Policy "origin"
+    Header set Strict-Transport-Security "max-age=16070400; includeSubDomains"
+    Header set X-UA-Compatible "IE=edge,chrome=1"
+    Header set X-Permitted-Cross-Domain-Policies "master-only"
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Download-Options "noopen"
+    Header set Access-Control-Allow-Methods "GET, POST"
+    # Content policy
+    #Header set Content-Security-Policy "default-src 'self'"
+    Header set Content-Security-Policy "default-src 'self'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src *; font-src *; object-src 'none'"
+
+</IfModule>
+
+<IfModule mod_rewrite.c>
+
+    # Enable URL Rewriter
+    RewriteEngine On
+    Options +FollowSymlinks
+    Options +SymLinksIfOwnerMatch
+
+    # URL Rewrite
+    # Remove comment from here if you use a url rewriter
+    #RewriteBase /
+    #RewriteRule ^index\.php$ - [L]
+    #RewriteCond %{REQUEST_FILENAME} !-f
+    #RewriteCond %{REQUEST_FILENAME} !-d
+    #RewriteRule . index.php [L]
+
+    RewriteRule .*\.git.* index.php [L]
+    RewriteRule .*\.svn.* index.php [L]
+    RewriteRule .*\.hg.* index.php [L]
+
+</IfModule>
+
+# File protection
+<Files ~ "^(config)\.php">
+  Order Allow,Deny
+  Deny from all
+</Files>
+<Files ~ "^.*\.([Hh][Tt][Aa])">
+  Order Allow,Deny
+  Deny from all
+  Satisfy all
+</Files>
+
+# Robots file protection
+<Files ~ "\.pdf$">
+  Header set X-Robots-Tag "noindex, nofollow"
+</Files>
+<Files ~ "\.(png|jpe?g|gif|bmp|psd)$">
+  Header set X-Robots-Tag "noindex"
+</Files>

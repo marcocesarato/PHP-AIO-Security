@@ -826,12 +826,12 @@ class Security
 				//"mysql_pconnect",
 			);
 
-		if (empty($file) || !glob($file))
+		if (empty($file) || !file_exists($file))
 			return false;
 
 		foreach (self::$scanner_whitelist as $value) {
-			if(preg_match('#'.preg_quote(realpath(trim($value,"/"))).'#i', realpath(dirname($file)))
-			|| preg_match('#'.preg_quote(realpath(trim($value,"/"))).'#i', realpath($file)))
+			if(!empty(realpath($value)) && (preg_match('#'.preg_quote(realpath($value)).'#i', realpath(dirname($file)))
+			|| preg_match('#'.preg_quote(realpath($value)).'#i', realpath($file))))
 				return true;
 		}
 
