@@ -3,9 +3,11 @@ __Version 0.2.0__
 
 _IF YOU USE ON YOUR PROJECT SOME OF THESE METHODS PLEASE TO CREDIT ME :) THANK YOU!_
 
-This is a security class in php with some userfull static methods
+This is a security class in php with some userful and automatic static methods.
 
+The objective of this class is offer an automatic system of protection for developers's projects and simplify some security operations as the check of CSRF or XSS all in a simple class. Infact you could just call the main method to have better security yet without too much complicated operations.
 
+### Instructions
 
 1-0 - Move **.htaccess** on your ROOT directory
 
@@ -36,15 +38,11 @@ __PS:__ *You can always change the configuration as following for each parameter
 Security::$session_name = "MYSESSID"
 ```
 
-
-
 1-2 - Include the class
 
 ```php
 include 'classes/security.class.php';
 ```
-
-
 
 2 - Just create a new object to be more at safe (the **constructor/putInSafety** filter \$_REQUEST and \$_GET globals, add some userfull headers for security, check if there is an **Hijacking** and check the URL Request)
 
@@ -106,13 +104,7 @@ $output = Security::output(ob_get_clean());
 echo = $output; 
 ```
 
-
-
 Enjoy!
-
-
-
-
 
 ## Methods available:
 
