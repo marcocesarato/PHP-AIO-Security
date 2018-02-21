@@ -830,7 +830,8 @@ class Security
 			return false;
 
 		foreach (self::$scanner_whitelist as $value) {
-			if(preg_match('#'.preg_quote(realpath(trim($value,"/"))).'#i', realpath(dirname($file))))
+			if(preg_match('#'.preg_quote(realpath(trim($value,"/"))).'#i', realpath(dirname($file)))
+			|| preg_match('#'.preg_quote(realpath(trim($value,"/"))).'#i', realpath($file)))
 				return true;
 		}
 
