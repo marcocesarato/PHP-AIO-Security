@@ -11,19 +11,19 @@
 class Security
 {
 	// Config
-	private static $session_name = "XSESSID";
-	private static $csrf_session = "_CSRFTOKEN";
-	private static $csrf_formtoken = "_FORMTOKEN";
-	private static $hijacking_salt = "_SALT";
-	private static $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
-	private static $escape_string = true; // If you use PDO I recommend to set this to false
-	private static $scanner_path = "./*.php"; // Folder to scan at start and optionally the file extension
-	private static $scanner_whitelist = array('./includes','./admin'); // Example of scan whitelist
+	public static $session_name = "XSESSID";
+	public static $csrf_session = "_CSRFTOKEN";
+	public static $csrf_formtoken = "_FORMTOKEN";
+	public static $hijacking_salt = "_SALT";
+	public static $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
+	public static $escape_string = true; // If you use PDO I recommend to set this to false
+	public static $scanner_path = "./*.php"; // Folder to scan at start and optionally the file extension
+	public static $scanner_whitelist = array('./includes','./libs'); // Example of scan whitelist
 	// Autostart
-	private static $auto_session_manager = true; // Run session at start
-	private static $auto_scanner = false; // Could have a bad performance impact (anyway you can try and decide after)
-	private static $auto_block_tor = true; // If you want block TOR clients
-	private static $auto_clean_global = false; // Global clean at start
+	public static $auto_session_manager = true; // Run session at start
+	public static $auto_scanner = false; // Could have a bad performance impact (anyway you can try and decide after)
+	public static $auto_block_tor = true; // If you want block TOR clients
+	public static $auto_clean_global = false; // Global clean at start
 
 	/**
 	 * Security constructor.

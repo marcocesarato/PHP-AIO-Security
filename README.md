@@ -22,13 +22,21 @@ $hijacking_salt = "_SALT";
 $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
 $escape_string = true; // If you use PDO I recommend to set this to false
 $scan_path = "./*.php"; // Folder to scan at start
-$scanner_whitelist = array('./includes','./admin'); // Example of scan whitelist
+$scanner_whitelist = array('./includes','./libs'); // Example of scan whitelist
 // Autostart
 $auto_session_manager = true; // Run session at start
 $auto_scanner = false; // Could have a bad performance impact (anyway you can try)
 $auto_block_tor = true; // If you want block TOR clients
 $auto_clean_global = false; // Global clean at start
 ```
+
+__PS:__ *You can always change the configuration as following for each parameters or simply editing the var if you need only static var:*
+
+```php
+Security::$session_name = "MYSESSID"
+```
+
+
 
 1-2 - Include the class
 
