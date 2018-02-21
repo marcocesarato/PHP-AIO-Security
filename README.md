@@ -122,7 +122,7 @@ Enjoy!
 | headersCache              |                | Void   | Set cache headers                                            |
 | secureCookies             | -              | Void   | Set some secure paramenter on cookies (autoencryption soon...) |
 | secureBlockBots           | -              | Void   | Block some generic bad bots/crawler/spiders                  |
-| secureBlockTor            | -              | Void   | Block Tor client if in class settings is set to TRUE         |
+| secureBlockTor            | -              | Void   | Block TOR clients                                            |
 | secureHijacking           | -              | Void   | Prevent Hijacking and delete session                         |
 
 ### Cleaning Methods
