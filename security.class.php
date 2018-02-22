@@ -915,8 +915,8 @@ class Security
 	}
 
 	/**
-	* Block DOS Attacks
-	*/
+	 * Block DOS Attacks
+	 */
 	public static function secureDOS() {
 
 		$time = $_SERVER["REQUEST_TIME"];
@@ -927,7 +927,7 @@ class Security
 			$_SESSION['DOSAttemps'] = 0;
 			$_SESSION['DOSTimer'] = $time;
 		} else {
-			if($_SESSION['DOSCounter'] > 10 && $_SESSION['DOSAttemps'] < 2) {
+			if($_SESSION['DOSCounter'] >= 10 && $_SESSION['DOSAttemps'] < 2) {
 				if ($time > $_SESSION['DOSTimer'] + 10) {
 					$_SESSION['DOSAttemps'] = $_SESSION['DOSAttemps'] + 1;
 					$_SESSION['DOSTimer'] = $time;
@@ -940,18 +940,7 @@ class Security
 
 					self::permission_denied('You must wait ' . $seconds . ' seconds...');
 				}
-				/*} else if($_SESSION['DOSCounter'] > 10 && $_SESSION['DOSAttemps'] == 1){
-					$attemps_ip = $time - (3600 * 3);// tre ore
-					if($_SESSION['DOSTimer'] < $attemps_ip) {
-						$_SESSION['DOSAttemps'] = $_SESSION['DOSAttemps'] + 1;
-						$_SESSION['DOSTimer'] = $time;
-						$_SESSION['DOSCounter'] = 0;
-					} else {
-						$timer = $_SESSION['DOSTimer'] - $attemps_ip;
-						$timer = gmdate("H:i:s", $timer);
-						self::permission_denied('You must wait '.$timer.'...');
-					}*/
-			} else if($_SESSION['DOSCounter'] >= 10 && $_SESSION['DOSAttemps'] == 2){
+			} else if($_SESSION['DOSCounter'] >= 10 && $_SESSION['DOSAttemps'] >= 1.5){
 				$htaccess = self::$basedir."/.htaccess";
 				$content = file_get_contents($htaccess);
 				$content .= "\r\n\r\nOrder Deny,Allow\r\nDeny from $ip";
@@ -965,5 +954,4 @@ class Security
 				$_SESSION['DOSTimer'] = $time;
 			}
 		}
-	}
 }
