@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Security Class
+ * AIO Security Class
  * @category  Security
  * @author    Marco Cesarato <cesarato.developer@gmail.com>
  * @copyright Copyright (c) 2014-2018
@@ -11,6 +11,7 @@
 class Security
 {
 	// Config
+	public static $basedir = "./"; // Project basedir where is located .htaccess
 	public static $session_name = "XSESSID";
 	public static $session_lifetime = 28800; // 8 hours
 	public static $csrf_session = "_CSRFTOKEN";
@@ -20,7 +21,6 @@ class Security
 	public static $escape_string = true; // If you use PDO I recommend to set this to false
 	public static $scanner_path = "./*.php"; // Folder to scan at start and optionally the file extension
 	public static $scanner_whitelist = array('./includes','./libs'); // Example of scan whitelist
-	public static $htaccess = __DIR__."/.htaccess";
 	// Autostart
 	public static $auto_session_manager = true; // Run session at start
 	public static $auto_scanner = false; // Could have a bad performance impact (anyway you can try and decide after)
@@ -952,9 +952,10 @@ class Security
 						self::permission_denied('You must wait '.$timer.'...');
 					}*/
 			} else if($_SESSION['DOSCounter'] >= 10 && $_SESSION['DOSAttemps'] == 2){
-				$content = file_get_contents(self::$htaccess);
+				$htaccess = self::$basedir."/.htaccess";
+				$content = file_get_contents($htaccess);
 				$content .= "\r\n\r\nOrder Deny,Allow\r\nDeny from $ip";
-				file_put_contents(self::$htaccess, $content);
+				file_put_contents($htaccess, $content);
 			} else {
 				if($_SESSION['DOSTimer'] > ($time - 2)){
 					$_SESSION['DOSCounter'] = $_SESSION['DOSCounter'] + 1;

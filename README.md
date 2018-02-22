@@ -17,6 +17,7 @@ These are the options:
 
 ```php
 // Config
+$basedir = "./"; // Project basedir where is located .htaccess
 $session_name = "XSESSID";
 $csrf_session = "_CSRFTOKEN";
 $csrf_formtoken = "_FORMTOKEN";
