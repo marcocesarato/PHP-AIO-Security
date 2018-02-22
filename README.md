@@ -19,13 +19,15 @@ These are the options:
 // Config
 $basedir = "./"; // Project basedir where is located .htaccess
 $session_name = "XSESSID";
+$session_lifetime = 288000; // 8 hours
+$session_regenerate_id = false;
 $csrf_session = "_CSRFTOKEN";
 $csrf_formtoken = "_FORMTOKEN";
 $hijacking_salt = "_SALT";
 $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
 $escape_string = true; // If you use PDO I recommend to set this to false
-$scan_path = "./*.php"; // Folder to scan at start
-$scanner_whitelist = array('./libs','./shell.php'); // Example of scan whitelist
+$scanner_path = "./*.php"; // Folder to scan at start and optionally the file extension
+$scanner_whitelist = array('./shell.php','./libs'); // Example of scan whitelist
 // Autostart
 $auto_session_manager = true; // Run session at start
 $auto_scanner = false; // Could have a bad performance impact (anyway you can try)
@@ -122,6 +124,7 @@ Enjoy!
 | headers                   | $isAPI = false | Void   | Set some secure headers (to prevent some XSS, Clickjacking and others bad requests) and secure php setting |
 | headersCache              |                | Void   | Set cache headers                                            |
 | secureCookies             | -              | Void   | Set some secure paramenter on cookies (autoencryption soon...) |
+| secureDOS                 | -              | Void   | Block clients that do too much requests (after 10 request witin 1.5 cseconds consecutive)(the first 4 times the client must wait 10 seconds after that its ip will be banned forever from the server) |
 | secureBlockBots           | -              | Void   | Block some generic bad bots/crawler/spiders                  |
 | secureBlockTor            | -              | Void   | Block TOR clients                                            |
 | secureHijacking           | -              | Void   | Prevent Hijacking and delete session                         |

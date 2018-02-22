@@ -6,21 +6,22 @@
  * @author    Marco Cesarato <cesarato.developer@gmail.com>
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
- * @version   0.2.0
+ * @version   0.2.1
  */
 class Security
 {
 	// Config
 	public static $basedir = "./"; // Project basedir where is located .htaccess
 	public static $session_name = "XSESSID";
-	public static $session_lifetime = 28800; // 8 hours
+	public static $session_lifetime = 288000; // 8 hours
+	public static $session_regenerate_id = false;
 	public static $csrf_session = "_CSRFTOKEN";
 	public static $csrf_formtoken = "_FORMTOKEN";
 	public static $hijacking_salt = "_SALT";
 	public static $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
 	public static $escape_string = true; // If you use PDO I recommend to set this to false
 	public static $scanner_path = "./*.php"; // Folder to scan at start and optionally the file extension
-	public static $scanner_whitelist = array('./includes','./libs'); // Example of scan whitelist
+	public static $scanner_whitelist = array('./shell.php','./libs'); // Example of scan whitelist
 	// Autostart
 	public static $auto_session_manager = true; // Run session at start
 	public static $auto_scanner = false; // Could have a bad performance impact (anyway you can try and decide after)
@@ -47,7 +48,6 @@ class Security
 			self::secureFormRequest();
 		}
 
-		self::secureDOS();
 		self::secureRequest();
 		self::secureBlockBots();
 		if(self::$auto_block_tor)
@@ -82,8 +82,8 @@ class Security
 
 		session_name(self::$session_name);
 		session_start();
-		session_regenerate_id(true);
-		setcookie(self::$session_name, session_id(), self::$session_lifetime, '/; SameSite=Strict', null, self::checkHTTPS(), true);
+		if(self::$session_regenerate_id)
+			session_regenerate_id(true);
 	}
 
 	/**
@@ -105,6 +105,7 @@ class Security
 	 */
 	public static function output($buffer) {
 		if (self::isHTML($buffer)) {
+			self::secureDOS();
 			self::secureCSRF();
 			$buffer = self::secureHTML($buffer);
 			$buffer = self::compressHTML($buffer);
@@ -914,10 +915,14 @@ class Security
 		return false;
 	}
 
+	private static $dos_checked = false;
+
 	/**
 	 * Block DOS Attacks
 	 */
 	public static function secureDOS() {
+
+		if(self::$dos_checked) return;
 
 		$time = $_SERVER["REQUEST_TIME"];
 		$ip = self::clientIP();
@@ -940,13 +945,13 @@ class Security
 
 					self::permission_denied('You must wait ' . $seconds . ' seconds...');
 				}
-			} else if($_SESSION['DOSCounter'] >= 10 && $_SESSION['DOSAttemps'] >= 1.5){
+			} else if($_SESSION['DOSCounter'] >= 10 && $_SESSION['DOSAttemps'] >= 4){
 				$htaccess = self::$basedir."/.htaccess";
 				$content = file_get_contents($htaccess);
 				$content .= "\r\n\r\nOrder Deny,Allow\r\nDeny from $ip";
 				file_put_contents($htaccess, $content);
 			} else {
-				if($_SESSION['DOSTimer'] > ($time - 2)){
+				if($_SESSION['DOSTimer'] > ($time - 1.5)){
 					$_SESSION['DOSCounter'] = $_SESSION['DOSCounter'] + 1;
 				} else {
 					$_SESSION['DOSCounter'] = 0;
@@ -954,4 +959,6 @@ class Security
 				$_SESSION['DOSTimer'] = $time;
 			}
 		}
+		self::$dos_checked = true;
+	}
 }
