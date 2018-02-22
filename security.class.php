@@ -12,6 +12,7 @@ class Security
 {
 	// Config
 	public static $session_name = "XSESSID";
+	public static $session_lifetime = 28800; // 8 hours
 	public static $csrf_session = "_CSRFTOKEN";
 	public static $csrf_formtoken = "_FORMTOKEN";
 	public static $hijacking_salt = "_SALT";
@@ -19,6 +20,7 @@ class Security
 	public static $escape_string = true; // If you use PDO I recommend to set this to false
 	public static $scanner_path = "./*.php"; // Folder to scan at start and optionally the file extension
 	public static $scanner_whitelist = array('./includes','./libs'); // Example of scan whitelist
+	public static $htaccess = __DIR__."/.htaccess";
 	// Autostart
 	public static $auto_session_manager = true; // Run session at start
 	public static $auto_scanner = false; // Could have a bad performance impact (anyway you can try and decide after)
@@ -44,6 +46,8 @@ class Security
 				self::secureScan(self::$scanner_path);
 			self::secureFormRequest();
 		}
+
+		self::secureDOS();
 		self::secureRequest();
 		self::secureBlockBots();
 		if(self::$auto_block_tor)
@@ -69,9 +73,17 @@ class Security
 	 */
 	public static function secureSession(){
 		self::unsetCookie('PHPSESSID');
+
+		ini_set("session.cookie_httponly", true);
+		ini_set("session.use_trans_sid",false);
+		ini_set('session.use_only_cookies', true);
+		ini_set("session.cookie_secure", self::checkHTTPS());
+		ini_set("session.gc_maxlifetime", self::$session_lifetime);
+
 		session_name(self::$session_name);
 		session_start();
-		setcookie(self::$session_name, session_id(), 0, '/; SameSite=Strict', null, false, true);
+		session_regenerate_id(true);
+		setcookie(self::$session_name, session_id(), self::$session_lifetime, '/; SameSite=Strict', null, self::checkHTTPS(), true);
 	}
 
 	/**
@@ -140,7 +152,7 @@ class Security
 			//$value = self::clean(self::getCookie($key), false, false);
 			//self::setCookie($key, $value, 0, '/; SameSite=Strict', null, false, true);
 			if($key != self::$session_name)
-				setcookie($key, $value, 0, '/; SameSite=Strict', null, false, true);
+				setcookie($key, $value, 0, '/; SameSite=Strict', null, false, self::checkHTTPS());
 		}
 	}
 
@@ -755,15 +767,17 @@ class Security
 	/**
 	 * Error 403
 	 */
-	private static function permission_denied() {
+	private static function permission_denied($message = "") {
+		ob_clean();
 		http_response_code(403);
-		die("Access Denied!");
+		die("Access Denied!<br>$message");
 	}
 
 	/**
 	 * Error 404
 	 */
 	private static function not_found() {
+		ob_clean();
 		http_response_code(404);
 		die("Not found!");
 	}
@@ -888,5 +902,67 @@ class Security
 			$files = array_merge($files, self::recursiveGlob($dir.'/'.basename($pattern), $flags));
 		}
 		return $files;
+	}
+
+	/**
+	 * Check if the request is HTTPS
+	 */
+	private static function checkHTTPS(){
+		if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	* Block DOS Attacks
+	*/
+	public static function secureDOS() {
+
+		$time = $_SERVER["REQUEST_TIME"];
+		$ip = self::clientIP();
+
+		if(!isset($_SESSION['DOSCounter']) || !isset($_SESSION['DOSAttemps']) || empty($_SESSION['DOSTimer'])){
+			$_SESSION['DOSCounter'] = 0;
+			$_SESSION['DOSAttemps'] = 0;
+			$_SESSION['DOSTimer'] = $time;
+		} else {
+			if($_SESSION['DOSCounter'] > 10 && $_SESSION['DOSAttemps'] < 2) {
+				if ($time > $_SESSION['DOSTimer'] + 10) {
+					$_SESSION['DOSAttemps'] = $_SESSION['DOSAttemps'] + 1;
+					$_SESSION['DOSTimer'] = $time;
+					$_SESSION['DOSCounter'] = 0;
+				} else {
+					$url = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+					$seconds = round(($_SESSION['DOSTimer'] + 10) - time());
+					if ($seconds < 1) header("Location: {$url}");
+					header("Refresh: {$seconds}; url={$url}");
+
+					self::permission_denied('You must wait ' . $seconds . ' seconds...');
+				}
+				/*} else if($_SESSION['DOSCounter'] > 10 && $_SESSION['DOSAttemps'] == 1){
+					$attemps_ip = $time - (3600 * 3);// tre ore
+					if($_SESSION['DOSTimer'] < $attemps_ip) {
+						$_SESSION['DOSAttemps'] = $_SESSION['DOSAttemps'] + 1;
+						$_SESSION['DOSTimer'] = $time;
+						$_SESSION['DOSCounter'] = 0;
+					} else {
+						$timer = $_SESSION['DOSTimer'] - $attemps_ip;
+						$timer = gmdate("H:i:s", $timer);
+						self::permission_denied('You must wait '.$timer.'...');
+					}*/
+			} else if($_SESSION['DOSCounter'] >= 10 && $_SESSION['DOSAttemps'] == 2){
+				$content = file_get_contents(self::$htaccess);
+				$content .= "\r\n\r\nOrder Deny,Allow\r\nDeny from $ip";
+				file_put_contents(self::$htaccess, $content);
+			} else {
+				if($_SESSION['DOSTimer'] > ($time - 2)){
+					$_SESSION['DOSCounter'] = $_SESSION['DOSCounter'] + 1;
+				} else {
+					$_SESSION['DOSCounter'] = 0;
+				}
+				$_SESSION['DOSTimer'] = $time;
+			}
+		}
 	}
 }

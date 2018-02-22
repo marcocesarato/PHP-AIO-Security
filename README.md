@@ -7,12 +7,6 @@ This is a security class in php with some userful and automatic static methods.
 
 The objective of this class is offer an automatic system of protection for developers's projects and simplify some security operations as the check of CSRF or XSS all in a simple class. Infact you could just call the main method to have better security yet without too much complicated operations.
 
-### Works in progress...
-*PS: the following point are already done but need to be adapted*
-1. Captcha
-2. Anti-DOS
-3. PDO auto-filter
-
 ### Instructions
 
 1-0 - Move **.htaccess** on your ROOT directory
