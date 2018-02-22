@@ -1,4 +1,4 @@
-# PHP Security Class
+# PHP Firewall Security Class
 __Version 0.2.0__
 
 _IF YOU USE ON YOUR PROJECT SOME OF THESE METHODS PLEASE TO CREDIT ME :) THANK YOU!_
