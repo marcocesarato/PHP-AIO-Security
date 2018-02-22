@@ -124,7 +124,7 @@ Enjoy!
 | headers                   | $isAPI = false | Void   | Set some secure headers (to prevent some XSS, Clickjacking and others bad requests) and secure php setting |
 | headersCache              |                | Void   | Set cache headers                                            |
 | secureCookies             | -              | Void   | Set some secure paramenter on cookies (autoencryption soon...) |
-| secureDOS                 | -              | Void   | Block clients that do too much requests (after 10 request witin 1.5 cseconds consecutive)(the first 4 times the client must wait 10 seconds after that its ip will be banned forever from the server) |
+| secureDOS                 | -              | Void   | Block clients that do too much requests (after 10 requests within 1.5 seconds consecutive detect a DOS attemp, the first 4 times the client must wait 10 seconds after that its ip will be banned from the server) |
 | secureBlockBots           | -              | Void   | Block some generic bad bots/crawler/spiders                  |
 | secureBlockTor            | -              | Void   | Block TOR clients                                            |
 | secureHijacking           | -              | Void   | Prevent Hijacking and delete session                         |
