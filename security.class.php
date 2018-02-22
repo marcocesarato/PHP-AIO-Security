@@ -939,19 +939,21 @@ class Security
 					$_SESSION['DOSCounter'] = 0;
 				} else {
 					$url = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
-					$seconds = round(($_SESSION['DOSTimer'] + 10) - time());
+					$seconds = round(($_SESSION['DOSTimer'] + 1.5) - time());
 					if ($seconds < 1) header("Location: {$url}");
 					header("Refresh: {$seconds}; url={$url}");
-
 					self::permission_denied('You must wait ' . $seconds . ' seconds...');
 				}
-			} else if($_SESSION['DOSCounter'] >= 10 && $_SESSION['DOSAttemps'] >= 4){
+			} else if($_SESSION['DOSCounter'] >= 10 && $_SESSION['DOSAttemps'] > 1){
 				$htaccess = self::$basedir."/.htaccess";
 				$content = file_get_contents($htaccess);
-				$content .= "\r\n\r\nOrder Deny,Allow\r\nDeny from $ip";
+				if(preg_match("/### BEGIN: BANNED IPs ###\r\n/i", $content))
+					$content = preg_replace("/(### BEGIN: BANNED IPs ###\r\n)([\S\s.]*?)(\r\n### END: BANNED IPs ###)/i","$1$2\r\nDeny from $ip$3", $content);
+				else
+					$content .= "\r\n\r\n### BEGIN: BANNED IPs ###\r\nOrder Allow,Deny\r\nDeny from $ip\r\n### END: BANNED IPs ###";
 				file_put_contents($htaccess, $content);
 			} else {
-				if($_SESSION['DOSTimer'] > ($time - 1.5)){
+				if($_SESSION['DOSTimer'] > ($time - 10)){
 					$_SESSION['DOSCounter'] = $_SESSION['DOSCounter'] + 1;
 				} else {
 					$_SESSION['DOSCounter'] = 0;

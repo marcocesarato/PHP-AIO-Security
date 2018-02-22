@@ -14,6 +14,7 @@ echo <<<HTML
 <body>
   <h1>Security Test</h1>
   <h3>From here is possible test output security, CSRF, WAF (Firewall) and external form request protection</h3>
+  <h3>You can also test the AntiDOS refreshing the page many times (hold pressed F5)</h3>
   <form action="#" method="POST">
     <label>Username</lable>
     <input type="text" name="username"><br>
