@@ -938,6 +938,7 @@ class Security
 			$htaccess_content .= "\r\n### END: DOS Attempts ###";
 		}
 		file_put_contents($htaccess, $htaccess_content);
+		//die("# $ip => " . $_SESSION['DOSAttemptsTimer'] . ":" . $_SESSION['DOSAttempts'] . ":" . $_SESSION['DOSCounter'] . ":" . $_SESSION['DOSTimer']);
 	}
 
 	/**
@@ -949,8 +950,27 @@ class Security
 		$ip_quote = preg_quote($ip);
 		$htaccess = realpath(self::$basedir . "/.htaccess");
 		if (preg_match("/### BEGIN: DOS Attempts ###[\S\s.]*[\r\n]+# $ip_quote => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\S\s.]*### END: DOS Attempts ###/i", $htaccess_content, $attemps)) {
-			$htaccess_content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)([\r\n]+# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i",
-				"$1$3", $htaccess_content);
+			$htaccess_content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)([\r\n]+# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i","$1$3", $htaccess_content);
+		}
+		file_put_contents($htaccess, $htaccess_content);
+	}
+
+	/**
+	 * Remove from htaccess the DOS Attempts
+	 * @param $ip
+	 * @param $htaccess_content
+	 */
+	private static function secureDOSRemoveOldAttempts($time_expire, $htaccess_content) {
+		$time = $_SERVER['REQUEST_TIME'];
+		$pattern = "/# ((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])) => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\r\n]+/i";
+		$htaccess = realpath(self::$basedir . "/.htaccess");
+		if (preg_match_all($pattern, $htaccess_content, $attemps)) {
+			foreach ($attemps as $attemp){
+				preg_match($pattern, $attemp[0], $attemp);
+				$ip_quote = preg_quote($attemp[1]);
+				if ($time > $attemp[5] + $time_expire || $time > $attemp[8] + $time_expire)
+					$htaccess_content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)([\r\n]+# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i","$1$3", $htaccess_content);
+			}
 		}
 		file_put_contents($htaccess, $htaccess_content);
 	}
@@ -981,11 +1001,12 @@ class Security
 
 		$time_counter = 2;
 		$time_waiting = 10;
-		$time_attemps_expire = 3600;
+		$time_expire = 3600;
 
-		$time = time();
+		$time = $_SERVER['REQUEST_TIME'];
 		$ip = self::clientIP();
-		$htaccess = realpath(self::$basedir . "/.htaccess");
+		$htaccess = realpath(self::$basedir . "/.htaccess");;
+		self::secureDOSRemoveOldAttempts($time_expire, file_get_contents($htaccess));
 		$htaccess_content = file_get_contents($htaccess);
 
 		if (!isset($_SESSION['DOSCounter']) || !isset($_SESSION['DOSAttempts']) || empty($_SESSION['DOSAttemptsTimer']) || empty($_SESSION['DOSTimer'])) {
@@ -995,9 +1016,9 @@ class Security
 			$_SESSION['DOSAttemptsTimer'] = $time;
 			$_SESSION['DOSTimer'] = $time;
 			self::secureDOSWriteAttempts($ip, $htaccess_content);
-		} else if ($_SESSION['DOSTimer'] < ($time - ($time_counter / 1.99))) {
+		} else if ($_SESSION['DOSTimer'] != $time) {
 
-			if ($time > $_SESSION['DOSTimer'] + $time_attemps_expire)
+			if ($time > $_SESSION['DOSTimer'] + $time_expire)
 				$_SESSION['DOSAttempts'] = 0;
 
 			if ($_SESSION['DOSCounter'] >= 10 && $_SESSION['DOSAttempts'] < 2) {
