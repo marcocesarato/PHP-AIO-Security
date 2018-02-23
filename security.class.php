@@ -995,7 +995,7 @@ class Security
 			$_SESSION['DOSAttemptsTimer'] = $time;
 			$_SESSION['DOSTimer'] = $time;
 			self::secureDOSWriteAttempts($ip, $htaccess_content);
-		} else {
+		} else if ($_SESSION['DOSTimer'] < ($time - ($time_counter / 1.99))) {
 
 			if ($time > $_SESSION['DOSTimer'] + $time_attemps_expire)
 				$_SESSION['DOSAttempts'] = 0;
