@@ -8,10 +8,11 @@
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @version   0.2.1
  */
+
 class Security
 {
 	// Config
-	public static $basedir = "./"; // Project basedir where is located .htaccess
+	public static $basedir = __DIR__; // Project basedir where is located .htaccess
 	public static $session_name = "XSESSID";
 	public static $session_lifetime = 288000; // 8 hours
 	public static $session_regenerate_id = false;
@@ -21,7 +22,7 @@ class Security
 	public static $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
 	public static $escape_string = true; // If you use PDO I recommend to set this to false
 	public static $scanner_path = "./*.php"; // Folder to scan at start and optionally the file extension
-	public static $scanner_whitelist = array('./shell.php','./libs'); // Example of scan whitelist
+	public static $scanner_whitelist = array('./shell.php', './libs'); // Example of scan whitelist
 	// Autostart
 	public static $auto_session_manager = true; // Run session at start
 	public static $auto_scanner = false; // Could have a bad performance impact (anyway you can try and decide after)
@@ -40,20 +41,21 @@ class Security
 	 */
 	public static function putInSafety($API = false) {
 
-		if(!$API) {
-			if(self::$auto_session_manager)
+		if (!$API) {
+			if (self::$auto_session_manager)
 				self::secureSession();
-			if(self::$auto_scanner)
+			if (self::$auto_scanner)
 				self::secureScan(self::$scanner_path);
 			self::secureFormRequest();
 		}
 
+		self::secureDOS();
 		self::secureRequest();
 		self::secureBlockBots();
-		if(self::$auto_block_tor)
+		if (self::$auto_block_tor)
 			self::secureBlockTor();
 
-		if(self::$auto_clean_global){
+		if (self::$auto_clean_global) {
 			self::cleanGlobals();
 		} else {
 			$_GET = self::clean($_GET, false, false);
@@ -71,18 +73,18 @@ class Security
 	/**
 	 * Custom session name for prevent fast identification of php
 	 */
-	public static function secureSession(){
+	public static function secureSession() {
 		self::unsetCookie('PHPSESSID');
 
 		ini_set("session.cookie_httponly", true);
-		ini_set("session.use_trans_sid",false);
+		ini_set("session.use_trans_sid", false);
 		ini_set('session.use_only_cookies', true);
 		ini_set("session.cookie_secure", self::checkHTTPS());
 		ini_set("session.gc_maxlifetime", self::$session_lifetime);
 
 		session_name(self::$session_name);
 		session_start();
-		if(self::$session_regenerate_id)
+		if (self::$session_regenerate_id)
 			session_regenerate_id(true);
 	}
 
@@ -105,7 +107,6 @@ class Security
 	 */
 	public static function output($buffer) {
 		if (self::isHTML($buffer)) {
-			self::secureDOS();
 			self::secureCSRF();
 			$buffer = self::secureHTML($buffer);
 			$buffer = self::compressHTML($buffer);
@@ -130,7 +131,7 @@ class Security
 		@header("X-Permitted-Cross-Domain-Policies: master-only");
 		@header("Referer-Policy: origin");
 		@header("X-Download-Options: noopen");
-		if(!$API) @header("Access-Control-Allow-Methods: GET, POST");
+		if (!$API) @header("Access-Control-Allow-Methods: GET, POST");
 		else @header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
 
 		header_remove("X-Powered-By");
@@ -152,7 +153,7 @@ class Security
 		foreach ($_COOKIE as $key => $value) {
 			//$value = self::clean(self::getCookie($key), false, false);
 			//self::setCookie($key, $value, 0, '/; SameSite=Strict', null, false, true);
-			if($key != self::$session_name)
+			if ($key != self::$session_name)
 				setcookie($key, $value, 0, '/; SameSite=Strict', null, false, self::checkHTTPS());
 		}
 	}
@@ -197,8 +198,8 @@ class Security
 	/**
 	 * Secure Form Request check if the referer is equal to the origin
 	 */
-	public static function secureFormRequest(){
-		if ($_SERVER["REQUEST_METHOD"] == "POST"){
+	public static function secureFormRequest() {
+		if ($_SERVER["REQUEST_METHOD"] == "POST") {
 			$referer = $_SERVER["HTTP_REFERER"];
 			if (!isset($referer) || strpos($_SERVER["SERVER_NAME"], $referer) != 0)
 				self::permission_denied();
@@ -563,7 +564,7 @@ class Security
 	 * Check if clients use Tor
 	 * @return bool
 	 */
-	public static function clientIsTor(){
+	public static function clientIsTor() {
 		$ip = self::clientIP();
 		$ip_server = gethostbyname($_SERVER['SERVER_NAME']);
 
@@ -588,8 +589,8 @@ class Security
 	/**
 	 * Block Tor clients
 	 */
-	public static function secureBlockTor(){
-		if(self::clientIsTor())
+	public static function secureBlockTor() {
+		if (self::clientIsTor())
 			self::permission_denied();
 	}
 
@@ -611,7 +612,7 @@ class Security
 			) as $key) {
 			if (array_key_exists($key, $_SERVER) === true) {
 				foreach (explode(',', $_SERVER[$key]) as $ip) {
-					if($ip == "::1") return "127.0.0.1";
+					if ($ip == "::1") return "127.0.0.1";
 					return $ip;
 				}
 			}
@@ -638,11 +639,11 @@ class Security
 	 */
 	private static function blockFakeGoogleBots() {
 		$user_agent = (isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '');
-		if (preg_match('/googlebot/i', $user_agent, $matches)){
+		if (preg_match('/googlebot/i', $user_agent, $matches)) {
 			$ip = self::clientIP();
 			$name = gethostbyaddr($ip);
 			$host_ip = gethostbyname($name);
-			if(preg_match('/googlebot/i', $name, $matches)){
+			if (preg_match('/googlebot/i', $name, $matches)) {
 				if ($host_ip != $ip)
 					self::permission_denied();
 			} else self::permission_denied();
@@ -671,7 +672,7 @@ class Security
 	public static function secureUpload($file, $path) {
 		if (!file_exists($path)) return false;
 		if (!is_uploaded_file($_FILES[$file]["tmp_name"])) return false;
-		if(!self::secureScanFile($_FILES[$file]["tmp_name"])) return false;
+		if (!self::secureScanFile($_FILES[$file]["tmp_name"])) return false;
 		if (move_uploaded_file($_FILES[$file]["tmp_name"], $path)) {
 			return true;
 		}
@@ -730,7 +731,7 @@ class Security
 	 * @return bool
 	 */
 	public static function setCookie($name, $value, $expires = 2592000, $path = "/", $domain = null, $secure = false, $httponly = false) {
-		if($name != session_name()) {
+		if ($name != session_name()) {
 			$newValue = self::crypt('encrypt', $value);
 			if (!setcookie($name, $newValue, $expires, $path, $domain, $secure, $httponly)) return false;
 			$_COOKIE[$name] = $value;
@@ -846,17 +847,18 @@ class Security
 			return false;
 
 		foreach (self::$scanner_whitelist as $value) {
-			if(!empty(realpath($value)) && (preg_match('#'.preg_quote(realpath($value)).'#i', realpath(dirname($file)))
-			|| preg_match('#'.preg_quote(realpath($value)).'#i', realpath($file))))
+			$value = trim(realpath($value));
+			if (!empty($value) && (preg_match('#' . preg_quote($value) . '#i', realpath(dirname($file)))
+					|| preg_match('#' . preg_quote($value) . '#i', realpath($file))))
 				return true;
 		}
 
-		if (preg_match("/^text/i", mime_content_type($file))){
+		if (preg_match("/^text/i", mime_content_type($file))) {
 			$contents = file_get_contents($file);
 			foreach ($search as $pattern) {
-				if (preg_match("/(".$pattern."[\s\r\n]?\()/i", $contents))
+				if (preg_match("/(" . $pattern . "[\s\r\n]?\()/i", $contents))
 					return false;
-					//return array($pattern,realpath($file));
+				//return array($pattern,realpath($file));
 			}
 		}
 		return true;
@@ -873,7 +875,7 @@ class Security
 			return array();
 		$files = self::recursiveGlob($path);
 		foreach ($files as $file) {
-			if(!self::secureScanFile($file))
+			if (!self::secureScanFile($file))
 				$potentially_infected[] = $file;
 		}
 		return $potentially_infected;
@@ -882,12 +884,11 @@ class Security
 	/**
 	 * Scan and rename bad files
 	 * @param $pattern
-	 * @return array
 	 */
 	public static function secureScan($path) {
 		$files = self::secureScanPath($path);
-		foreach ($files as $file){
-				rename($file,$file.".bad");
+		foreach ($files as $file) {
+			rename($file, $file . ".bad");
 		}
 	}
 
@@ -897,10 +898,10 @@ class Security
 	 * @param int $flags
 	 * @return array
 	 */
-	private static function recursiveGlob($pattern, $flags = 0){
+	private static function recursiveGlob($pattern, $flags = 0) {
 		$files = glob($pattern, $flags);
-		foreach (glob(dirname($pattern).'/*', GLOB_ONLYDIR|GLOB_NOSORT) as $dir){
-			$files = array_merge($files, self::recursiveGlob($dir.'/'.basename($pattern), $flags));
+		foreach (glob(dirname($pattern) . '/*', GLOB_ONLYDIR | GLOB_NOSORT) as $dir) {
+			$files = array_merge($files, self::recursiveGlob($dir . '/' . basename($pattern), $flags));
 		}
 		return $files;
 	}
@@ -908,59 +909,132 @@ class Security
 	/**
 	 * Check if the request is HTTPS
 	 */
-	private static function checkHTTPS(){
+	private static function checkHTTPS() {
 		if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) {
 			return true;
 		}
 		return false;
 	}
 
-	private static $dos_checked = false;
+	/**
+	 * Write on htaccess the DOS Attempts
+	 * @param $ip
+	 * @param $htaccess_content
+	 */
+	private static function secureDOSWriteAttempts($ip, $htaccess_content) {
+		$ip_quote = preg_quote($ip);
+		$htaccess = realpath(self::$basedir . "/.htaccess");
+		if (preg_match("/### BEGIN: DOS Attempts ###[\S\s.]*# $ip_quote => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\S\s.]*### END: DOS Attempts ###/i", $htaccess_content, $attemps)) {
+			$row_replace = "# $ip => " . $_SESSION['DOSAttemptsTimer'] . ":" . $_SESSION['DOSAttempts'] . ":" . $_SESSION['DOSCounter'] . ":" . $_SESSION['DOSTimer'];
+			$htaccess_content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)(# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i",
+				"$1$row_replace$3", $htaccess_content);
+		} else if (preg_match("/### BEGIN: DOS Attempts ###([\S\s.]*)### END: DOS Attempts ###/i", $htaccess_content)) {
+			$row = "# $ip => " . $_SESSION['DOSAttemptsTimer'] . ":" . $_SESSION['DOSAttempts'] . ":" . $_SESSION['DOSCounter'] . ":" . $_SESSION['DOSTimer'] . ":" . $_SESSION['DOSAttemptsTimer'];
+			$htaccess_content = preg_replace("/(### BEGIN: DOS Attempts ###)([\S\s.]*)([\r\n]+### END: DOS Attempts ###)/i",
+				"$1$2$row$3", $htaccess_content);
+		} else {
+			$htaccess_content .= "\r\n\r\n### BEGIN: DOS Attempts ###";
+			$htaccess_content .= "\r\n# $ip => " . $_SESSION['DOSAttemptsTimer'] . ":" . $_SESSION['DOSAttempts'] . ":" . $_SESSION['DOSCounter'] . ":" . $_SESSION['DOSTimer'] . ":" . $_SESSION['DOSAttemptsTimer'];
+			$htaccess_content .= "\r\n### END: DOS Attempts ###";
+		}
+		file_put_contents($htaccess, $htaccess_content);
+	}
+
+	/**
+	 * Remove from htaccess the DOS Attempts
+	 * @param $ip
+	 * @param $htaccess_content
+	 */
+	private static function secureDOSRemoveAttempts($ip, $htaccess_content) {
+		$ip_quote = preg_quote($ip);
+		$htaccess = realpath(self::$basedir . "/.htaccess");
+		if (preg_match("/### BEGIN: DOS Attempts ###[\S\s.]*[\r\n]+# $ip_quote => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\S\s.]*### END: DOS Attempts ###/i", $htaccess_content, $attemps)) {
+			$htaccess_content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)([\r\n]+# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i",
+				"$1$3", $htaccess_content);
+		}
+		file_put_contents($htaccess, $htaccess_content);
+	}
+
+	/**
+	 * Read from htaccess the DOS Attempts
+	 * @param $ip
+	 * @param $htaccess_content
+	 */
+	private static function secureDOSReadAttempts($ip, $htaccess_content) {
+		$ip_quote = preg_quote($ip);
+		if (preg_match("/### BEGIN: DOS Attempts ###[\S\s.]*[\r\n]+# $ip_quote => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\S\s.]*### END: DOS Attempts ###/i", $htaccess_content, $attemps)) {
+			if (!empty($_SESSION['DOSAttemptsTimer']))
+				$_SESSION['DOSAttemptsTimer'] = $attemps[1];
+			if (!isset($_SESSION['DOSAttempts']))
+				$_SESSION['DOSAttempts'] = $attemps[2];
+			if (!isset($_SESSION['DOSCounter']))
+				$_SESSION['DOSCounter'] = $attemps[3];
+			if (!empty($_SESSION['DOSTimer']))
+				$_SESSION['DOSTimer'] = $attemps[4];
+		}
+	}
 
 	/**
 	 * Block DOS Attacks
 	 */
 	public static function secureDOS() {
 
-		if(self::$dos_checked) return;
+		$time_counter = 2;
+		$time_waiting = 10;
+		$time_attemps_expire = 3600;
 
-		$time = $_SERVER["REQUEST_TIME"];
+		$time = time();
 		$ip = self::clientIP();
+		$htaccess = realpath(self::$basedir . "/.htaccess");
+		$htaccess_content = file_get_contents($htaccess);
 
-		if(!isset($_SESSION['DOSCounter']) || !isset($_SESSION['DOSAttemps']) || empty($_SESSION['DOSTimer'])){
+		if (!isset($_SESSION['DOSCounter']) || !isset($_SESSION['DOSAttempts']) || empty($_SESSION['DOSAttemptsTimer']) || empty($_SESSION['DOSTimer'])) {
+			self::secureDOSReadAttempts($ip, $htaccess_content);
 			$_SESSION['DOSCounter'] = 0;
-			$_SESSION['DOSAttemps'] = 0;
+			$_SESSION['DOSAttempts'] = 0;
+			$_SESSION['DOSAttemptsTimer'] = $time;
 			$_SESSION['DOSTimer'] = $time;
+			self::secureDOSWriteAttempts($ip, $htaccess_content);
 		} else {
-			if($_SESSION['DOSCounter'] >= 10 && $_SESSION['DOSAttemps'] < 2) {
-				if ($time > $_SESSION['DOSTimer'] + 10) {
-					$_SESSION['DOSAttemps'] = $_SESSION['DOSAttemps'] + 1;
+
+			if ($time > $_SESSION['DOSTimer'] + $time_attemps_expire)
+				$_SESSION['DOSAttempts'] = 0;
+
+			if ($_SESSION['DOSCounter'] >= 10 && $_SESSION['DOSAttempts'] < 2) {
+				if ($time > $_SESSION['DOSTimer'] + $time_waiting) {
+					$_SESSION['DOSAttempts'] = $_SESSION['DOSAttempts'] + 1;
+					$_SESSION['DOSAttemptsTimer'] = $time;
 					$_SESSION['DOSTimer'] = $time;
 					$_SESSION['DOSCounter'] = 0;
 				} else {
 					$url = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
-					$seconds = round(($_SESSION['DOSTimer'] + 1.5) - time());
+					$seconds = round(($_SESSION['DOSTimer'] + $time_waiting) - time());
 					if ($seconds < 1) header("Location: {$url}");
 					header("Refresh: {$seconds}; url={$url}");
+
 					self::permission_denied('You must wait ' . $seconds . ' seconds...');
 				}
-			} else if($_SESSION['DOSCounter'] >= 10 && $_SESSION['DOSAttemps'] > 1){
-				$htaccess = self::$basedir."/.htaccess";
-				$content = file_get_contents($htaccess);
-				if(preg_match("/### BEGIN: BANNED IPs ###\r\n/i", $content))
-					$content = preg_replace("/(### BEGIN: BANNED IPs ###\r\n)([\S\s.]*?)(\r\n### END: BANNED IPs ###)/i","$1$2\r\nDeny from $ip$3", $content);
-				else
-					$content .= "\r\n\r\n### BEGIN: BANNED IPs ###\r\nOrder Allow,Deny\r\nDeny from $ip\r\n### END: BANNED IPs ###";
-				file_put_contents($htaccess, $content);
+				self::secureDOSWriteAttempts($ip, $htaccess_content);
+			} else if ($_SESSION['DOSCounter'] >= 10 && $_SESSION['DOSAttempts'] > 1) {
+				if (preg_match("/### BEGIN: BANNED IPs ###\n/i", $htaccess_content)) {
+					$htaccess_content = preg_replace("/(### BEGIN: BANNED IPs ###[\r\n]+)([\S\s.]*?)([\r\n]+### END: BANNED IPs ###)/i", "$1$2\r\nDeny from $ip$3", $htaccess_content);
+				} else {
+					$htaccess_content .= "\r\n\r\n### BEGIN: BANNED IPs ###\r\n";
+					$htaccess_content .= "Order Allow,Deny\r\n";
+					$htaccess_content .= "Deny from $ip\r\n";
+					$htaccess_content .= "### END: BANNED IPs ###";
+				}
+				file_put_contents($htaccess, $htaccess_content);
+				self::secureDOSRemoveAttempts($ip, $htaccess_content);
 			} else {
-				if($_SESSION['DOSTimer'] > ($time - 10)){
+				if ($_SESSION['DOSTimer'] > ($time - $time_counter)) {
 					$_SESSION['DOSCounter'] = $_SESSION['DOSCounter'] + 1;
 				} else {
 					$_SESSION['DOSCounter'] = 0;
 				}
 				$_SESSION['DOSTimer'] = $time;
+				self::secureDOSWriteAttempts($ip, $htaccess_content);
 			}
 		}
-		self::$dos_checked = true;
 	}
 }

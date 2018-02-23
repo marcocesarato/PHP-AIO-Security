@@ -17,7 +17,7 @@ These are the options:
 
 ```php
 // Config
-$basedir = "./"; // Project basedir where is located .htaccess
+$basedir = __DIR__; // Project basedir where is located .htaccess
 $session_name = "XSESSID";
 $session_lifetime = 288000; // 8 hours
 $session_regenerate_id = false;
