@@ -929,12 +929,12 @@ class Security
 			$htaccess_content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)(# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i",
 				"$1$row_replace$3", $htaccess_content);
 		} else if (preg_match("/### BEGIN: DOS Attempts ###([\S\s.]*)### END: DOS Attempts ###/i", $htaccess_content)) {
-			$row = "# $ip => " . $_SESSION['DOSAttemptsTimer'] . ":" . $_SESSION['DOSAttempts'] . ":" . $_SESSION['DOSCounter'] . ":" . $_SESSION['DOSTimer'] . ":" . $_SESSION['DOSAttemptsTimer'];
+			$row = "# $ip => " . $_SESSION['DOSAttemptsTimer'] . ":" . $_SESSION['DOSAttempts'] . ":" . $_SESSION['DOSCounter'] . ":" . $_SESSION['DOSTimer'];
 			$htaccess_content = preg_replace("/(### BEGIN: DOS Attempts ###)([\S\s.]*)([\r\n]+### END: DOS Attempts ###)/i",
 				"$1$2$row$3", $htaccess_content);
 		} else {
 			$htaccess_content .= "\r\n\r\n### BEGIN: DOS Attempts ###";
-			$htaccess_content .= "\r\n# $ip => " . $_SESSION['DOSAttemptsTimer'] . ":" . $_SESSION['DOSAttempts'] . ":" . $_SESSION['DOSCounter'] . ":" . $_SESSION['DOSTimer'] . ":" . $_SESSION['DOSAttemptsTimer'];
+			$htaccess_content .= "\r\n# $ip => " . $_SESSION['DOSAttemptsTimer'] . ":" . $_SESSION['DOSAttempts'] . ":" . $_SESSION['DOSCounter'] . ":" . $_SESSION['DOSTimer'];
 			$htaccess_content .= "\r\n### END: DOS Attempts ###";
 		}
 		file_put_contents($htaccess, $htaccess_content);
