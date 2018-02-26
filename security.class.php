@@ -983,14 +983,10 @@ class Security
 	private static function secureDOSReadAttempts($ip, $htaccess_content) {
 		$ip_quote = preg_quote($ip);
 		if (preg_match("/### BEGIN: DOS Attempts ###[\S\s.]*[\r\n]+# $ip_quote => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\S\s.]*### END: DOS Attempts ###/i", $htaccess_content, $attemps)) {
-			if (!empty($_SESSION['DOSAttemptsTimer']))
-				$_SESSION['DOSAttemptsTimer'] = $attemps[1];
-			if (!isset($_SESSION['DOSAttempts']))
-				$_SESSION['DOSAttempts'] = $attemps[2];
-			if (!isset($_SESSION['DOSCounter']))
-				$_SESSION['DOSCounter'] = $attemps[3];
-			if (!empty($_SESSION['DOSTimer']))
-				$_SESSION['DOSTimer'] = $attemps[4];
+			$_SESSION['DOSAttemptsTimer'] = $attemps[1];
+			$_SESSION['DOSAttempts'] = $attemps[2];
+			$_SESSION['DOSCounter'] = $attemps[3];
+			$_SESSION['DOSTimer'] = $attemps[4];
 		}
 	}
 
