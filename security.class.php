@@ -1004,7 +1004,7 @@ class Security
 		$htaccess = realpath(self::$basedir . "/.htaccess");
 		$file_attempts = realpath(self::$basedir) . "/.ddos";
 		$content = @file_get_contents($file_attempts);
-		self::secureDOSRemoveOldAttempts($time_expire, @file_get_contents($file_attempts));
+		self::secureDOSRemoveOldAttempts($time_expire, $file_attempts);
 
 		if (!isset($_SESSION['DOSCounter']) || !isset($_SESSION['DOSAttempts']) || empty($_SESSION['DOSAttemptsTimer']) || empty($_SESSION['DOSTimer'])) {
 			self::secureDOSReadAttempts($ip, $file_attempts);
