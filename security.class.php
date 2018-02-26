@@ -919,70 +919,70 @@ class Security
 	/**
 	 * Write on htaccess the DOS Attempts
 	 * @param $ip
-	 * @param $htaccess_content
+	 * @param $content
 	 */
-	private static function secureDOSWriteAttempts($ip, $htaccess_content) {
+	private static function secureDOSWriteAttempts($ip, $file_attempts) {
 		$ip_quote = preg_quote($ip);
-		$htaccess = realpath(self::$basedir . "/.htaccess");
-		if (preg_match("/### BEGIN: DOS Attempts ###[\S\s.]*# $ip_quote => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\S\s.]*### END: DOS Attempts ###/i", $htaccess_content, $attemps)) {
+		$content = @file_get_contents($file_attempts);
+		if (preg_match("/### BEGIN: DOS Attempts ###[\S\s.]*# $ip_quote => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\S\s.]*### END: DOS Attempts ###/i", $content, $attemps)) {
 			$row_replace = "# $ip => " . $_SESSION['DOSAttemptsTimer'] . ":" . $_SESSION['DOSAttempts'] . ":" . $_SESSION['DOSCounter'] . ":" . $_SESSION['DOSTimer'];
-			$htaccess_content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)(# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i",
-				"$1$row_replace$3", $htaccess_content);
-		} else if (preg_match("/### BEGIN: DOS Attempts ###([\S\s.]*)### END: DOS Attempts ###/i", $htaccess_content)) {
+			$content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)(# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i",
+				"$1$row_replace$3", $content);
+		} else if (preg_match("/### BEGIN: DOS Attempts ###([\S\s.]*)### END: DOS Attempts ###/i", $content)) {
 			$row = "# $ip => " . $_SESSION['DOSAttemptsTimer'] . ":" . $_SESSION['DOSAttempts'] . ":" . $_SESSION['DOSCounter'] . ":" . $_SESSION['DOSTimer'];
-			$htaccess_content = preg_replace("/(### BEGIN: DOS Attempts ###)([\S\s.]*)([\r\n]+### END: DOS Attempts ###)/i",
-				"$1$2$row$3", $htaccess_content);
+			$content = preg_replace("/(### BEGIN: DOS Attempts ###)([\S\s.]*)([\r\n]+### END: DOS Attempts ###)/i",
+				"$1$2$row$3", $content);
 		} else {
-			$htaccess_content .= "\r\n\r\n### BEGIN: DOS Attempts ###";
-			$htaccess_content .= "\r\n# $ip => " . $_SESSION['DOSAttemptsTimer'] . ":" . $_SESSION['DOSAttempts'] . ":" . $_SESSION['DOSCounter'] . ":" . $_SESSION['DOSTimer'];
-			$htaccess_content .= "\r\n### END: DOS Attempts ###";
+			$content .= "### BEGIN: DOS Attempts ###";
+			$content .= "\r\n# $ip => " . $_SESSION['DOSAttemptsTimer'] . ":" . $_SESSION['DOSAttempts'] . ":" . $_SESSION['DOSCounter'] . ":" . $_SESSION['DOSTimer'];
+			$content .= "\r\n### END: DOS Attempts ###";
 		}
-		file_put_contents($htaccess, $htaccess_content);
+		file_put_contents($file_attempts, $content);
 		//die("# $ip => " . $_SESSION['DOSAttemptsTimer'] . ":" . $_SESSION['DOSAttempts'] . ":" . $_SESSION['DOSCounter'] . ":" . $_SESSION['DOSTimer']);
 	}
 
 	/**
 	 * Remove from htaccess the DOS Attempts
 	 * @param $ip
-	 * @param $htaccess_content
+	 * @param $content
 	 */
-	private static function secureDOSRemoveAttempts($ip, $htaccess_content) {
+	private static function secureDOSRemoveAttempts($ip, $file_attempts) {
 		$ip_quote = preg_quote($ip);
-		$htaccess = realpath(self::$basedir . "/.htaccess");
-		if (preg_match("/### BEGIN: DOS Attempts ###[\S\s.]*[\r\n]+# $ip_quote => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\S\s.]*### END: DOS Attempts ###/i", $htaccess_content, $attemps)) {
-			$htaccess_content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)([\r\n]+# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i","$1$3", $htaccess_content);
+		$content = @file_get_contents($file_attempts);
+		if (preg_match("/### BEGIN: DOS Attempts ###[\S\s.]*[\r\n]+# $ip_quote => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\S\s.]*### END: DOS Attempts ###/i", $content, $attemps)) {
+			$content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)([\r\n]+# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i","$1$3", $content);
 		}
-		file_put_contents($htaccess, $htaccess_content);
+		file_put_contents($file_attempts, $content);
 	}
 
 	/**
 	 * Remove from htaccess the DOS Attempts
 	 * @param $ip
-	 * @param $htaccess_content
+	 * @param $content
 	 */
-	private static function secureDOSRemoveOldAttempts($time_expire, $htaccess_content) {
+	private static function secureDOSRemoveOldAttempts($time_expire, $file_attempts) {
 		$time = $_SERVER['REQUEST_TIME'];
 		$pattern = "/# ((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])) => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\r\n]+/i";
-		$htaccess = realpath(self::$basedir . "/.htaccess");
-		if (preg_match_all($pattern, $htaccess_content, $attemps)) {
+		$content = @file_get_contents($file_attempts);
+		if (preg_match_all($pattern, $content, $attemps)) {
 			foreach ($attemps as $attemp){
 				preg_match($pattern, $attemp[0], $attemp);
 				$ip_quote = preg_quote($attemp[1]);
 				if ($time > $attemp[5] + $time_expire || $time > $attemp[8] + $time_expire)
-					$htaccess_content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)([\r\n]+# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i","$1$3", $htaccess_content);
+					$content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)([\r\n]+# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i","$1$3", $content);
 			}
 		}
-		file_put_contents($htaccess, $htaccess_content);
+		file_put_contents($file_attempts, $content);
 	}
 
 	/**
 	 * Read from htaccess the DOS Attempts
 	 * @param $ip
-	 * @param $htaccess_content
+	 * @param $content
 	 */
-	private static function secureDOSReadAttempts($ip, $htaccess_content) {
+	private static function secureDOSReadAttempts($ip, $content) {
 		$ip_quote = preg_quote($ip);
-		if (preg_match("/### BEGIN: DOS Attempts ###[\S\s.]*[\r\n]+# $ip_quote => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\S\s.]*### END: DOS Attempts ###/i", $htaccess_content, $attemps)) {
+		if (preg_match("/### BEGIN: DOS Attempts ###[\S\s.]*[\r\n]+# $ip_quote => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\S\s.]*### END: DOS Attempts ###/i", $content, $attemps)) {
 			$_SESSION['DOSAttemptsTimer'] = $attemps[1];
 			$_SESSION['DOSAttempts'] = $attemps[2];
 			$_SESSION['DOSCounter'] = $attemps[3];
@@ -1001,17 +1001,18 @@ class Security
 
 		$time = $_SERVER['REQUEST_TIME'];
 		$ip = self::clientIP();
-		$htaccess = realpath(self::$basedir . "/.htaccess");;
-		self::secureDOSRemoveOldAttempts($time_expire, file_get_contents($htaccess));
-		$htaccess_content = file_get_contents($htaccess);
+		$htaccess = realpath(self::$basedir . "/.htaccess");
+		$file_attempts = realpath(self::$basedir) . "/.ddos";
+		$content = @file_get_contents($file_attempts);
+		self::secureDOSRemoveOldAttempts($time_expire, @file_get_contents($file_attempts));
 
 		if (!isset($_SESSION['DOSCounter']) || !isset($_SESSION['DOSAttempts']) || empty($_SESSION['DOSAttemptsTimer']) || empty($_SESSION['DOSTimer'])) {
-			self::secureDOSReadAttempts($ip, $htaccess_content);
+			self::secureDOSReadAttempts($ip, $file_attempts);
 			$_SESSION['DOSCounter'] = 0;
 			$_SESSION['DOSAttempts'] = 0;
 			$_SESSION['DOSAttemptsTimer'] = $time;
 			$_SESSION['DOSTimer'] = $time;
-			self::secureDOSWriteAttempts($ip, $htaccess_content);
+			self::secureDOSWriteAttempts($ip, $file_attempts);
 		} else if ($_SESSION['DOSTimer'] != $time) {
 
 			if ($time > $_SESSION['DOSTimer'] + $time_expire)
@@ -1031,9 +1032,10 @@ class Security
 
 					self::permission_denied('You must wait ' . $seconds . ' seconds...');
 				}
-				self::secureDOSWriteAttempts($ip, $htaccess_content);
+				self::secureDOSWriteAttempts($ip, $file_attempts);
 			} else if ($_SESSION['DOSCounter'] >= 10 && $_SESSION['DOSAttempts'] > 1) {
-				if (preg_match("/### BEGIN: BANNED IPs ###\n/i", $htaccess_content)) {
+				$htaccess_content = file_get_contents($htaccess);
+				if (preg_match("/### BEGIN: BANNED IPs ###\n/i", $content)) {
 					$htaccess_content = preg_replace("/(### BEGIN: BANNED IPs ###[\r\n]+)([\S\s.]*?)([\r\n]+### END: BANNED IPs ###)/i", "$1$2\r\nDeny from $ip$3", $htaccess_content);
 				} else {
 					$htaccess_content .= "\r\n\r\n### BEGIN: BANNED IPs ###\r\n";
@@ -1042,7 +1044,7 @@ class Security
 					$htaccess_content .= "### END: BANNED IPs ###";
 				}
 				file_put_contents($htaccess, $htaccess_content);
-				self::secureDOSRemoveAttempts($ip, $htaccess_content);
+				self::secureDOSRemoveAttempts($ip, $file_attempts);
 			} else {
 				if ($_SESSION['DOSTimer'] > ($time - $time_counter)) {
 					$_SESSION['DOSCounter'] = $_SESSION['DOSCounter'] + 1;
@@ -1050,7 +1052,7 @@ class Security
 					$_SESSION['DOSCounter'] = 0;
 				}
 				$_SESSION['DOSTimer'] = $time;
-				self::secureDOSWriteAttempts($ip, $htaccess_content);
+				self::secureDOSWriteAttempts($ip, $file_attempts);
 			}
 		}
 	}
