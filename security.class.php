@@ -790,11 +790,10 @@ class Security
 	 * @return boolean
 	 */
 	public static function secureScanFile($file) {
-		$search =
+		$commands =
 			array(
-				/*"eval",
-				"exec",*/
-				"_exec",
+				"eval",
+				"exec",
 				"create_function",/*
 				"sqlite_create_aggregate",
 				"sqlite_create_function",*/
@@ -836,7 +835,39 @@ class Security
 				"ob_start",*/
 			);
 
+		$exploits = array(
+			"eval_chr" => "/chr\s*\(\s*101\s*\)\s*\.\s*chr\s*\(\s*118\s*\)\s*\.\s*chr\s*\(\s*97\s*\)\s*\.\s*chr\s*\(\s*108\s*\)/i",
+			"eval_preg" => "/(preg_replace(_callback)?|mb_ereg_replace|preg_filter)\s*\(.+(\/|\\x2f)(e|\\x65)['\"]/i",
+			"align" => "/(\$\w+=[^;]*)*;\$\w+=@?\$\w+\(/i",
+			"weevely3" => "/\$\w=\$[a-zA-Z]\('',\$\w\);\$\w\(\);/i",  // weevely3 launcher
+			"c99_launcher" => "/;\$\w+\(\$\w+(,\s?\$\w+)+\);/i",  // http://bartblaze.blogspot.fr/2015/03/c99shell-not-dead.html
+			"variable_variable" => "/\${\$[0-9a-zA-z]+}/i",
+			"too_many_chr" => "/(chr\([\d]+\)\.){8}/i",  // concatenation of more than eight `chr()`
+			"concat" => "/(\$[^\n\r]+\.){5}/i",  // concatenation of more than 5 words
+			"concat_with_spaces" => "/(\$[^\n\r]+\. ){5}/i",  // concatenation of more than 5 words, with spaces
+			"var_as_func" => "/\$_(GET|POST|COOKIE|REQUEST|SERVER)\s*\[[^\]]+\]\s*\(/i",
+			"escaped_path" => "/(\\x[0-9abcdef]{2}[a-z0-9.-\/]{1,4}){4,}/i",
+			"infected_comment" => "/\/\*[a-z0-9]{5}\*\//i",
+			"hex_char" => "/\\[Xx](5[Ff])/i",
+			"download_remote_code" => "/echo\s+file_get_contents\s*\(\s*base64_url_decode\s*\(\s*@*\$_(GET|POST|SERVER|COOKIE|REQUEST)/i",
+			"globals" => "/\$GLOBALS\[\$GLOBALS['[a-z0-9]{4,}'\]\[\d+\]\.\$GLOBALS\['[a-z-0-9]{4,}'\]\[\d+\]./i",
+			"globals_assign" => "/\$GLOBALS\['[a-z0-9]{5,}'\] = \$[a-z]+\d+\[\d+\]\.\$[a-z]+\d+\[\d+\]\.\$[a-z]+\d+\[\d+\]\.\$[a-z]+\d+\[\d+\]\./i",
+			"php_long" => "/^.*<\?php.{1100,}\?>.*$/i",
+			"base64_long" => "/['\"][A-Za-z0-9+\/]{260,}={0,3}['\"]/",
+			"clever_include" => "/include\s*\(\s*[^\.]+\.(png|jpe?g|gif|bmp)/i",
+			"basedir_bypass" => "/curl_init\s*\(\s*[\"']file:\/\//i",
+			"basedir_bypass2" => "/file\:file\:\/\//i", // https://www.intelligentexploit.com/view-details.html?id=8719
+			"ini_get" => "/ini_(get|set|restore)\s*\(\s*['\"](safe_mode|open_basedir|disable_(function|classe)s|safe_mode_exec_dir|safe_mode_include_dir|register_globals|allow_url_include)/i",
+			"non_printable" => "/(function|return|base64_decode).{,256}[^\x09-\x0d\x20-\x7E]{3}/i",
+			"double_var" => "/\${\s*\${/i",
+			"obfuscated_var" => "/\${\"\\x/i", // IonCube use this
+			"register_function" => "/register_[a-z]+_function\s*\(\s*['\"]\s*(eval|assert|passthru|exec|include|system|shell_exec|`)/i",  // https://github.com/nbs-system/php-malware-finder/issues/41
+			"safemode_bypass" => "/\x00\/\.\.\/|LD_PRELOAD/i",
+		);
+
 		$contents = file_get_contents($file);
+		$contents = preg_replace("/\/\*.*?\*\//i","",$contents); // Remove comments
+		$contents = preg_replace("/('|\")[\s\r\n]*\.[\s\r\n]*('|\")/i","",$contents); // Remove "ev"."al"
 
 		if (empty($file) || !file_exists($file))
 			return false;
@@ -848,17 +879,22 @@ class Security
 				return true;
 		}
 
-		// IonCube encoded virus
-		if ((strpos($contents, 'IonCube_loader')) || (strpos($contents, '${"\x')))
-			return false;
-
 		if (preg_match("/^text/i", mime_content_type($file))) {
-			$contents = preg_replace("/\/\*.*?\*\//i","",$contents);
-			$contents = preg_replace("/('|\")[\s\r\n]*\.[\s\r\n]*('|\")/i","",$contents);
-			foreach ($search as $pattern) {
-				if (preg_match("/(" . $pattern . ")/i", $contents))
+			foreach ($commands as $pattern) {
+				if (@preg_match("/(" . $pattern . ")\/\*[^\*]*\*\/\()/i", $contents))
+					return false;
+				if (@preg_match("/(" . preg_quote(base64_encode($pattern)) . ")/i", $contents))
+					return false;
+				$field = bin2hex($pattern);
+				$field = chunk_split($field,2,"\\x");
+				$field = "\\x".substr($field,0,-2);
+				if (@preg_match("/(" . $field . ")/i", $contents))
 					return false;
 				//return array($pattern,realpath($file));
+			}
+			foreach ($exploits as $pattern) {
+				if (@preg_match($pattern, $contents))
+					return false;
 			}
 		}
 		return true;
@@ -938,7 +974,6 @@ class Security
 			$content .= "\r\n### END: DOS Attempts ###";
 		}
 		file_put_contents($file_attempts, $content);
-		//die("# $ip => " . $_SESSION['DOSAttemptsTimer'] . ":" . $_SESSION['DOSAttempts'] . ":" . $_SESSION['DOSCounter'] . ":" . $_SESSION['DOSTimer']);
 	}
 
 	/**
