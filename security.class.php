@@ -792,15 +792,15 @@ class Security
 	public static function secureScanFile($file) {
 		$search =
 			array(
-				"e(\'\.\')?v(\'\.\')?a(\'\.\')?l(\'\.\')?",
-				"exec", //ftp_exec,hell_exec,exec
-				"create_function",
+				/*"eval",
+				"exec", //ftp_exec,exec*/
+				"create_function",/*
 				"sqlite_create_aggregate",
-				"sqlite_create_function",
+				"sqlite_create_function",*/
 				"assert",
 				"system",
 				"syslog",
-				"passthru",
+				"passthru",/*
 				"dl",
 				"define_syslog_variables",
 				"debugger_off",
@@ -810,38 +810,40 @@ class Security
 				"show_source",
 				"symlink",
 				"popen",
-				"posix_getpwuid",
+				"posix_getpwuid",*/
 				"posix_kill",
-				"posix_mkfifo",
+				"posix_mkfifo",/*
 				"posix_setpgid",
 				"posix_setsid",
 				"posix_setuid",
-				"posix_uname",
-				"proc_close",
+				"posix_uname",*/
+				"proc_close",/*
 				"proc_get_status",
 				"proc_nice",
-				"proc_open",
-				"proc_terminate",
+				"proc_open",*/
+				"proc_terminate",/*
 				"ini_alter",
 				"ini_get_all",
-				"ini_restore",
+				"ini_restore",*/
 				"inject_code",
 				"apache_child_terminate",
-				"apache_setenv",
+				"apache_setenv",/*
 				"apache_note",
 				"define_syslog_variables",
 				"escapeshellarg",
 				"escapeshellcmd",
-				//"ob_start",
-				//"ftp_connect",
-				//"ftp_get",
-				//"ftp_login",
-				//"ftp_nb_fput",
-				//"ftp_put",
-				//"ftp_raw",
-				//"ftp_rawlist",
-				//"mysql_pconnect",
+				"ob_start",
+				"ftp_connect",
+				"ftp_get",
+				"ftp_login",
+				"ftp_nb_fput",
+				"ftp_put",
+				"ftp_raw",
+				"ftp_rawlist",
+				"mysql_pconnect",*/
 			);
+
+		$contents = file_get_contents($file);
 
 		if (empty($file) || !file_exists($file))
 			return false;
@@ -853,10 +855,15 @@ class Security
 				return true;
 		}
 
+		// IonCube encoded virus
+		if ((strpos($contents, 'IonCube_loader')) || (strpos($contents, '${"\x')))
+			return false;
+
 		if (preg_match("/^text/i", mime_content_type($file))) {
-			$contents = file_get_contents($file);
+			$contents = preg_replace("/\/\*.*?\*\//i","",$contents);
+			$contents = preg_replace("/('|\")[\s\r\n]*\.[\s\r\n]*('|\")/i","",$contents);
 			foreach ($search as $pattern) {
-				if (preg_match("/(" . $pattern . "[\s\r\n]?\()/i", $contents))
+				if (preg_match("/(" . $pattern . ")/i", $contents))
 					return false;
 				//return array($pattern,realpath($file));
 			}
