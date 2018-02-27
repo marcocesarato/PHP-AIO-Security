@@ -793,7 +793,8 @@ class Security
 		$search =
 			array(
 				/*"eval",
-				"exec", //ftp_exec,exec*/
+				"exec",*/
+				"_exec",
 				"create_function",/*
 				"sqlite_create_aggregate",
 				"sqlite_create_function",*/
@@ -808,8 +809,8 @@ class Security
 				"stream_select",
 				"parse_ini_file",
 				"show_source",
-				"symlink",
-				"popen",
+				"symlink",*/
+				"popen",/*
 				"posix_getpwuid",*/
 				"posix_kill",
 				"posix_mkfifo",/*
@@ -819,8 +820,8 @@ class Security
 				"posix_uname",*/
 				"proc_close",/*
 				"proc_get_status",
-				"proc_nice",
-				"proc_open",*/
+				"proc_nice",*/
+				"proc_open",
 				"proc_terminate",/*
 				"ini_alter",
 				"ini_get_all",
@@ -832,15 +833,7 @@ class Security
 				"define_syslog_variables",
 				"escapeshellarg",
 				"escapeshellcmd",
-				"ob_start",
-				"ftp_connect",
-				"ftp_get",
-				"ftp_login",
-				"ftp_nb_fput",
-				"ftp_put",
-				"ftp_raw",
-				"ftp_rawlist",
-				"mysql_pconnect",*/
+				"ob_start",*/
 			);
 
 		$contents = file_get_contents($file);
