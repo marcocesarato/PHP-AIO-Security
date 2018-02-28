@@ -806,16 +806,16 @@ class Security
 				"debugger_off",
 				"debugger_on",
 				"stream_select",
-				"parse_ini_file",
-				"show_source",
+				"parse_ini_file",*/
+				"show_source",/*
 				"symlink",*/
-				"popen",/*
-				"posix_getpwuid",*/
+				"popen",
+				"posix_getpwuid",
 				"posix_kill",
-				"posix_mkfifo",/*
+				"posix_mkfifo",
 				"posix_setpgid",
 				"posix_setsid",
-				"posix_setuid",
+				"posix_setuid",/*
 				"posix_uname",*/
 				"proc_close",/*
 				"proc_get_status",
@@ -841,33 +841,30 @@ class Security
 			"align" => "/(\$\w+=[^;]*)*;\$\w+=@?\$\w+\(/i",
 			"weevely3" => "/\$\w=\$[a-zA-Z]\('',\$\w\);\$\w\(\);/i",  // weevely3 launcher
 			"c99_launcher" => "/;\$\w+\(\$\w+(,\s?\$\w+)+\);/i",  // http://bartblaze.blogspot.fr/2015/03/c99shell-not-dead.html
-			"variable_variable" => "/\${\$[0-9a-zA-z]+}/i",
 			"too_many_chr" => "/(chr\([\d]+\)\.){8}/i",  // concatenation of more than eight `chr()`
 			"concat" => "/(\$[^\n\r]+\.){5}/i",  // concatenation of more than 5 words
 			"concat_with_spaces" => "/(\$[^\n\r]+\. ){5}/i",  // concatenation of more than 5 words, with spaces
 			"var_as_func" => "/\$_(GET|POST|COOKIE|REQUEST|SERVER)\s*\[[^\]]+\]\s*\(/i",
 			"escaped_path" => "/(\\x[0-9abcdef]{2}[a-z0-9.-\/]{1,4}){4,}/i",
-			"infected_comment" => "/\/\*[a-z0-9]{5}\*\//i",
+			"infected_comment" => "/\/\*[a-z0-9]{5}\*\//i", // usually used to detect if a file is infected yet
 			"hex_char" => "/\\[Xx](5[Ff])/i",
 			"download_remote_code" => "/echo\s+file_get_contents\s*\(\s*base64_url_decode\s*\(\s*@*\$_(GET|POST|SERVER|COOKIE|REQUEST)/i",
 			"globals" => "/\$GLOBALS\[\$GLOBALS['[a-z0-9]{4,}'\]\[\d+\]\.\$GLOBALS\['[a-z-0-9]{4,}'\]\[\d+\]./i",
 			"globals_assign" => "/\$GLOBALS\['[a-z0-9]{5,}'\] = \$[a-z]+\d+\[\d+\]\.\$[a-z]+\d+\[\d+\]\.\$[a-z]+\d+\[\d+\]\.\$[a-z]+\d+\[\d+\]\./i",
-			"php_long" => "/^.*<\?php.{1100,}\?>.*$/i",
+			"php_long" => "/^.*<\?php.{1000,}\?>.*$/i",
 			"base64_long" => "/['\"][A-Za-z0-9+\/]{260,}={0,3}['\"]/",
 			"clever_include" => "/include\s*\(\s*[^\.]+\.(png|jpe?g|gif|bmp)/i",
 			"basedir_bypass" => "/curl_init\s*\(\s*[\"']file:\/\//i",
 			"basedir_bypass2" => "/file\:file\:\/\//i", // https://www.intelligentexploit.com/view-details.html?id=8719
-			"ini_get" => "/ini_(get|set|restore)\s*\(\s*['\"](safe_mode|open_basedir|disable_(function|classe)s|safe_mode_exec_dir|safe_mode_include_dir|register_globals|allow_url_include)/i",
-			"non_printable" => "/(function|return|base64_decode).{,256}[^\x09-\x0d\x20-\x7E]{3}/i",
+			"non_printable" => "/(function|return|base64_decode).{,256}[^\x00-\x1F\x7F-\xFF]{3}/i",
 			"double_var" => "/\${\s*\${/i",
-			"obfuscated_var" => "/\${\"\\x/i", // IonCube use this
+			"double_var2" => "/\${\$[0-9a-zA-z]+}/i",
+			"hex_var" => "/\${\"\\x/i", // check for ${"\xFF"}, IonCube use this method
 			"register_function" => "/register_[a-z]+_function\s*\(\s*['\"]\s*(eval|assert|passthru|exec|include|system|shell_exec|`)/i",  // https://github.com/nbs-system/php-malware-finder/issues/41
 			"safemode_bypass" => "/\x00\/\.\.\/|LD_PRELOAD/i",
 		);
 
 		$contents = file_get_contents($file);
-		$contents = preg_replace("/\/\*.*?\*\//i","",$contents); // Remove comments
-		$contents = preg_replace("/('|\")[\s\r\n]*\.[\s\r\n]*('|\")/i","",$contents); // Remove "ev"."al"
 
 		if (empty($file) || !file_exists($file))
 			return false;
@@ -879,9 +876,17 @@ class Security
 				return true;
 		}
 
+		foreach ($exploits as $pattern) {
+			if (@preg_match($pattern, $contents))
+				return false;
+		}
+
+		$contents = trim(preg_replace('/<\?php(.*?)\?>/si','$1', $contents));
+		$contents = preg_replace("/\/\*.*?\*\/|\/\/.*?\n|\#.*?\n/i","",$contents); // Remove comments
+		$contents = preg_replace("/('|\")[\s\r\n]*\.[\s\r\n]*('|\")/i","",$contents); // Remove "ev"."al"
 		if (preg_match("/^text/i", mime_content_type($file))) {
 			foreach ($commands as $pattern) {
-				if (@preg_match("/(" . $pattern . ")\/\*[^\*]*\*\/\()/i", $contents))
+				if (@preg_match("/(" . $pattern . ")[\s\r\n]*()/i", $contents))
 					return false;
 				if (@preg_match("/(" . preg_quote(base64_encode($pattern)) . ")/i", $contents))
 					return false;
@@ -891,10 +896,6 @@ class Security
 				if (@preg_match("/(" . $field . ")/i", $contents))
 					return false;
 				//return array($pattern,realpath($file));
-			}
-			foreach ($exploits as $pattern) {
-				if (@preg_match($pattern, $contents))
-					return false;
 			}
 		}
 		return true;
