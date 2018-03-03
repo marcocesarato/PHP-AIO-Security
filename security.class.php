@@ -838,30 +838,32 @@ class Security
 		$exploits = array(
 			"eval_chr" => "/chr\s*\(\s*101\s*\)\s*\.\s*chr\s*\(\s*118\s*\)\s*\.\s*chr\s*\(\s*97\s*\)\s*\.\s*chr\s*\(\s*108\s*\)/i",
 			"eval_preg" => "/(preg_replace(_callback)?|mb_ereg_replace|preg_filter)\s*\(.+(\/|\\x2f)(e|\\x65)['\"]/i",
-			"align" => "/(\$\w+=[^;]*)*;\$\w+=@?\$\w+\(/i",
-			"weevely3" => "/\$\w=\$[a-zA-Z]\('',\$\w\);\$\w\(\);/i",  // weevely3 launcher
-			"c99_launcher" => "/;\$\w+\(\$\w+(,\s?\$\w+)+\);/i",  // http://bartblaze.blogspot.fr/2015/03/c99shell-not-dead.html
+			"align" => "/(\\\$\w+=[^;]*)*;\\\$\w+=@?\\\$\w+\(/i",
+			"b374k" => "/'ev'\.'al'\.'\(\"\?>/i",  // b374k shell
+			"weevely3" => "/\\\$\w=\\\$[a-zA-Z]\('',\\\$\w\);\\\$\w\(\);/i",  // weevely3 launcher
+			"c99_launcher" => "/;\\\$\w+\(\\\$\w+(,\s?\\\$\w+)+\);/i",  // http://bartblaze.blogspot.fr/2015/03/c99shell-not-dead.html
 			"too_many_chr" => "/(chr\([\d]+\)\.){8}/i",  // concatenation of more than eight `chr()`
-			"concat" => "/(\$[^\n\r]+\.){5}/i",  // concatenation of more than 5 words
-			"concat_with_spaces" => "/(\$[^\n\r]+\. ){5}/i",  // concatenation of more than 5 words, with spaces
-			"var_as_func" => "/\$_(GET|POST|COOKIE|REQUEST|SERVER)\s*\[[^\]]+\]\s*\(/i",
+			"concat" => "/(\\\$[^\n\r]+\.){5}/i",  // concatenation of more than 5 words
+			"concat_with_spaces" => "/(\\\$[^\\n\\r]+\. ){5}/i",  // concatenation of more than 5 words, with spaces
+			"var_as_func" => "/\\\$_(GET|POST|COOKIE|REQUEST|SERVER)\s*\[[^\]]+\]\s*\(/i",
 			"escaped_path" => "/(\\x[0-9abcdef]{2}[a-z0-9.-\/]{1,4}){4,}/i",
 			"infected_comment" => "/\/\*[a-z0-9]{5}\*\//i", // usually used to detect if a file is infected yet
 			"hex_char" => "/\\[Xx](5[Ff])/i",
-			"download_remote_code" => "/echo\s+file_get_contents\s*\(\s*base64_url_decode\s*\(\s*@*\$_(GET|POST|SERVER|COOKIE|REQUEST)/i",
-			"globals" => "/\$GLOBALS\[\$GLOBALS['[a-z0-9]{4,}'\]\[\d+\]\.\$GLOBALS\['[a-z-0-9]{4,}'\]\[\d+\]./i",
-			"globals_assign" => "/\$GLOBALS\['[a-z0-9]{5,}'\] = \$[a-z]+\d+\[\d+\]\.\$[a-z]+\d+\[\d+\]\.\$[a-z]+\d+\[\d+\]\.\$[a-z]+\d+\[\d+\]\./i",
+			"download_remote_code" => "/echo\s+file_get_contents\s*\(\s*base64_url_decode\s*\(\s*@*\\\$_(GET|POST|SERVER|COOKIE|REQUEST)/i",
+			"globals" => "/\\\$GLOBALS\[\\\$GLOBALS['[a-z0-9]{4,}'\]\[\d+\]\.\\\$GLOBALS\['[a-z-0-9]{4,}'\]\[\d+\]./i",
+			"globals_assign" => "/\\\$GLOBALS\['[a-z0-9]{5,}'\] = \\\$[a-z]+\d+\[\d+\]\.\\\$[a-z]+\d+\[\d+\]\.\\\$[a-z]+\d+\[\d+\]\.\\\$[a-z]+\d+\[\d+\]\./i",
 			"php_long" => "/^.*<\?php.{1000,}\?>.*$/i",
 			"base64_long" => "/['\"][A-Za-z0-9+\/]{260,}={0,3}['\"]/",
 			"clever_include" => "/include\s*\(\s*[^\.]+\.(png|jpe?g|gif|bmp)/i",
 			"basedir_bypass" => "/curl_init\s*\(\s*[\"']file:\/\//i",
 			"basedir_bypass2" => "/file\:file\:\/\//i", // https://www.intelligentexploit.com/view-details.html?id=8719
-			"non_printable" => "/(function|return|base64_decode).{,256}[^\x00-\x1F\x7F-\xFF]{3}/i",
-			"double_var" => "/\${\s*\${/i",
+			"non_printable" => "/(function|return|base64_decode).{,256}[^\\x00-\\x1F\\x7F-\\xFF]{3}/i",
+			"double_var" => "/\\\${\s*\\\${/i",
 			"double_var2" => "/\${\$[0-9a-zA-z]+}/i",
-			"hex_var" => "/\${\"\\x/i", // check for ${"\xFF"}, IonCube use this method
-			"register_function" => "/register_[a-z]+_function\s*\(\s*['\"]\s*(eval|assert|passthru|exec|include|system|shell_exec|`)/i",  // https://github.com/nbs-system/php-malware-finder/issues/41
-			"safemode_bypass" => "/\x00\/\.\.\/|LD_PRELOAD/i",
+			"hex_var" => "/\\\$\{\\\"\\\\x/i", // check for ${"\xFF"}, IonCube use this method ${"\x
+			"register_function" => "/register_[a-z]+_function\s*\(\s*['\\\"]\s*(eval|assert|passthru|exec|include|system|shell_exec|`)/i",  // https://github.com/nbs-system/php-malware-finder/issues/41
+			"safemode_bypass" => "/\\x00\/\.\.\/|LD_PRELOAD/i",
+			"IonCube_loader" => "/IonCube\_loader/i"
 		);
 
 		$contents = file_get_contents($file);
@@ -881,7 +883,7 @@ class Security
 				return false;
 		}
 
-		$contents = trim(preg_replace('/<\?php(.*?)\?>/si','$1', $contents));
+		$contents = preg_replace("/<\?php(.*?)(?!\B\"[^\"]*)\?>(?![^\"]*\"\B)/si","$1",$contents); // Only php code
 		$contents = preg_replace("/\/\*.*?\*\/|\/\/.*?\n|\#.*?\n/i","",$contents); // Remove comments
 		$contents = preg_replace("/('|\")[\s\r\n]*\.[\s\r\n]*('|\")/i","",$contents); // Remove "ev"."al"
 		if (preg_match("/^text/i", mime_content_type($file))) {
