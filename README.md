@@ -3,9 +3,9 @@ __Version 0.2.1__
 
 _IF YOU USE ON YOUR PROJECT SOME OF THESE METHODS PLEASE TO CREDIT ME :) THANK YOU!_
 
-This is a security class in php with some userful and automatic static methods.
+This is a security class in php with some useful and automatic static methods.
 
-The objective of this class is offer an automatic system of protection for developers's projects and simplify some security operations as the check of CSRF or XSS all in a simple class. Infact you could just call the main method to have better security yet without too much complicated operations.
+The objective of this class is offer an automatic system of protection for developer's projects and simplify some security operations as the check of CSRF or XSS all in a simple class. In fact you could just call the main method to have better security yet without too much complicated operations.
 
 ### Instructions
 
@@ -47,7 +47,7 @@ Security::$session_name = "MYSESSID"
 include 'classes/security.class.php';
 ```
 
-2 - Just create a new object to be more at safe (the **constructor/putInSafety** filter \$_REQUEST and \$_GET globals, add some userfull headers for security, check if there is an **Hijacking** and check the URL Request)
+2 - Just create a new object to be more at safe (the **constructor/putInSafety** filter \$_REQUEST and \$_GET globals, add some useful headers for security, check if there is an **Hijacking** and check the URL Request)
 
 ```php
 $isAPI = false; // default is FALSE (this remove some check that could block API request)
@@ -78,9 +78,9 @@ Security::putInSafety($isAPI);
 3 - Prevent **XSS/SQL Injection** on your variables with:
 
 ```php
-$is_html = true;        // deafult is TRUE
-$have_quotes = true;    // deafult is TRUE
-$escape_string = true;  // deafult is TRUE except if you set FALSE in class config
+$is_html = true;        // default is TRUE
+$have_quotes = true;    // default is TRUE
+$escape_string = true;  // default is TRUE except if you set FALSE in class config
 $var = Security::clean($_POST['var'], $is_html, $have_quotes, $escape_string);
 echo $var; 
 ```
@@ -123,8 +123,8 @@ Enjoy!
 | secureSession             | -              | Void   | Set custom session name for prevent fast identification of php and add some secure param to session cookie. PS: This method call `session_start` |
 | headers                   | $isAPI = false | Void   | Set some secure headers (to prevent some XSS, Clickjacking and others bad requests) and secure php setting |
 | headersCache              |                | Void   | Set cache headers                                            |
-| secureCookies             | -              | Void   | Set some secure paramenter on cookies (autoencryption soon...) |
-| secureDOS                 | -              | Void   | Block clients that do too much requests (after 10 requests within 1.5 seconds consecutive detect a DOS attemp, the first 4 times the client must wait 10 seconds after that its ip will be banned from the server) |
+| secureCookies             | -              | Void   | Set some secure parameter on cookies (autoencryption soon...) |
+| secureDOS                 | -              | Void   | Block clients that do too much requests (after 10 requests within 1.5 seconds consecutive detect a DOS attempt, the first 4 times the client must wait 10 seconds after that its IP will be banned from the server) |
 | secureBlockBots           | -              | Void   | Block some generic bad bots/crawler/spiders                  |
 | secureBlockTor            | -              | Void   | Block TOR clients                                            |
 | secureHijacking           | -              | Void   | Prevent Hijacking and delete session                         |
