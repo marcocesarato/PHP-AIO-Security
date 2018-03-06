@@ -6,7 +6,7 @@
  * @author    Marco Cesarato <cesarato.developer@gmail.com>
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
- * @version   0.2.1
+ * @version   0.2.2
  */
 
 class Security
@@ -94,6 +94,7 @@ class Security
 	 * (send with htmlentities could be a solution if you want send inline js and clean globals at the same time)
 	 */
 	public static function cleanGlobals() {
+		$_SERVER = self::clean($_SERVER, false, false);
 		$_COOKIE = self::clean($_COOKIE, false);
 		$_GET = self::clean($_GET, false, false);
 		$_POST = self::clean($_POST);
