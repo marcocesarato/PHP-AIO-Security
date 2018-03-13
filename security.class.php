@@ -785,59 +785,52 @@ class Security
 		die("Not found!");
 	}
 
-	/**
-	 * File scanner
-	 * @param $pattern
-	 * @return boolean
-	 */
-	public static function secureScanFile($file) {
-		$commands =
-			array(
-				"il_exec",
-				"shell_exec",
-				/*"eval",
-				"exec",
-				"create_function",
-				"assert",
-				"system",*/
-				"syslog",
-				"passthru",/*
+	public static $SCAN_DEF = array("functions" =>
+		array(
+			"il_exec",
+			"shell_exec",
+			/*"eval",
+			"exec",
+			"create_function",
+			"assert",
+			"system",*/
+			"syslog",
+			"passthru",/*
 				"dl",
 				"define_syslog_variables",
 				"debugger_off",
 				"debugger_on",
 				"stream_select",
 				"parse_ini_file",*/
-				"show_source",/*
+			"show_source",/*
 				"symlink",
 				"popen",*
 				"posix_getpwuid",*/
-				"posix_kill",
-				/*"posix_mkfifo",
-				"posix_setpgid",
-				"posix_setsid",
-				"posix_setuid",
-				"posix_uname",*/
-				"proc_close",/*
+			"posix_kill",
+			/*"posix_mkfifo",
+			"posix_setpgid",
+			"posix_setsid",
+			"posix_setuid",
+			"posix_uname",*/
+			"proc_close",/*
 				"proc_get_status",
 				"proc_nice",*/
-				"proc_open",
-				"proc_terminate",/*
+			"proc_open",
+			"proc_terminate",/*
 				"ini_alter",
 				"ini_get_all",
 				"ini_restore",
 				"parse_ini_file",*/
-				"inject_code",
-				"apache_child_terminate",/*
+			"inject_code",
+			"apache_child_terminate",/*
 				"apache_setenv",
 				"apache_note",
 				"define_syslog_variables",
 				"escapeshellarg",
 				"escapeshellcmd",
 				"ob_start",*/
-			);
-
-		$exploits = array(
+		),
+		"exploits" => array(
 			"eval_chr" => "/chr\s*\(\s*101\s*\)\s*\.\s*chr\s*\(\s*118\s*\)\s*\.\s*chr\s*\(\s*97\s*\)\s*\.\s*chr\s*\(\s*108\s*\)/i",
 			//"eval_preg" => "/(preg_replace(_callback)?|mb_ereg_replace|preg_filter)\s*\(.+(\/|\\x2f)(e|\\x65)['\"]/i",
 			"align" => "/(\\\$\w+=[^;]*)*;\\\$\w+=@?\\\$\w+\(/i",
@@ -866,7 +859,15 @@ class Security
 			"register_function" => "/register_[a-z]+_function\s*\(\s*['\\\"]\s*(eval|assert|passthru|exec|include|system|shell_exec|`)/i",  // https://github.com/nbs-system/php-malware-finder/issues/41
 			"safemode_bypass" => "/\\x00\/\.\.\/|LD_PRELOAD/i",
 			"ioncube_loader" => "/IonCube\_loader/i"
-		);
+		)
+	);
+
+	/**
+	 * File scanner
+	 * @param $pattern
+	 * @return boolean
+	 */
+	public static function secureScanFile($file) {
 
 		$contents = file_get_contents($file);
 
@@ -880,23 +881,23 @@ class Security
 				return true;
 		}
 
-		foreach ($exploits as $pattern) {
+		foreach (self::$SCAN_DEF["exploits"] as $pattern) {
 			if (@preg_match($pattern, $contents))
 				return false;
 		}
 
-		$contents = preg_replace("/<\?php(.*?)(?!\B\"[^\"]*)\?>(?![^\"]*\"\B)/si","$1",$contents); // Only php code
-		$contents = preg_replace("/\/\*.*?\*\/|\/\/.*?\n|\#.*?\n/i","",$contents); // Remove comments
-		$contents = preg_replace("/('|\")[\s\r\n]*\.[\s\r\n]*('|\")/i","",$contents); // Remove "ev"."al"
+		$contents = preg_replace("/<\?php(.*?)(?!\B\"[^\"]*)\?>(?![^\"]*\"\B)/si", "$1", $contents); // Only php code
+		$contents = preg_replace("/\/\*.*?\*\/|\/\/.*?\n|\#.*?\n/i", "", $contents); // Remove comments
+		$contents = preg_replace("/('|\")[\s\r\n]*\.[\s\r\n]*('|\")/i", "", $contents); // Remove "ev"."al"
 		if (preg_match("/^text/i", mime_content_type($file))) {
-			foreach ($commands as $pattern) {
+			foreach (self::$SCAN_DEF["functions"] as $pattern) {
 				if (@preg_match("/(" . $pattern . ")[\s\r\n]*()/i", $contents))
 					return false;
 				if (@preg_match("/(" . preg_quote(base64_encode($pattern)) . ")/i", $contents))
 					return false;
 				$field = bin2hex($pattern);
-				$field = chunk_split($field,2,"\\x");
-				$field = "\\x".substr($field,0,-2);
+				$field = chunk_split($field, 2, "\\x");
+				$field = "\\x" . substr($field, 0, -2);
 				if (@preg_match("/(" . $field . ")/i", $contents))
 					return false;
 				//return array($pattern,realpath($file));
@@ -990,7 +991,7 @@ class Security
 		$ip_quote = preg_quote($ip);
 		$content = @file_get_contents($file_attempts);
 		if (preg_match("/### BEGIN: DOS Attempts ###[\S\s.]*[\r\n]+# $ip_quote => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\S\s.]*### END: DOS Attempts ###/i", $content, $attemps)) {
-			$content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)([\r\n]+# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i","$1$3", $content);
+			$content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)([\r\n]+# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i", "$1$3", $content);
 		}
 		file_put_contents($file_attempts, $content);
 	}
@@ -1005,11 +1006,11 @@ class Security
 		$pattern = "/# ((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])) => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\r\n]+/i";
 		$content = @file_get_contents($file_attempts);
 		if (preg_match_all($pattern, $content, $attemps)) {
-			foreach ($attemps as $attemp){
+			foreach ($attemps as $attemp) {
 				preg_match($pattern, $attemp[0], $attemp);
 				$ip_quote = preg_quote($attemp[1]);
 				if ($time > $attemp[5] + $time_expire || $time > $attemp[8] + $time_expire)
-					$content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)([\r\n]+# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i","$1$3", $content);
+					$content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)([\r\n]+# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i", "$1$3", $content);
 			}
 		}
 		file_put_contents($file_attempts, $content);

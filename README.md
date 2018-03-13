@@ -1,9 +1,13 @@
-# PHP AIO Security Class
+# PHP AIO Security Class + Antimalware
 __Version 0.2.2__
 
 _IF YOU USE ON YOUR PROJECT SOME OF THESE METHODS PLEASE TO CREDIT ME :) THANK YOU!_
 
-This is a security class in php with some useful and automatic static methods.
+This is a security class in php with some useful and automatic static methods. 
+
+Also in _Demo_ folder there is my __antimalware scanner__ userful for check virus on our projects. 
+
+__Read more__ after the _instructions_ section if you interested.
 
 The objective of this class is offer an automatic system of protection for developer's projects and simplify some security operations as the check of CSRF or XSS all in a simple class. In fact you could just call the main method to have better security yet without too much complicated operations.
 
@@ -108,6 +112,16 @@ echo = $output;
 ```
 
 Enjoy!
+
+
+
+### AMWSCAN - Antimalware Scanner
+
+On the __Demo__ folder there is also my __antimalware__ (Demo/scanner.php) that use the scan definitions of __PHP AIO Security Class__. To use it you run the php file from a console try it! 
+
+__Suggestion:__ if you run the scanner on a Wordpress project type _-exploits_ as argument for a better check.
+
+
 
 ## Methods available:
 
