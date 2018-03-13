@@ -119,7 +119,7 @@ Enjoy!
 
 On the __Demo__ folder there is also my __antimalware__ (Demo/scanner.php) that use the scan definitions of __PHP AIO Security Class__. To use it you run the php file from a console try it! 
 
-__Suggestion:__ if you run the scanner on a Wordpress project type _-exploits_ as argument for a better check.
+__Suggestion:__ if you run the scanner on a Wordpress project type _--exploits_ as argument for a better check.
 
 
 

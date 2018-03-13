@@ -10,7 +10,7 @@ require_once("../security.class.php");
 
 // Settings
 define("__NAME__", "amwscan");
-define("__VERSION__", "0.3.9");
+define("__VERSION__", "0.3.10");
 define("__ROOT__", dirname(__FILE__));
 define("__PATH_QUARANTINE__", __ROOT__ . "/quarantine");
 define("__PATH_LOGS__", __ROOT__ . "/scanner.log");
@@ -108,15 +108,18 @@ if (isset($_REQUEST['path'])) {
 
 $_WHITELIST = CSV::read(__PATH_WHITELIST__);
 
-// Malware Definitions
-if (!isset($_REQUEST['exploits']))
-	$_FUNCTIONS = Security::$SCAN_DEF["functions"];
-$_EXPLOITS = Security::$SCAN_DEF["exploits"];
-
 @unlink(__PATH_LOGS__);
 
 Console::write("Scan date: " . date("d-m-Y H:i:s") . PHP_EOL);
 Console::write("Scanning $path".PHP_EOL2);
+
+// Malware Definitions
+if (!isset($_REQUEST['exploits'])) {
+	$_FUNCTIONS = Security::$SCAN_DEF["functions"];
+} else {
+	Console::write("Exploits mode enabled".PHP_EOL);
+}
+$_EXPLOITS = Security::$SCAN_DEF["exploits"];
 
 if ($_REQUEST['scan']) {
 	Console::write("Scan mode enabled".PHP_EOL);
