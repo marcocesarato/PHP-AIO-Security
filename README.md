@@ -1,5 +1,5 @@
 # PHP AIO Security Class
-__Version 0.2.1__
+__Version 0.2.2__
 
 _IF YOU USE ON YOUR PROJECT SOME OF THESE METHODS PLEASE TO CREDIT ME :) THANK YOU!_
 
