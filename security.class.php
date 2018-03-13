@@ -25,7 +25,7 @@ class Security
 	public static $scanner_whitelist = array('./shell.php', './libs'); // Example of scan whitelist
 	// Autostart
 	public static $auto_session_manager = true; // Run session at start
-	public static $auto_scanner = false; // Could have a bad performance impact (anyway you can try and decide after)
+	public static $auto_scanner = false; // Could have a bad performance impact the BE CAREFUL
 	public static $auto_block_tor = true; // If you want block TOR clients
 	public static $auto_clean_global = false; // Global clean at start
 
@@ -793,13 +793,13 @@ class Security
 	public static function secureScanFile($file) {
 		$commands =
 			array(
-				"eval",
+				"il_exec",
+				"shell_exec",
+				/*"eval",
 				"exec",
-				"create_function",/*
-				"sqlite_create_aggregate",
-				"sqlite_create_function",*/
+				"create_function",
 				"assert",
-				"system",
+				"system",*/
 				"syslog",
 				"passthru",/*
 				"dl",
@@ -809,14 +809,14 @@ class Security
 				"stream_select",
 				"parse_ini_file",*/
 				"show_source",/*
-				"symlink",*/
-				"popen",
-				"posix_getpwuid",
+				"symlink",
+				"popen",*
+				"posix_getpwuid",*/
 				"posix_kill",
-				"posix_mkfifo",
+				/*"posix_mkfifo",
 				"posix_setpgid",
 				"posix_setsid",
-				"posix_setuid",/*
+				"posix_setuid",
 				"posix_uname",*/
 				"proc_close",/*
 				"proc_get_status",
@@ -825,10 +825,11 @@ class Security
 				"proc_terminate",/*
 				"ini_alter",
 				"ini_get_all",
-				"ini_restore",*/
+				"ini_restore",
+				"parse_ini_file",*/
 				"inject_code",
-				"apache_child_terminate",
-				"apache_setenv",/*
+				"apache_child_terminate",/*
+				"apache_setenv",
 				"apache_note",
 				"define_syslog_variables",
 				"escapeshellarg",
@@ -838,22 +839,22 @@ class Security
 
 		$exploits = array(
 			"eval_chr" => "/chr\s*\(\s*101\s*\)\s*\.\s*chr\s*\(\s*118\s*\)\s*\.\s*chr\s*\(\s*97\s*\)\s*\.\s*chr\s*\(\s*108\s*\)/i",
-			"eval_preg" => "/(preg_replace(_callback)?|mb_ereg_replace|preg_filter)\s*\(.+(\/|\\x2f)(e|\\x65)['\"]/i",
+			//"eval_preg" => "/(preg_replace(_callback)?|mb_ereg_replace|preg_filter)\s*\(.+(\/|\\x2f)(e|\\x65)['\"]/i",
 			"align" => "/(\\\$\w+=[^;]*)*;\\\$\w+=@?\\\$\w+\(/i",
 			"b374k" => "/'ev'\.'al'\.'\(\"\?>/i",  // b374k shell
 			"weevely3" => "/\\\$\w=\\\$[a-zA-Z]\('',\\\$\w\);\\\$\w\(\);/i",  // weevely3 launcher
 			"c99_launcher" => "/;\\\$\w+\(\\\$\w+(,\s?\\\$\w+)+\);/i",  // http://bartblaze.blogspot.fr/2015/03/c99shell-not-dead.html
-			"too_many_chr" => "/(chr\([\d]+\)\.){8}/i",  // concatenation of more than eight `chr()`
-			"concat" => "/(\\\$[^\n\r]+\.){5}/i",  // concatenation of more than 5 words
-			"concat_with_spaces" => "/(\\\$[^\\n\\r]+\. ){5}/i",  // concatenation of more than 5 words, with spaces
-			"var_as_func" => "/\\\$_(GET|POST|COOKIE|REQUEST|SERVER)\s*\[[^\]]+\]\s*\(/i",
+			//"too_many_chr" => "/(chr\([\d]+\)\.){8}/i",  // concatenation of more than eight `chr()`
+			//"concat" => "/(\\\$[^\n\r]+\.){5}/i",  // concatenation of more than 5 words
+			//"concat_with_spaces" => "/(\\\$[^\\n\\r]+\. ){5}/i",  // concatenation of more than 5 words, with spaces
+			//"var_as_func" => "/\\\$_(GET|POST|COOKIE|REQUEST|SERVER)\s*\[[^\]]+\]\s*\(/i",
 			"escaped_path" => "/(\\x[0-9abcdef]{2}[a-z0-9.-\/]{1,4}){4,}/i",
-			"infected_comment" => "/\/\*[a-z0-9]{5}\*\//i", // usually used to detect if a file is infected yet
+			//"infected_comment" => "/\/\*[a-z0-9]{5}\*\//i", // usually used to detect if a file is infected yet
 			"hex_char" => "/\\[Xx](5[Ff])/i",
 			"download_remote_code" => "/echo\s+file_get_contents\s*\(\s*base64_url_decode\s*\(\s*@*\\\$_(GET|POST|SERVER|COOKIE|REQUEST)/i",
-			"globals" => "/\\\$GLOBALS\[\\\$GLOBALS['[a-z0-9]{4,}'\]\[\d+\]\.\\\$GLOBALS\['[a-z-0-9]{4,}'\]\[\d+\]./i",
+			"globals_concat" => "/\\\$GLOBALS\[\\\$GLOBALS['[a-z0-9]{4,}'\]\[\d+\]\.\\\$GLOBALS\['[a-z-0-9]{4,}'\]\[\d+\]./i",
 			"globals_assign" => "/\\\$GLOBALS\['[a-z0-9]{5,}'\] = \\\$[a-z]+\d+\[\d+\]\.\\\$[a-z]+\d+\[\d+\]\.\\\$[a-z]+\d+\[\d+\]\.\\\$[a-z]+\d+\[\d+\]\./i",
-			"php_long" => "/^.*<\?php.{1000,}\?>.*$/i",
+			"php_inline_long" => "/^.*<\?php.{1000,}\?>.*$/i",
 			"base64_long" => "/['\"][A-Za-z0-9+\/]{260,}={0,3}['\"]/",
 			"clever_include" => "/include\s*\(\s*[^\.]+\.(png|jpe?g|gif|bmp)/i",
 			"basedir_bypass" => "/curl_init\s*\(\s*[\"']file:\/\//i",
@@ -864,7 +865,7 @@ class Security
 			"hex_var" => "/\\\$\{\\\"\\\\x/i", // check for ${"\xFF"}, IonCube use this method ${"\x
 			"register_function" => "/register_[a-z]+_function\s*\(\s*['\\\"]\s*(eval|assert|passthru|exec|include|system|shell_exec|`)/i",  // https://github.com/nbs-system/php-malware-finder/issues/41
 			"safemode_bypass" => "/\\x00\/\.\.\/|LD_PRELOAD/i",
-			"IonCube_loader" => "/IonCube\_loader/i"
+			"ioncube_loader" => "/IonCube\_loader/i"
 		);
 
 		$contents = file_get_contents($file);
