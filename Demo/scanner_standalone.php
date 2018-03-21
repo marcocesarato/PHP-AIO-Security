@@ -8,9 +8,6 @@
  $isCLI = (php_sapi_name() == 'cli');
  if (!$isCLI) die("This file must run from a console session.");
 
-// Include for definitions
-require_once("../security.class.php");
-
 // Settings
 define("__NAME__", "amwscan");
 define("__VERSION__", "0.3.10");
@@ -20,8 +17,8 @@ define("__PATH_LOGS__", __ROOT__ . "/scanner.log");
 define("__PATH_WHITELIST__", __ROOT__ . "/scanner_whitelist.csv");
 define("__PATH_LOGS_INFECTED__", __ROOT__ . "/scanner_infected.log");
 
-define("PHP_EOL2",PHP_EOL.PHP_EOL);
-define("PHP_EOL3",PHP_EOL2.PHP_EOL);
+define("PHP_EOL2", PHP_EOL . PHP_EOL);
+define("PHP_EOL3", PHP_EOL2 . PHP_EOL);
 
 error_reporting(0);
 ini_set('display_errors', 0);
@@ -72,7 +69,7 @@ if (isset($_REQUEST['h']))
 if (isset($_REQUEST['help']))
 	Console::helper();
 
-Console::display("Start scanning...".PHP_EOL, 'green');
+Console::display("Start scanning..." . PHP_EOL, 'green');
 
 if (isset($_REQUEST['l']))
 	$_REQUEST['log'] = $_REQUEST['l'];
@@ -103,7 +100,7 @@ if (isset($_REQUEST['path'])) {
 	if (file_exists(realpath($_REQUEST['path']))) {
 		$path = realpath($_REQUEST['path']);
 	} else {
-		Console::write("Path not found".PHP_EOL, 'red');
+		Console::write("Path not found" . PHP_EOL, 'red');
 	}
 }
 
@@ -112,29 +109,101 @@ $_WHITELIST = CSV::read(__PATH_WHITELIST__);
 @unlink(__PATH_LOGS__);
 
 Console::write("Scan date: " . date("d-m-Y H:i:s") . PHP_EOL);
-Console::write("Scanning $path".PHP_EOL2);
+Console::write("Scanning $path" . PHP_EOL2);
 
 // Malware Definitions
 if (!isset($_REQUEST['exploits'])) {
-	$_FUNCTIONS = Security::$SCAN_DEF["functions"];
+	$_FUNCTIONS = array(
+		"il_exec",
+		"shell_exec",/*
+	"eval",
+	"exec",
+	"create_function",
+	"assert",
+	"system",
+	"syslog",
+	"passthru",
+	"dl",
+	"define_syslog_variables",
+	"debugger_off",
+	"debugger_on",
+	"stream_select",
+	"parse_ini_file",
+	"show_source",
+	"symlink",
+	"popen",
+	"posix_kill",
+	"posix_getpwuid",
+	"posix_mkfifo",
+	"posix_setpgid",
+	"posix_setsid",
+	"posix_setuid",
+	"posix_uname",
+	"proc_close",
+	"proc_get_status",
+	"proc_nice",
+	"proc_open",
+	"proc_terminate",
+	"ini_alter",
+	"ini_get_all",
+	"ini_restore",
+	"parse_ini_file",
+	"inject_code",
+	"apache_child_terminate",
+	"apache_setenv",
+	"apache_note",
+	"define_syslog_variables",
+	"escapeshellarg",
+	"escapeshellcmd",
+	"ob_start",*/
+	);
 } else {
-	Console::write("Exploits mode enabled".PHP_EOL);
+	Console::write("Exploits mode enabled" . PHP_EOL);
 }
-$_EXPLOITS = Security::$SCAN_DEF["exploits"];
+$_EXPLOITS = array(
+	"eval_chr" => "/chr\s*\(\s*101\s*\)\s*\.\s*chr\s*\(\s*118\s*\)\s*\.\s*chr\s*\(\s*97\s*\)\s*\.\s*chr\s*\(\s*108\s*\)/i",
+	//"eval_preg" => "/(preg_replace(_callback)?|mb_ereg_replace|preg_filter)\s*\(.+(\/|\\x2f)(e|\\x65)['\"]/i",
+	"align" => "/(\\\$\w+=[^;]*)*;\\\$\w+=@?\\\$\w+\(/i",
+	"b374k" => "/'ev'\.'al'\.'\(\"\?>/i",  // b374k shell
+	"weevely3" => "/\\\$\w=\\\$[a-zA-Z]\('',\\\$\w\);\\\$\w\(\);/i",  // weevely3 launcher
+	"c99_launcher" => "/;\\\$\w+\(\\\$\w+(,\s?\\\$\w+)+\);/i",  // http://bartblaze.blogspot.fr/2015/03/c99shell-not-dead.html
+	//"too_many_chr" => "/(chr\([\d]+\)\.){8}/i",  // concatenation of more than eight `chr()`
+	//"concat" => "/(\\\$[^\n\r]+\.){5}/i",  // concatenation of more than 5 words
+	//"concat_with_spaces" => "/(\\\$[^\\n\\r]+\. ){5}/i",  // concatenation of more than 5 words, with spaces
+	//"var_as_func" => "/\\\$_(GET|POST|COOKIE|REQUEST|SERVER)\s*\[[^\]]+\]\s*\(/i",
+	"escaped_path" => "/(\\x[0-9abcdef]{2}[a-z0-9.-\/]{1,4}){4,}/i",
+	//"infected_comment" => "/\/\*[a-z0-9]{5}\*\//i", // usually used to detect if a file is infected yet
+	"hex_char" => "/\\[Xx](5[Ff])/i",
+	"download_remote_code" => "/echo\s+file_get_contents\s*\(\s*base64_url_decode\s*\(\s*@*\\\$_(GET|POST|SERVER|COOKIE|REQUEST)/i",
+	"globals_concat" => "/\\\$GLOBALS\[\\\$GLOBALS['[a-z0-9]{4,}'\]\[\d+\]\.\\\$GLOBALS\['[a-z-0-9]{4,}'\]\[\d+\]./i",
+	"globals_assign" => "/\\\$GLOBALS\['[a-z0-9]{5,}'\] = \\\$[a-z]+\d+\[\d+\]\.\\\$[a-z]+\d+\[\d+\]\.\\\$[a-z]+\d+\[\d+\]\.\\\$[a-z]+\d+\[\d+\]\./i",
+	/*"php_long" => "/^.*<\?php.{1000,}\?>.*$/i",*/
+	//"base64_long" => "/['\"][A-Za-z0-9+\/]{260,}={0,3}['\"]/",
+	"clever_include" => "/include\s*\(\s*[^\.]+\.(png|jpe?g|gif|bmp)/i",
+	//"basedir_bypass" => "/curl_init\s*\(\s*[\"']file:\/\//i",
+	"basedir_bypass2" => "/file\:file\:\/\//i", // https://www.intelligentexploit.com/view-details.html?id=8719
+	"non_printable" => "/(function|return|base64_decode).{,256}[^\\x00-\\x1F\\x7F-\\xFF]{3}/i",
+	"double_var" => "/\\\${\s*\\\${/i",
+	"double_var2" => "/\${\$[0-9a-zA-z]+}/i",
+	"hex_var" => "/\\\$\{\\\"\\\\x/i", // check for ${"\xFF"}, IonCube use this method ${"\x
+	"register_function" => "/register_[a-z]+_function\s*\(\s*['\\\"]\s*(eval|assert|passthru|exec|include|system|shell_exec|`)/i",  // https://github.com/nbs-system/php-malware-finder/issues/41
+	"safemode_bypass" => "/\\x00\/\.\.\/|LD_PRELOAD/i",
+	"ioncube_loader" => "/IonCube\_loader/i"
+);
 
 if ($_REQUEST['scan']) {
-	Console::write("Scan mode enabled".PHP_EOL);
+	Console::write("Scan mode enabled" . PHP_EOL);
 }
 
-Console::write("Mapping files...".PHP_EOL);
+Console::write("Mapping files..." . PHP_EOL);
 
 // Mapping
 $directory = new \RecursiveDirectoryIterator($path);
 $iterator = new \RecursiveIteratorIterator($directory);
 
 $files_count = iterator_count($iterator);
-Console::write("Found " . $files_count . " files".PHP_EOL2);
-Console::write("Checking files...".PHP_EOL2);
+Console::write("Found " . $files_count . " files" . PHP_EOL2);
+Console::write("Checking files..." . PHP_EOL2);
 Console::progress(0, $files_count);
 
 // Scanning
@@ -198,10 +267,10 @@ foreach ($iterator as $info) {
 		$pattern_found = array_unique($pattern_found);
 
 		$in_whitelist = 0;
-		foreach($_WHITELIST as $item) {
+		foreach ($_WHITELIST as $item) {
 			foreach ($pattern_found as $key => $pattern) {
-				$exploit = preg_replace("/^(\S+) \[line [0-9]+\]/i","$1",$key);
-				$lineNumber = preg_replace("/^\S+ \[line ([0-9]+)\]/i","$1",$key);
+				$exploit = preg_replace("/^(\S+) \[line [0-9]+\]/i", "$1", $key);
+				$lineNumber = preg_replace("/^\S+ \[line ([0-9]+)\]/i", "$1", $key);
 				if (realpath($pathname) == realpath($item[0]) && $exploit == $item[1] && $lineNumber == $item[2]) {
 					$in_whitelist++;
 				}
@@ -219,7 +288,7 @@ foreach ($iterator as $info) {
 				Console::display(PHP_EOL2);
 				Console::write(PHP_EOL);
 				Console::write("PROBABLE MALWARE FOUND!", 'red');
-				Console::write(PHP_EOL."$pathname", 'yellow');
+				Console::write(PHP_EOL . "$pathname", 'yellow');
 				Console::write(PHP_EOL2);
 				Console::write("=========================================== SOURCE ===========================================", 'white', 'red');
 				Console::write(PHP_EOL2);
@@ -231,15 +300,15 @@ foreach ($iterator as $info) {
 				Console::write("\n");
 				Console::write("Exploit: " . implode(", ", array_keys($pattern_found)), 'red');
 				Console::display(PHP_EOL2);
-				Console::display("OPTIONS:".PHP_EOL2);
+				Console::display("OPTIONS:" . PHP_EOL2);
 				Console::display("    [1] Delete file\n");
-				Console::display("    [2] Move to quarantine".PHP_EOL);
-				Console::display("    [3] Remove evil code".PHP_EOL);
-				Console::display("    [4] Edit with vim".PHP_EOL);
-				Console::display("    [5] Edit with nano".PHP_EOL);
-				Console::display("    [6] Add to whitelist".PHP_EOL);
-				Console::display("    [-] Ignore".PHP_EOL2);
-				Console::display(__NAME__." > What is your choise? ", "purple");
+				Console::display("    [2] Move to quarantine" . PHP_EOL);
+				Console::display("    [3] Remove evil code" . PHP_EOL);
+				Console::display("    [4] Edit with vim" . PHP_EOL);
+				Console::display("    [5] Edit with nano" . PHP_EOL);
+				Console::display("    [6] Add to whitelist" . PHP_EOL);
+				Console::display("    [-] Ignore" . PHP_EOL2);
+				Console::display(__NAME__ . " > What is your choise? ", "purple");
 				$confirmation = trim(fgets(STDIN));
 				Console::display(PHP_EOL);
 
@@ -273,12 +342,12 @@ foreach ($iterator as $info) {
 					Console::write(PHP_EOL2);
 					Console::write("===============================================================================================", 'black', 'green');
 					Console::display(PHP_EOL2);
-					Console::display("File sanitized, now you must verify if has been fixed correctly.".PHP_EOL2, "yellow");
-					Console::display(__NAME__." > Confirm and save [y|N]? ", "purple");
+					Console::display("File sanitized, now you must verify if has been fixed correctly." . PHP_EOL2, "yellow");
+					Console::display(__NAME__ . " > Confirm and save [y|N]? ", "purple");
 					$confirm2 = trim(fgets(STDIN));
 					Console::display(PHP_EOL);
 					if ($confirm2 == 'y') {
-						Console::write("File '$pathname' sanitized!".PHP_EOL2, 'green');
+						Console::write("File '$pathname' sanitized!" . PHP_EOL2, 'green');
 						file_put_contents($pathname, $fc);
 						$summary_removed++;
 					} else {
@@ -298,7 +367,7 @@ foreach ($iterator as $info) {
 						}
 					}
 					$summary_edited[] = $pathname;
-					Console::write("File '$pathname' edited with vim!".PHP_EOL2, 'green');
+					Console::write("File '$pathname' edited with vim!" . PHP_EOL2, 'green');
 					$summary_removed++;
 				// Edit with nano
 				} else if (in_array($confirmation, array('5'))) {
@@ -314,19 +383,19 @@ foreach ($iterator as $info) {
 						}
 					}
 					$summary_edited[] = $pathname;
-					Console::write("File '$pathname' edited with nano!".PHP_EOL2, 'green');
+					Console::write("File '$pathname' edited with nano!" . PHP_EOL2, 'green');
 					$summary_removed++;
 				// Add to whitelist
 				} else if (in_array($confirmation, array('6'))) {
 					foreach ($pattern_found as $key => $pattern) {
-						$exploit = preg_replace("/^(\S+) \[line [0-9]+\]/i","$1",$key);
-						$lineNumber = preg_replace("/^\S+ \[line ([0-9]+)\]/i","$1",$key);
-						$_WHITELIST[] = array(realpath($pathname),$exploit,$lineNumber);
+						$exploit = preg_replace("/^(\S+) \[line [0-9]+\]/i", "$1", $key);
+						$lineNumber = preg_replace("/^\S+ \[line ([0-9]+)\]/i", "$1", $key);
+						$_WHITELIST[] = array(realpath($pathname), $exploit, $lineNumber);
 					}
 					$_WHITELIST = array_map("unserialize", array_unique(array_map("serialize", $_WHITELIST)));
-					CSV::write(__PATH_WHITELIST__,$_WHITELIST);
+					CSV::write(__PATH_WHITELIST__, $_WHITELIST);
 					$summary_whitelist[] = $pathname;
-					Console::write("Exploits of file '$pathname' added to whitelist!".PHP_EOL2, 'green');
+					Console::write("Exploits of file '$pathname' added to whitelist!" . PHP_EOL2, 'green');
 				// None
 				} else {
 					$summary_ignored[] = $pathname;
@@ -359,30 +428,30 @@ if (!$_REQUEST['scan']) {
 }
 
 if ($_REQUEST['scan']) {
-	Console::write(PHP_EOL."Files infected: '" . __PATH_LOGS_INFECTED__ . "'".PHP_EOL, 'red');
+	Console::write(PHP_EOL . "Files infected: '" . __PATH_LOGS_INFECTED__ . "'" . PHP_EOL, 'red');
 	file_put_contents(__PATH_LOGS_INFECTED__, "Log date: " . date("d-m-Y H:i:s") . PHP_EOL . implode(PHP_EOL, $summary_ignored));
 	Console::write(PHP_EOL2);
 } else {
 	if (count($summary_edited) > 0) {
-		Console::write(PHP_EOL."Files edited:".PHP_EOL, 'green');
+		Console::write(PHP_EOL . "Files edited:" . PHP_EOL, 'green');
 		foreach ($summary_edited as $un) {
 			Console::write($un . PHP_EOL);
 		}
 	}
 	if (count($summary_quarantine) > 0) {
-		Console::write(PHP_EOL."Files quarantined:".PHP_EOL, 'yellow');
+		Console::write(PHP_EOL . "Files quarantined:" . PHP_EOL, 'yellow');
 		foreach ($summary_ignored as $un) {
 			Console::write($un . PHP_EOL);
 		}
 	}
 	if (count($summary_whitelist) > 0) {
-		Console::write(PHP_EOL."Files whitelisted:".PHP_EOL, 'cyan');
+		Console::write(PHP_EOL . "Files whitelisted:" . PHP_EOL, 'cyan');
 		foreach ($summary_whitelist as $un) {
 			Console::write($un . PHP_EOL);
 		}
 	}
 	if (count($summary_ignored) > 0) {
-		Console::write(PHP_EOL."Files ignored:".PHP_EOL, 'cyan');
+		Console::write(PHP_EOL . "Files ignored:" . PHP_EOL, 'cyan');
 		foreach ($summary_ignored as $un) {
 			Console::write($un . PHP_EOL);
 		}
@@ -477,9 +546,9 @@ class Console
 		if (isset($_REQUEST['log']) && $log === null)
 			$log = true;
 		$lines = explode("\n", $string);
-		for($i = 0; $i < count($lines); $i++){
-			if($i != 0) self::display(PHP_EOL);
-			self::display("  ". str_pad((string) ($i + 1), strlen((string)count($lines)), " ", STR_PAD_LEFT).' | ','yellow');
+		for ($i = 0; $i < count($lines); $i++) {
+			if ($i != 0) self::display(PHP_EOL);
+			self::display("  " . str_pad((string)($i + 1), strlen((string)count($lines)), " ", STR_PAD_LEFT) . ' | ', 'yellow');
 			self::display($lines[$i]);
 		}
 		if ($log) self::log($string);
@@ -492,19 +561,17 @@ class Console
 	public static function helper() {
 		$help = <<<EOD
 
-OPTIONS:
+        OPTIONS:
 
-	-e   --exploits    Check only exploits and not the functions
-    -h   --help        Show the available options
-    -l   --log         Write a log file 'scanner.log' with all the operations done
-    -p   --path <dir>  Define the path to scan
-    -s   --scan        Scan only mode without check and remove malware. It also write
-                       all malware paths found to 'scanner_infected.log' file
+        -e   --exploits    Check only exploits and not the functions
+        -h   --help        Show the available options
+        -l   --log         Write a log file 'scanner.log' with all the operations done
+        -p   --path <dir>  Define the path to scan
+	    -s   --scan        Scan only mode without check and remove malware. It also write
+	    all malware paths found to 'scanner_infected.log' file
 
-NOTES: Better if your run with php -d disable_functions=''
-USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
-
-
+	    NOTES: Better if your run with php -d disable_functions=''
+	    USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 EOD;
 		self::display($help);
 		die();
@@ -549,16 +616,17 @@ class Argv
 
 Class CSV
 {
-	public static function read($filename){
-		if(!file_exists($filename)) return array();
+	public static function read($filename) {
+		if (!file_exists($filename)) return array();
 		$file_handle = fopen($filename, 'r');
 		$array = array();
-		while (!feof($file_handle) ) {
+		while (!feof($file_handle)) {
 			$array[] = fgetcsv($file_handle, 1024);
 		}
 		fclose($file_handle);
 		return $array;
 	}
+
 	public static function generate($data, $delimiter = ',', $enclosure = '"') {
 		$handle = fopen('php://temp', 'r+');
 		foreach ($data as $line) {
@@ -572,8 +640,9 @@ Class CSV
 		fclose($handle);
 		return $contents;
 	}
+
 	public static function write($filename, $data, $delimiter = ',', $enclosure = '"') {
 		$csv = self::generate($data, $delimiter, $enclosure);
-		file_put_contents($filename,$csv);
+		file_put_contents($filename, $csv);
 	}
 }
