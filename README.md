@@ -121,6 +121,8 @@ On the __Demo__ folder there is also my __antimalware__ (Demo/scanner.php) that 
 
 __Suggestion:__ if you run the scanner on a Wordpress project type _--exploits_ as argument for a better check.
 
+Link Repository: https://github.com/marcocesarato/AMWScan
+
 #### Usage
 
 ```
