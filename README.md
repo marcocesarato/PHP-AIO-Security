@@ -1,5 +1,5 @@
 # PHP AIO Security Class + Antimalware
-__Version 0.2.2__
+__Version 0.2.3__
 
 
 
