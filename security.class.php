@@ -58,6 +58,8 @@ class Security
 		if (self::$auto_clean_global) {
 			self::cleanGlobals();
 		} else {
+			$_SERVER = self::clean($_SERVER, false, false);
+			$_COOKIE = self::clean($_COOKIE, false);
 			$_GET = self::clean($_GET, false, false);
 			$_REQUEST = self::clean($_REQUEST);
 			$_REQUEST = array_merge($_REQUEST, $_GET);
@@ -788,12 +790,12 @@ class Security
 	public static $SCAN_DEF = array("functions" =>
 		array(
 			"il_exec",
-			"shell_exec",
-			/*"eval",
-			"exec",
-			"create_function",
-			"assert",
-			"system",*/
+			"shell_exec",/*
+				"eval",
+				"exec",
+				"create_function",
+				"assert",
+				"system",*/
 			"syslog",
 			"passthru",/*
 				"dl",
@@ -806,12 +808,12 @@ class Security
 				"symlink",
 				"popen",*
 				"posix_getpwuid",*/
-			"posix_kill",
-			/*"posix_mkfifo",
-			"posix_setpgid",
-			"posix_setsid",
-			"posix_setuid",
-			"posix_uname",*/
+			"posix_kill",/*
+				"posix_mkfifo",
+				"posix_setpgid",
+				"posix_setsid",
+				"posix_setuid",
+				"posix_uname",*/
 			"proc_close",/*
 				"proc_get_status",
 				"proc_nice",*/
@@ -1096,5 +1098,48 @@ class Security
 				self::secureDOSWriteAttempts($ip, $file_attempts);
 			}
 		}
+	}
+
+	/**
+	 * Generate strong password
+	 * @param int $length
+	 * @param bool $add_dashes
+	 * @param string $available_sets
+	 * @return bool|string
+	 */
+	function generatePassword($length = 8, $add_dashes = false, $available_sets = 'luns'){
+		$sets = array();
+		// lowercase
+		if(strpos($available_sets, 'l') !== false)
+			$sets[] = 'abcdefghjkmnpqrstuvwxyz';
+		// uppercase
+		if(strpos($available_sets, 'u') !== false)
+			$sets[] = 'ABCDEFGHJKMNPQRSTUVWXYZ';
+		// numbers
+		if(strpos($available_sets, 'n') !== false)
+			$sets[] = '0123456789';
+		// special chars
+		if(strpos($available_sets, 's') !== false)
+			$sets[] = '!@#$%&*?';
+		$all = '';
+		$password = '';
+		foreach($sets as $set) {
+			$password .= $set[array_rand(str_split($set))];
+			$all .= $set;
+		}
+		$all = str_split($all);
+		for($i = 0; $i < $length - count($sets); $i++)
+			$password .= $all[array_rand($all)];
+		$password = str_shuffle($password);
+		if(!$add_dashes)
+			return $password;
+		$dash_len = floor(sqrt($length));
+		$dash_str = '';
+		while(strlen($password) > $dash_len) {
+			$dash_str .= substr($password, 0, $dash_len) . '-';
+			$password = substr($password, $dash_len);
+		}
+		$dash_str .= $password;
+		return $dash_str;
 	}
 }

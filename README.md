@@ -186,16 +186,17 @@ USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 
 ### Utility Methods
 
-| Method         | Params                                                       | Return  | Description                                                  |
-| -------------- | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| crypt          | (encrypt\|decrypt), \$string                                 | String  | Encrypt and decrypt strings                                  |
-| getCookie      | $name                                                        | String  | Get decrypted cookie                                         |
-| setCookie      | \$name, \$value, \$expires = 2592000, \$path = "/", \$domain = null, \$secure = false, \$httponly = true | Boolean | Set encrypted cookie                                         |
-| unsetCookie    | $name                                                        | String  | Unset a cookie                                               |
-| clientIP       | -                                                            | String  | Get real client IP address                                   |
-| clientIsTor    | -                                                            | Boolean | Check if client use TOR                                      |
-| secureDownload | \$filename                                                   | Void    | Secure headers for download request                          |
-| secureUpload   | \$file, \$path                                               | Boolean | File upload with scan                                        |
-| secureScan     | $path                                                        | Void    | Scan files in directory recursively and rename bad files if detected |
-| secureScanFile | $filepath                                                    | Boolean | Scan file (detect for shell or php code infected)            |
-| secureScanPath | $path                                                        | Array   | Scan files in directory recursively (detect for shell or php code infected) |
+| Method           | Params                                                       | Return  | Description                                                  |
+| ---------------- | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+| crypt            | (encrypt\|decrypt), \$string                                 | String  | Encrypt and decrypt strings                                  |
+| generatePassword | \$length = 8, \$add_dashes = false, \$available_sets = 'luns'<br /><br />(l = lowercase, u = uppercase, n = numbers, s = special chars) | String  | Generate strong password                                     |
+| getCookie        | $name                                                        | String  | Get decrypted cookie                                         |
+| setCookie        | \$name, \$value, \$expires = 2592000, \$path = "/", \$domain = null, \$secure = false, \$httponly = true | Boolean | Set encrypted cookie                                         |
+| unsetCookie      | $name                                                        | String  | Unset a cookie                                               |
+| clientIP         | -                                                            | String  | Get real client IP address                                   |
+| clientIsTor      | -                                                            | Boolean | Check if client use TOR                                      |
+| secureDownload   | \$filename                                                   | Void    | Secure headers for download request                          |
+| secureUpload     | \$file, \$path                                               | Boolean | File upload with scan                                        |
+| secureScan       | $path                                                        | Void    | Scan files in directory recursively and rename bad files if detected |
+| secureScanFile   | $filepath                                                    | Boolean | Scan file (detect for shell or php code infected)            |
+| secureScanPath   | $path                                                        | Array   | Scan files in directory recursively (detect for shell or php code infected) |
