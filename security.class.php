@@ -55,6 +55,7 @@ class Security
 		if (self::$auto_block_tor)
 			self::secureBlockTor();
 
+		self::saveUnsafeGlobals();
 		if (self::$auto_clean_global) {
 			self::cleanGlobals();
 		} else {
@@ -96,11 +97,27 @@ class Security
 	 * (send with htmlentities could be a solution if you want send inline js and clean globals at the same time)
 	 */
 	public static function cleanGlobals() {
+		self::saveUnsafeGlobals();
 		$_SERVER = self::clean($_SERVER, false, false);
 		$_COOKIE = self::clean($_COOKIE, false);
 		$_GET = self::clean($_GET, false, false);
 		$_POST = self::clean($_POST);
 		$_REQUEST = array_merge($_GET, $_POST);
+	}
+
+	private static $savedGlobals = false;
+
+	/**
+	 * Save uncleaned globals
+	 */
+	private static function saveUnsafeGlobals() {
+		if(!self::$savedGlobals) {
+			$GLOBALS['UNSAFE_SERVER'] = $_SERVER;
+			$GLOBALS['UNSAFE_COOKIE'] = $_COOKIE;
+			$GLOBALS['UNSAFE_GET'] = $_GET;
+			$GLOBALS['UNSAFE_POST'] = $_POST;
+			$GLOBALS['UNSAFE_REQUEST'] = $_REQUEST;
+		}
 	}
 
 	/**

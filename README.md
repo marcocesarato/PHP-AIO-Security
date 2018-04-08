@@ -1,15 +1,25 @@
 # PHP AIO Security Class + Antimalware
 __Version 0.2.2__
 
+
+
 _IF YOU USE ON YOUR PROJECT SOME OF THESE METHODS PLEASE TO CREDIT ME :) THANK YOU!_
 
 This is a security class in php with some useful and automatic static methods. 
+
+
 
 Also in _Demo_ folder there is my __antimalware scanner__ userful for check virus on our projects. 
 
 __Read more__ after the _instructions_ section if you interested.
 
+Link Repository: https://github.com/marcocesarato/AMWScan
+
+
+
 The objective of this class is offer an automatic system of protection for developer's projects and simplify some security operations as the check of CSRF or XSS all in a simple class. In fact you could just call the main method to have better security yet without too much complicated operations.
+
+
 
 ### Instructions
 
@@ -75,7 +85,19 @@ Security::putInSafety($isAPI);
 
 *<sup>3</sup> These methods call **session_start** then **don't** use it before/after*
 
-*<sup>4</sup> global **$_POST** is not filtered. If you want it I could add this if someone will request this feature. Anyway if you want filter it write* `$_POST = Security::clean($_POST);` 
+*<sup>4</sup> global **$_POST** is not filtered. If you dont enable the cleanGlobals feature on settings*
+
+
+
+All the uncleaned data can be recovered calling the following globals:
+
+```php
+$GLOBALS['UNSAFE_SERVER'] = $_SERVER;
+$GLOBALS['UNSAFE_COOKIE'] = $_COOKIE;
+$GLOBALS['UNSAFE_GET'] = $_GET;
+$GLOBALS['UNSAFE_POST'] = $_POST;
+$GLOBALS['UNSAFE_REQUEST'] = $_REQUEST;
+```
 
 
 
@@ -94,7 +116,7 @@ or
 Security::cleanGlobals();
 ```
 
-__PS:__ THIS COULD COMPROMISE DATA IF YOU SEND HTML WITH INLINE JAVASCRIPT
+__PS:__ THIS COULD COMPROMISE DATA IF YOU SEND HTML WITH SCRIPT TAGS
 
 _send with htmlentities could be a solution if you want inline js and clean globals at the same time_
 
