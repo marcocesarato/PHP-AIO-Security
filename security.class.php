@@ -123,6 +123,7 @@ class Security
 			$GLOBALS['UNSAFE_GET'] = $_GET;
 			$GLOBALS['UNSAFE_POST'] = $_POST;
 			$GLOBALS['UNSAFE_REQUEST'] = $_REQUEST;
+			self::$savedGlobals = true;
 		}
 	}
 
