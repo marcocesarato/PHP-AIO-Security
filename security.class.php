@@ -23,9 +23,11 @@ class Security
 	public static $escape_string = true; // If you use PDO I recommend to set this to false
 	public static $scanner_path = "./*.php"; // Folder to scan at start and optionally the file extension
 	public static $scanner_whitelist = array('./shell.php', './libs'); // Example of scan whitelist
+
 	// Autostart
 	public static $auto_session_manager = true; // Run session at start
-	public static $auto_scanner = false; // Could have a bad performance impact the BE CAREFUL
+	public static $auto_scanner = false; // Could have a bad performance impact and could detect false positive,
+										 // then try the method secureScanPath before enable this. BE CAREFUL
 	public static $auto_block_tor = true; // If you want block TOR clients
 	public static $auto_clean_global = false; // Global clean at start
 
@@ -111,7 +113,7 @@ class Security
 	 * Save uncleaned globals
 	 */
 	private static function saveUnsafeGlobals() {
-		if(!self::$savedGlobals) {
+		if (!self::$savedGlobals) {
 			$GLOBALS['UNSAFE_SERVER'] = $_SERVER;
 			$GLOBALS['UNSAFE_COOKIE'] = $_COOKIE;
 			$GLOBALS['UNSAFE_GET'] = $_GET;
@@ -1124,35 +1126,35 @@ class Security
 	 * @param string $available_sets
 	 * @return bool|string
 	 */
-	function generatePassword($length = 8, $add_dashes = false, $available_sets = 'luns'){
+	function generatePassword($length = 8, $add_dashes = false, $available_sets = 'luns') {
 		$sets = array();
 		// lowercase
-		if(strpos($available_sets, 'l') !== false)
+		if (strpos($available_sets, 'l') !== false)
 			$sets[] = 'abcdefghjkmnpqrstuvwxyz';
 		// uppercase
-		if(strpos($available_sets, 'u') !== false)
+		if (strpos($available_sets, 'u') !== false)
 			$sets[] = 'ABCDEFGHJKMNPQRSTUVWXYZ';
 		// numbers
-		if(strpos($available_sets, 'n') !== false)
+		if (strpos($available_sets, 'n') !== false)
 			$sets[] = '0123456789';
 		// special chars
-		if(strpos($available_sets, 's') !== false)
+		if (strpos($available_sets, 's') !== false)
 			$sets[] = '!@#$%&*?';
 		$all = '';
 		$password = '';
-		foreach($sets as $set) {
+		foreach ($sets as $set) {
 			$password .= $set[array_rand(str_split($set))];
 			$all .= $set;
 		}
 		$all = str_split($all);
-		for($i = 0; $i < $length - count($sets); $i++)
+		for ($i = 0; $i < $length - count($sets); $i++)
 			$password .= $all[array_rand($all)];
 		$password = str_shuffle($password);
-		if(!$add_dashes)
+		if (!$add_dashes)
 			return $password;
 		$dash_len = floor(sqrt($length));
 		$dash_str = '';
-		while(strlen($password) > $dash_len) {
+		while (strlen($password) > $dash_len) {
 			$dash_str .= substr($password, 0, $dash_len) . '-';
 			$password = substr($password, $dash_len);
 		}

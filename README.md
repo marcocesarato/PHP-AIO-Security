@@ -36,14 +36,17 @@ $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
 $escape_string = true; // If you use PDO I recommend to set this to false
 $scanner_path = "./*.php"; // Folder to scan at start and optionally the file extension
 $scanner_whitelist = array('./shell.php','./libs'); // Example of scan whitelist
+
 // Autostart
 $auto_session_manager = true; // Run session at start
-$auto_scanner = false; // Could have a bad performance impact (anyway you can try)
+$auto_scanner = false; // Could have a bad performance impact and could detect false positive, then try the method secureScanPath before enable this. BE CAREFUL
 $auto_block_tor = true; // If you want block TOR clients
 $auto_clean_global = false; // Global clean at start
 ```
 
-__PS:__ *You can always change the configuration as following for each parameters or simply editing the var if you need only static var:*
+`$auto_scanner = true;`  Could have a bad performance impact and could detect __false positive__, then try the method __secureScanPath__, that return an *array* with all probable malware, before enable this feature.
+
+__PS:__ *You can change the configuration as following for each parameters or simply editing the var directly on the class file:*
 
 ```php
 Security::$session_name = "MYSESSID"
