@@ -30,6 +30,7 @@ class Security
 										 // then try the method secureScanPath before enable this. BE CAREFUL
 	public static $auto_block_tor = true; // If you want block TOR clients
 	public static $auto_clean_global = false; // Global clean at start
+	public static $auto_antidos = true; // Block the client ip when there are too many requests
 
 	/**
 	 * Security constructor.
@@ -51,9 +52,12 @@ class Security
 			self::secureFormRequest();
 		}
 
-		self::secureDOS();
+		if (self::$auto_antidos)
+			self::secureDOS();
+
 		self::secureRequest();
 		self::secureBlockBots();
+
 		if (self::$auto_block_tor)
 			self::secureBlockTor();
 

@@ -42,6 +42,7 @@ $auto_session_manager = true; // Run session at start
 $auto_scanner = false; // Could have a bad performance impact and could detect false positive, then try the method secureScanPath before enable this. BE CAREFUL
 $auto_block_tor = true; // If you want block TOR clients
 $auto_clean_global = false; // Global clean at start
+$auto_antidos = true; // Block the client ip when there are too many requests
 ```
 
 `$auto_scanner = true;`  Could have a bad performance impact and could detect __false positive__, then try the method __secureScanPath__, that return an *array* with all probable malware, before enable this feature.
