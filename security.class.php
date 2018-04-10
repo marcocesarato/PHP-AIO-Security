@@ -129,6 +129,46 @@ class Security
 	}
 
 	/**
+	 * Restore unsafe globals
+	 */
+	public static function restoreGlobals(){
+		$_SERVER = $GLOBALS['UNSAFE_SERVER'];
+		$_COOKIE = $GLOBALS['UNSAFE_COOKIE'];
+		$_GET = $GLOBALS['UNSAFE_GET'];
+		$_POST = $GLOBALS['UNSAFE_POST'];
+		$_REQUEST = $GLOBALS['UNSAFE_REQUEST'];
+	}
+
+	/**
+	 * Userful to compare unsafe globals with safe globals
+	 * @return array
+	 */
+	public static function debugGlobals(){
+		$compare = array();
+		// SERVER
+		$compare['SERVER']['current'] = $_SERVER;
+		$compare['SERVER']['unsafe'] = $GLOBALS['UNSAFE_SERVER'];
+		$compare['SERVER']['safe'] = self::clean($GLOBALS['UNSAFE_SERVER']);
+		// COOKIE
+		$compare['COOKIE']['current'] = $_COOKIE;
+		$compare['COOKIE']['unsafe'] = $GLOBALS['UNSAFE_COOKIE'];
+		$compare['COOKIE']['safe'] = self::clean($GLOBALS['UNSAFE_COOKIE']);
+		// GET
+		$compare['GET']['current'] = $_GET;
+		$compare['GET']['unsafe'] = $GLOBALS['UNSAFE_GET'];
+		$compare['GET']['safe'] = self::clean($GLOBALS['UNSAFE_GET']);
+		// POST
+		$compare['POST']['current'] = $_POST;
+		$compare['POST']['unsafe'] = $GLOBALS['UNSAFE_POST'];
+		$compare['POST']['safe'] = self::clean($GLOBALS['UNSAFE_POST']);
+		// REQUEST
+		$compare['REQUEST']['current'] = $_REQUEST;
+		$compare['REQUEST']['unsafe'] = $GLOBALS['UNSAFE_REQUEST'];
+		$compare['REQUEST']['safe'] = self::clean($GLOBALS['UNSAFE_REQUEST']);
+		return $compare;
+	}
+
+	/**
 	 * Fix some elements on output buffer (to use with ob_start)
 	 * @param $buffer
 	 * @return string
