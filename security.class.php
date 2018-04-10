@@ -6,7 +6,8 @@
  * @author    Marco Cesarato <cesarato.developer@gmail.com>
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
- * @version   0.2.2
+ * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
+ * @version   0.2.3
  */
 
 class Security
