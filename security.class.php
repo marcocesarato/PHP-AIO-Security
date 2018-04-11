@@ -559,7 +559,7 @@ class Security
 		} while ($old_data !== $data);
 		$data = str_replace(chr(0), '', $data);
 		$data = preg_replace('%&\s*\{[^}]*(\}\s*;?|$)%', '', $data);
-		$data = str_replace('&', '&amp;', $data);
+		//$data = str_replace('&', '&amp;', $data);
 		$data = preg_replace('/&amp;#([0-9]+;)/', '&#\1', $data);
 		$data = preg_replace('/&amp;#[Xx]0*((?:[0-9A-Fa-f]{2})+;)/', '&#x\1', $data);
 		$data = preg_replace('/&amp;([A-Za-z][A-Za-z0-9]*;)/', '&\1', $data);
