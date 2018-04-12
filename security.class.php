@@ -7,23 +7,26 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.3
+ * @version   0.2.4
  */
 
 class Security
 {
 	// Config
 	public static $basedir = __DIR__; // Project basedir where is located .htaccess
-	public static $session_name = "XSESSID";
-	public static $session_lifetime = 288000; // 8 hours
-	public static $session_regenerate_id = false;
-	public static $csrf_session = "_CSRFTOKEN";
-	public static $csrf_formtoken = "_FORMTOKEN";
-	public static $hijacking_salt = "_SALT";
+	public static $session_name = "XSESSID"; // Session cookie name
+	public static $session_lifetime = 288000; // Session lifetime | default = 8 hours
+	public static $session_regenerate_id = false; // Rengenerate session id
+	public static $csrf_session = "_CSRFTOKEN"; // CSRF session token name
+	public static $csrf_formtoken = "_FORMTOKEN"; // CSRF form token input name
+	public static $hijacking_salt = "_SALT"; // Simply a salt
+	public static $headers_cache = true; // Enable header cache
 	public static $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
 	public static $escape_string = true; // If you use PDO I recommend to set this to false
 	public static $scanner_path = "./*.php"; // Folder to scan at start and optionally the file extension
-	public static $scanner_whitelist = array('./shell.php', './libs'); // Example of scan whitelist
+	public static $scanner_whitelist = array(); // Scan paths/files whitelist
+	public static $clean_post_xss = true; // Remove XSS on post global
+	public static $compress_output = true; // Compress output
 
 	// Autostart
 	public static $auto_session_manager = true; // Run session at start
@@ -33,8 +36,12 @@ class Security
 	public static $auto_clean_global = false; // Global clean at start
 	public static $auto_antidos = true; // Block the client ip when there are too many requests
 
+	// Error Template
+	public static $error_template = '<html><head><title>${ERROR_TITLE}</title></head><body>${ERROR_BODY}</body></html>';
+
 	/**
 	 * Security constructor.
+	 * @param bool $API
 	 */
 	function __construct($API = false) {
 		self::putInSafety($API);
@@ -42,6 +49,7 @@ class Security
 
 	/**
 	 * Secure initialization
+	 * @param bool $API
 	 */
 	public static function putInSafety($API = false) {
 
@@ -65,13 +73,6 @@ class Security
 		self::saveUnsafeGlobals();
 		if (self::$auto_clean_global) {
 			self::cleanGlobals();
-		} else {
-			$_SERVER = self::clean($_SERVER, false, false);
-			$_COOKIE = self::clean($_COOKIE, false);
-			$_GET = self::clean($_GET, false, false);
-			$_REQUEST = self::clean($_REQUEST);
-			$_REQUEST = array_merge($_REQUEST, $_GET);
-			$_REQUEST = array_diff($_REQUEST, $_COOKIE);
 		}
 
 		self::secureHijacking();
@@ -99,94 +100,55 @@ class Security
 	}
 
 	/**
-	 * Clean all input globals received
-	 * BE CAREFUL THIS METHOD COULD COMPROMISE HTML DATA IF SENT WITH INLINE JS
-	 * (send with htmlentities could be a solution if you want send inline js and clean globals at the same time)
-	 */
-	public static function cleanGlobals() {
-		self::saveUnsafeGlobals();
-		$_SERVER = self::clean($_SERVER, false, false);
-		$_COOKIE = self::clean($_COOKIE, false);
-		$_GET = self::clean($_GET, false, false);
-		$_POST = self::clean($_POST);
-		$_REQUEST = array_merge($_GET, $_POST);
-	}
-
-	private static $savedGlobals = false;
-
-	/**
-	 * Save uncleaned globals
-	 */
-	private static function saveUnsafeGlobals() {
-		if (!self::$savedGlobals) {
-			$GLOBALS['UNSAFE_SERVER'] = $_SERVER;
-			$GLOBALS['UNSAFE_COOKIE'] = $_COOKIE;
-			$GLOBALS['UNSAFE_GET'] = $_GET;
-			$GLOBALS['UNSAFE_POST'] = $_POST;
-			$GLOBALS['UNSAFE_REQUEST'] = $_REQUEST;
-			self::$savedGlobals = true;
-		}
-	}
-
-	/**
-	 * Restore unsafe globals
-	 */
-	public static function restoreGlobals(){
-		$_SERVER = $GLOBALS['UNSAFE_SERVER'];
-		$_COOKIE = $GLOBALS['UNSAFE_COOKIE'];
-		$_GET = $GLOBALS['UNSAFE_GET'];
-		$_POST = $GLOBALS['UNSAFE_POST'];
-		$_REQUEST = $GLOBALS['UNSAFE_REQUEST'];
-	}
-
-	/**
-	 * Userful to compare unsafe globals with safe globals
-	 * @return array
-	 */
-	public static function debugGlobals(){
-		$compare = array();
-		// SERVER
-		$compare['SERVER']['current'] = $_SERVER;
-		$compare['SERVER']['unsafe'] = $GLOBALS['UNSAFE_SERVER'];
-		$compare['SERVER']['safe'] = self::clean($GLOBALS['UNSAFE_SERVER']);
-		// COOKIE
-		$compare['COOKIE']['current'] = $_COOKIE;
-		$compare['COOKIE']['unsafe'] = $GLOBALS['UNSAFE_COOKIE'];
-		$compare['COOKIE']['safe'] = self::clean($GLOBALS['UNSAFE_COOKIE']);
-		// GET
-		$compare['GET']['current'] = $_GET;
-		$compare['GET']['unsafe'] = $GLOBALS['UNSAFE_GET'];
-		$compare['GET']['safe'] = self::clean($GLOBALS['UNSAFE_GET']);
-		// POST
-		$compare['POST']['current'] = $_POST;
-		$compare['POST']['unsafe'] = $GLOBALS['UNSAFE_POST'];
-		$compare['POST']['safe'] = self::clean($GLOBALS['UNSAFE_POST']);
-		// REQUEST
-		$compare['REQUEST']['current'] = $_REQUEST;
-		$compare['REQUEST']['unsafe'] = $GLOBALS['UNSAFE_REQUEST'];
-		$compare['REQUEST']['safe'] = self::clean($GLOBALS['UNSAFE_REQUEST']);
-		return $compare;
-	}
-
-	/**
 	 * Fix some elements on output buffer (to use with ob_start)
 	 * @param $buffer
+	 * @param string $type
+	 * @param null $cache_days
+	 * @param bool $compress
 	 * @return string
 	 */
-	public static function output($buffer) {
-		if (self::isHTML($buffer)) {
+	public static function output($buffer, $type = 'html', $cache_days = null, $compress = true) {
+
+		if(self::$headers_cache) self::headersCache($cache_days);
+
+		$compress_output = (self::$compress_output && $compress);
+
+		if ($type = 'html' && self::isHTML($buffer)) {
+			header("Content-Type: text/html");
 			self::secureCSRF();
 			$buffer = self::secureHTML($buffer);
-			$buffer = self::compressHTML($buffer);
+			if($compress_output) $buffer = self::compressHTML($buffer);
+		} elseif($type == 'css') {
+			header("Content-type: text/css");
+			if($compress_output) $buffer = self::compressCSS($buffer);
+		} elseif($type == 'csv') {
+			header("Content-type: text/csv");
+			header("Content-Disposition: attachment; filename=file.csv");
+			if($compress_output) $buffer = self::compressOutput($buffer);
+		} elseif($type == 'js' || $type == 'javascript') {
+			header('Content-Type: application/javascript');
+			if($compress_output) $buffer = self::compressJS($buffer);
+		} elseif($type == 'json') {
+			header('Content-Type: application/json');
+			if($compress_output) $buffer = self::compressOutput($buffer);
+		} elseif($type == 'xml') {
+			header('Content-Type: text/xml');
+			if($compress_output) $buffer = self::compressHTML($buffer);
+		} elseif($type == 'text' || $type == 'txt') {
+			header("Content-Type: text/plain");
+			if($compress_output) $buffer = self::compressOutput($buffer);
 		} else {
-			self::headersCache();
-			header('Content-Length: ' . strlen($buffer)); // For cache header
+			if($compress_output) $buffer = self::compressOutput($buffer);
 		}
+
+		header('Content-Length: ' . strlen($buffer)); // For cache header
+
 		return $buffer;
 	}
 
 	/**
 	 * Security Headers
+	 * @param bool $API
 	 */
 	public static function headers($API = false) {
 		// Headers
@@ -215,6 +177,19 @@ class Security
 	}
 
 	/**
+	 * Cache Headers
+	 * @param null $cache_days
+	 */
+	public static function headersCache($cache_days = null) {
+		// Cache Headers
+		$days_to_cache = (($cache_days == null) ? self::$headers_cache_days : $cache_days) * (60 * 60 * 24);
+		$ts = gmdate("D, d M Y H:i:s", time() + $days_to_cache) . " GMT";
+		@header("Expires: $ts");
+		@header("Pragma" . ($days_to_cache > 0) ? "cache" : "no-cache");
+		@header("Cache-Control: max-age=$days_to_cache, must-revalidate");
+	}
+
+	/**
 	 * Security Cookies
 	 */
 	public static function secureCookies() {
@@ -233,7 +208,7 @@ class Security
 
 		// Disable methods
 		if (preg_match("/^(HEAD|TRACE|TRACK|DEBUG|OPTIONS)/i", $_SERVER['REQUEST_METHOD']))
-			self::permission_denied();
+			self::error(403, 'Permission denied!');
 
 		// Check REQUEST_URI
 		$_REQUEST_URI = urldecode($_SERVER['REQUEST_URI']);
@@ -245,7 +220,7 @@ class Security
 			preg_match("/base64_(en|de)code[^(]*\([^)]*\)/i", $_REQUEST_URI) ||
 			preg_match("/(%0A|%0D|\\r|\\n)/", $_REQUEST_URI) ||
 			preg_match("/union([^a]*a)+ll([^s]*s)+elect/i", $_REQUEST_URI))
-			self::permission_denied();
+			self::error(403, 'Permission denied!');
 
 		// Check QUERY_STRING
 		$_QUERY_STRING = urldecode($_SERVER['QUERY_STRING']);
@@ -259,7 +234,7 @@ class Security
 			preg_match("/(\.\.\/|\.\.\\|%2e%2e%2f|%2e%2e\/|\.\.%2f|%2e%2e%5c)/i", $_QUERY_STRING) ||
 			preg_match("/(;|<|>|'|\"|\)|%0A|%0D|%22|%27|%3C|%3E|%00).*(\*|union|select|insert|cast|set|declare|drop|update|md5|benchmark).*/i", $_QUERY_STRING) ||
 			preg_match("/union([^a]*a)+ll([^s]*s)+elect/i", $_QUERY_STRING))
-			self::permission_denied();
+			self::error(403, 'Permission denied!');
 	}
 
 
@@ -270,20 +245,19 @@ class Security
 		if ($_SERVER["REQUEST_METHOD"] == "POST") {
 			$referer = $_SERVER["HTTP_REFERER"];
 			if (!isset($referer) || strpos($_SERVER["SERVER_NAME"], $referer) != 0)
-				self::permission_denied();
+				self::error(403, 'Permission denied!');
 		}
 	}
 
 	/**
-	 * Cache Headers
+	 * Compress generic output
+	 * @param $buffer
+	 * @return string
 	 */
-	public static function headersCache() {
-		// Cache Headers
-		$days_to_cache = self::$headers_cache_days * (60 * 60 * 24);
-		$ts = gmdate("D, d M Y H:i:s", time() + $days_to_cache) . " GMT";
-		@header("Expires: $ts");
-		@header("Pragma: cache");
-		@header("Cache-Control: max-age=$days_to_cache, must-revalidate");
+	public static function compressOutput($buffer) {
+		ini_set("zlib.output_compression", "On");
+		ini_set("zlib.output_compression_level", "9");
+		return preg_replace(array('/\s+/'), array(' '), str_replace(array("\n", "\r", "\t"), '', $buffer));
 	}
 
 	/**
@@ -392,20 +366,91 @@ class Security
 	}
 
 	/**
-	 * Clean variables (recursive)
+	 * Clean all input globals received
+	 * BE CAREFUL THIS METHOD COULD COMPROMISE HTML DATA IF SENT WITH INLINE JS
+	 * (send with htmlentities could be a solution if you want send inline js and clean globals at the same time)
+	 */
+	public static function cleanGlobals() {
+		self::saveUnsafeGlobals();
+		$_SERVER = self::clean($_SERVER, false, false);
+		$_COOKIE = self::clean($_COOKIE, false);
+		$_GET = self::clean($_GET, false, false);
+		$_POST = self::clean($_POST, true, true, true, self::$clean_post_xss);
+		$_REQUEST = array_merge($_GET, $_POST);
+	}
+
+	private static $savedGlobals = false;
+
+	/**
+	 * Save uncleaned globals
+	 */
+	private static function saveUnsafeGlobals() {
+		if (!self::$savedGlobals) {
+			$GLOBALS['UNSAFE_SERVER'] = $_SERVER;
+			$GLOBALS['UNSAFE_COOKIE'] = $_COOKIE;
+			$GLOBALS['UNSAFE_GET'] = $_GET;
+			$GLOBALS['UNSAFE_POST'] = $_POST;
+			$GLOBALS['UNSAFE_REQUEST'] = $_REQUEST;
+			self::$savedGlobals = true;
+		}
+	}
+
+	/**
+	 * Restore unsafe globals
+	 */
+	public static function restoreGlobals(){
+		$_SERVER = $GLOBALS['UNSAFE_SERVER'];
+		$_COOKIE = $GLOBALS['UNSAFE_COOKIE'];
+		$_GET = $GLOBALS['UNSAFE_GET'];
+		$_POST = $GLOBALS['UNSAFE_POST'];
+		$_REQUEST = $GLOBALS['UNSAFE_REQUEST'];
+	}
+
+	/**
+	 * Userful to compare unsafe globals with safe globals
+	 * @return array
+	 */
+	public static function debugGlobals(){
+		$compare = array();
+		// SERVER
+		$compare['SERVER']['current'] = $_SERVER;
+		$compare['SERVER']['unsafe'] = $GLOBALS['UNSAFE_SERVER'];
+		$compare['SERVER']['safe'] = self::clean($GLOBALS['UNSAFE_SERVER']);
+		// COOKIE
+		$compare['COOKIE']['current'] = $_COOKIE;
+		$compare['COOKIE']['unsafe'] = $GLOBALS['UNSAFE_COOKIE'];
+		$compare['COOKIE']['safe'] = self::clean($GLOBALS['UNSAFE_COOKIE']);
+		// GET
+		$compare['GET']['current'] = $_GET;
+		$compare['GET']['unsafe'] = $GLOBALS['UNSAFE_GET'];
+		$compare['GET']['safe'] = self::clean($GLOBALS['UNSAFE_GET']);
+		// POST
+		$compare['POST']['current'] = $_POST;
+		$compare['POST']['unsafe'] = $GLOBALS['UNSAFE_POST'];
+		$compare['POST']['safe'] = self::clean($GLOBALS['UNSAFE_POST']);
+		// REQUEST
+		$compare['REQUEST']['current'] = $_REQUEST;
+		$compare['REQUEST']['unsafe'] = $GLOBALS['UNSAFE_REQUEST'];
+		$compare['REQUEST']['safe'] = self::clean($GLOBALS['UNSAFE_REQUEST']);
+		return $compare;
+	}
+
+	/**
+	 *  Clean variables (recursive)
 	 * @param $data
 	 * @param bool $html
 	 * @param bool $quotes
 	 * @param bool $escape
-	 * @return mixed
+	 * @param bool $xss
+	 * @return array|mixed
 	 */
-	public static function clean($data, $html = true, $quotes = true, $escape = true) {
+	public static function clean($data, $html = true, $quotes = true, $escape = true, $xss = true) {
 		if (is_array($data)) {
 			foreach ($data as $k => $v) {
-				$data[$k] = self::clean($v, $html, $quotes, $escape);
+				$data[$k] = self::clean($v, $html, $quotes, $escape, $xss);
 			}
 		} else {
-			$data = self::secureVar($data, $html, $quotes, $escape);
+			$data = self::secureVar($data, $html, $quotes, $escape, $xss);
 		}
 		return $data;
 	}
@@ -416,12 +461,13 @@ class Security
 	 * @param bool $html
 	 * @param bool $quotes
 	 * @param bool $escape
+	 * @param bool $xss
 	 * @return mixed
 	 */
-	private static function secureVar($data, $html = true, $quotes = true, $escape = true) {
+	private static function secureVar($data, $html = true, $quotes = true, $escape = true, $xss = true) {
 		if (!$quotes) $data = str_replace(array('\'', '"'), '', $data);
 		if (!$html) $data = self::stripTags(self::stripTagsContent($data));
-		$data = self::cleanXSS($data);
+		if ($xss) $data = self::cleanXSS($data);
 		if ($escape && self::$escape_string) {
 			$data = self::stripslashes($data);
 			$data = self::stringEscape($data);
@@ -484,7 +530,9 @@ class Security
 	/**
 	 * Strip tags and contents recursive
 	 * @param $data
-	 * @return mixed
+	 * @param string $tags
+	 * @param bool $invert
+	 * @return array|string
 	 */
 	public static function stripTagsContent($data, $tags = '', $invert = false) {
 		if (is_array($data)) {
@@ -555,7 +603,7 @@ class Security
 		$data = preg_replace('#</*\w+:\w[^>]*+>#i', '', $data);
 		do {
 			$old_data = $data;
-			$data = preg_replace("#</*(?:applet|b(?:ase|gsound|link)|embed|frame(?:set)?|i(?:frame|layer)|l(?:ayer|ink)|meta|object|s(?:cript|tyle)|title|xml)[^>]*+>#i", "", $data);
+			$data = preg_replace("#</*(?:applet|b(?:ase|gsound|link)|embed|frame(?:set)?|i(?:frame|layer)|l(?:ayer|ink)|meta|object|s(?:cript|tyle)|title|xml|eval|svg|video|math|keygen)[^>]*+>#i", "", $data);
 		} while ($old_data !== $data);
 		$data = str_replace(chr(0), '', $data);
 		$data = preg_replace('%&\s*\{[^}]*(\}\s*;?|$)%', '', $data);
@@ -588,7 +636,7 @@ class Security
 	public static function secureCSRF() {
 		if ($_SERVER["REQUEST_METHOD"] == "POST") {
 			if (!self::secureCSRFCompare())
-				self::permission_denied();
+				self::error(403, 'Permission denied!');
 		}
 		if (!isset($_SESSION[self::$csrf_session])) {
 			self::secureCSRFGenerate();
@@ -659,7 +707,7 @@ class Security
 	 */
 	public static function secureBlockTor() {
 		if (self::clientIsTor())
-			self::permission_denied();
+			self::error(403, 'Permission denied!');
 	}
 
 	/**
@@ -697,7 +745,7 @@ class Security
 			preg_match("/(havij|libwww-perl|wget|python|nikto|curl|scan|java|winhttp|clshttp|loader)/i", $_SERVER['HTTP_USER_AGENT']) ||
 			preg_match("/(%0A|%0D|%27|%3C|%3E|%00)/i", $_SERVER['HTTP_USER_AGENT']) ||
 			preg_match("/(;|<|>|'|\"|\)|\(|%0A|%0D|%22|%27|%28|%3C|%3E|%00).*(libwww-perl|wget|python|nikto|curl|scan|java|winhttp|HTTrack|clshttp|archiver|loader|email|harvest|extract|grab|miner)/i", $_SERVER['HTTP_USER_AGENT']))
-			self::permission_denied();
+			self::error(403, 'Permission denied!');
 		// Block Fake google bot
 		self::blockFakeGoogleBots();
 	}
@@ -713,8 +761,8 @@ class Security
 			$host_ip = gethostbyname($name);
 			if (preg_match('/googlebot/i', $name, $matches)) {
 				if ($host_ip != $ip)
-					self::permission_denied();
-			} else self::permission_denied();
+					self::error(403, 'Permission denied!');
+			} else self::error(403, 'Permission denied!');
 		}
 	}
 
@@ -725,7 +773,7 @@ class Security
 		if (!empty($_SESSION['HTTP_USER_TOKEN']) && $_SESSION['HTTP_USER_TOKEN'] != md5($_SERVER['HTTP_USER_AGENT'] . ':' . self::clientIP() . ':' . self::$hijacking_salt)) {
 			session_unset();
 			session_destroy();
-			self::permission_denied();
+			self::error(403, 'Permission denied!');
 		}
 
 		$_SESSION['HTTP_USER_TOKEN'] = md5($_SERVER['HTTP_USER_AGENT'] . ':' . self::clientIP() . ':' . self::$hijacking_salt);
@@ -835,21 +883,17 @@ class Security
 	}
 
 	/**
-	 * Error 403
+	 * Custom Error
+	 * @param string $code
+	 * @param string $message
+	 * @param string $title
 	 */
-	private static function permission_denied($message = "") {
+	public static function error($code = 404, $message = "Not found!", $title = 'Error') {
 		ob_clean();
-		http_response_code(403);
-		die("Access Denied!<br>$message");
-	}
-
-	/**
-	 * Error 404
-	 */
-	private static function not_found() {
-		ob_clean();
-		http_response_code(404);
-		die("Not found!");
+		http_response_code($code);
+		$output = str_replace('${ERROR_TITLE}', $title, self::$error_template);
+		$output = str_replace('${ERROR_BODY}',$message, $output);
+		die($output);
 	}
 
 	public static $SCAN_DEF = array("functions" =>
@@ -931,8 +975,8 @@ class Security
 
 	/**
 	 * File scanner
-	 * @param $pattern
-	 * @return boolean
+	 * @param $file
+	 * @return bool
 	 */
 	public static function secureScanFile($file) {
 
@@ -975,7 +1019,7 @@ class Security
 
 	/**
 	 * Directory scanner
-	 * @param $pattern
+	 * @param $path
 	 * @return array
 	 */
 	public static function secureScanPath($path) {
@@ -992,7 +1036,7 @@ class Security
 
 	/**
 	 * Scan and rename bad files
-	 * @param $pattern
+	 * @param $path
 	 */
 	public static function secureScan($path) {
 		$files = self::secureScanPath($path);
@@ -1028,7 +1072,7 @@ class Security
 	/**
 	 * Write on htaccess the DOS Attempts
 	 * @param $ip
-	 * @param $content
+	 * @param $file_attempts
 	 */
 	private static function secureDOSWriteAttempts($ip, $file_attempts) {
 		$ip_quote = preg_quote($ip);
@@ -1052,7 +1096,7 @@ class Security
 	/**
 	 * Remove from htaccess the DOS Attempts
 	 * @param $ip
-	 * @param $content
+	 * @param $file_attempts
 	 */
 	private static function secureDOSRemoveAttempts($ip, $file_attempts) {
 		$ip_quote = preg_quote($ip);
@@ -1065,8 +1109,8 @@ class Security
 
 	/**
 	 * Remove from htaccess the DOS Attempts
-	 * @param $ip
-	 * @param $content
+	 * @param $time_expire
+	 * @param $file_attempts
 	 */
 	private static function secureDOSRemoveOldAttempts($time_expire, $file_attempts) {
 		$time = $_SERVER['REQUEST_TIME'];
@@ -1138,7 +1182,7 @@ class Security
 					if ($seconds < 1) header("Location: {$url}");
 					header("Refresh: {$seconds}; url={$url}");
 
-					self::permission_denied('You must wait ' . $seconds . ' seconds...');
+					self::error(403, 'Permission Denied!<br>You must wait ' . $seconds . ' seconds...');
 				}
 				self::secureDOSWriteAttempts($ip, $file_attempts);
 			} else if ($_SESSION['DOSCounter'] >= 10 && $_SESSION['DOSAttempts'] > 1) {
