@@ -38,6 +38,7 @@ $escape_string = true; // If you use PDO I recommend to set this to false
 $scanner_path = "./*.php"; // Folder to scan at start and optionally the file extension
 $scanner_whitelist = array('./shell.php','./libs'); // Example of scan whitelist
 $clean_post_xss = true; // Remove XSS on post global
+$compress_output = true; // Compress output
 
 // Autostart
 $auto_session_manager = true; // Run session at start

@@ -884,7 +884,7 @@ class Security
 
 	/**
 	 * Custom Error
-	 * @param string $code
+	 * @param integer $code
 	 * @param string $message
 	 * @param string $title
 	 */
