@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.4
+ * @version   0.2.5
  */
 
 class Security
@@ -31,7 +31,7 @@ class Security
 	// Autostart
 	public static $auto_session_manager = true; // Run session at start
 	public static $auto_scanner = false; // Could have a bad performance impact and could detect false positive,
-										 // then try the method secureScanPath before enable this. BE CAREFUL
+	// then try the method secureScanPath before enable this. BE CAREFUL
 	public static $auto_block_tor = true; // If you want block TOR clients
 	public static $auto_clean_global = false; // Global clean at start
 	public static $auto_antidos = true; // Block the client ip when there are too many requests
@@ -109,7 +109,7 @@ class Security
 	 */
 	public static function output($buffer, $type = 'html', $cache_days = null, $compress = true) {
 
-		if(self::$headers_cache) self::headersCache($cache_days);
+		if (self::$headers_cache) self::headersCache($cache_days);
 
 		$compress_output = (self::$compress_output && $compress);
 
@@ -117,28 +117,28 @@ class Security
 			header("Content-Type: text/html");
 			self::secureCSRF();
 			$buffer = self::secureHTML($buffer);
-			if($compress_output) $buffer = self::compressHTML($buffer);
-		} elseif($type == 'css') {
+			if ($compress_output) $buffer = self::compressHTML($buffer);
+		} elseif ($type == 'css') {
 			header("Content-type: text/css");
-			if($compress_output) $buffer = self::compressCSS($buffer);
-		} elseif($type == 'csv') {
+			if ($compress_output) $buffer = self::compressCSS($buffer);
+		} elseif ($type == 'csv') {
 			header("Content-type: text/csv");
 			header("Content-Disposition: attachment; filename=file.csv");
-			if($compress_output) $buffer = self::compressOutput($buffer);
-		} elseif($type == 'js' || $type == 'javascript') {
+			if ($compress_output) $buffer = self::compressOutput($buffer);
+		} elseif ($type == 'js' || $type == 'javascript') {
 			header('Content-Type: application/javascript');
-			if($compress_output) $buffer = self::compressJS($buffer);
-		} elseif($type == 'json') {
+			if ($compress_output) $buffer = self::compressJS($buffer);
+		} elseif ($type == 'json') {
 			header('Content-Type: application/json');
-			if($compress_output) $buffer = self::compressOutput($buffer);
-		} elseif($type == 'xml') {
+			if ($compress_output) $buffer = self::compressOutput($buffer);
+		} elseif ($type == 'xml') {
 			header('Content-Type: text/xml');
-			if($compress_output) $buffer = self::compressHTML($buffer);
-		} elseif($type == 'text' || $type == 'txt') {
+			if ($compress_output) $buffer = self::compressHTML($buffer);
+		} elseif ($type == 'text' || $type == 'txt') {
 			header("Content-Type: text/plain");
-			if($compress_output) $buffer = self::compressOutput($buffer);
+			if ($compress_output) $buffer = self::compressOutput($buffer);
 		} else {
-			if($compress_output) $buffer = self::compressOutput($buffer);
+			if ($compress_output) $buffer = self::compressOutput($buffer);
 		}
 
 		header('Content-Length: ' . strlen($buffer)); // For cache header
@@ -398,7 +398,7 @@ class Security
 	/**
 	 * Restore unsafe globals
 	 */
-	public static function restoreGlobals(){
+	public static function restoreGlobals() {
 		$_SERVER = $GLOBALS['UNSAFE_SERVER'];
 		$_COOKIE = $GLOBALS['UNSAFE_COOKIE'];
 		$_GET = $GLOBALS['UNSAFE_GET'];
@@ -407,10 +407,10 @@ class Security
 	}
 
 	/**
-	 * Userful to compare unsafe globals with safe globals
+	 * Useful to compare unsafe globals with safe globals
 	 * @return array
 	 */
-	public static function debugGlobals(){
+	public static function debugGlobals() {
 		$compare = array();
 		// SERVER
 		$compare['SERVER']['current'] = $_SERVER;
@@ -767,6 +767,60 @@ class Security
 	}
 
 	/**
+	 * Generate captcha image
+	 */
+	public static function printCaptcha() {
+
+		ob_clean();
+
+		$md5_hash = md5(rand(0, 9999));
+		$security_code = substr($md5_hash, rand(0, 15), 5);
+
+		$spook = ': : : : : : : : : : :';
+
+		$_SESSION["CAPTCHA_CODE"] = $security_code;
+
+		$width = 100;
+		$height = 25;
+
+		$image = imagecreate($width, $height);
+
+		$background_color = imagecolorallocate($image, 0, 0, 0);
+		$text_color = imagecolorallocate($image, 233, 233, 233);
+		$strange1_color = imagecolorallocate($image, rand(100, 255), rand(100, 255), rand(100, 255));
+		$strange2_color = imagecolorallocate($image, rand(100, 255), rand(100, 255), rand(100, 255));
+		$shape1_color = imagecolorallocate($image, rand(100, 255), rand(100, 255), rand(100, 255));
+		$shape2_color = imagecolorallocate($image, rand(100, 255), rand(100, 255), rand(100, 255));
+
+		imagefill($image, 0, 0, $background_color);
+
+		imagestring($image, 5, 30, 4, $security_code, $text_color);
+
+		imagestring($image, 0, rand(0, $width / 2), rand(0, $height), $spook, $strange1_color);
+		imagestring($image, 0, rand(0, $width / 2), rand(0, $height), $spook, $strange2_color);
+		imageellipse($image, 0, 0, rand($width / 2, $width * 2), rand($height, $height * 2), $shape1_color);
+		imageellipse($image, 0, 0, rand($width / 2, $width * 2), rand($height, $height * 2), $shape2_color);
+
+		header("Content-Type: image/png");
+
+		imagepng($image);
+		imagedestroy($image);
+
+		die();
+	}
+
+	/**
+	 * Validate captcha
+	 * @param $input_name
+	 * @return bool
+	 */
+	public static function secureCaptcha($input_name) {
+		if ($_REQUEST[$input_name] == $_SESSION["CAPTCHA_CODE"] && !empty($_SESSION["CAPTCHA_CODE"]))
+			return true;
+		return false;
+	}
+
+	/**
 	 * Hijacking prevention
 	 */
 	public static function secureHijacking() {
@@ -892,7 +946,7 @@ class Security
 		ob_clean();
 		http_response_code($code);
 		$output = str_replace('${ERROR_TITLE}', $title, self::$error_template);
-		$output = str_replace('${ERROR_BODY}',$message, $output);
+		$output = str_replace('${ERROR_BODY}', $message, $output);
 		die($output);
 	}
 
@@ -1078,16 +1132,16 @@ class Security
 		$ip_quote = preg_quote($ip);
 		$content = @file_get_contents($file_attempts);
 		if (preg_match("/### BEGIN: DOS Attempts ###[\S\s.]*# $ip_quote => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\S\s.]*### END: DOS Attempts ###/i", $content, $attemps)) {
-			$row_replace = "# $ip => " . $_SESSION['DOSAttemptsTimer'] . ":" . $_SESSION['DOSAttempts'] . ":" . $_SESSION['DOSCounter'] . ":" . $_SESSION['DOSTimer'];
+			$row_replace = "# $ip => " . $_SESSION['DOS_ATTEMPTS_TIMER'] . ":" . $_SESSION['DOS_ATTEMPTS'] . ":" . $_SESSION['DOS_COUNTER'] . ":" . $_SESSION['DOS_TIMER'];
 			$content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)(# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i",
 				"$1$row_replace$3", $content);
 		} else if (preg_match("/### BEGIN: DOS Attempts ###([\S\s.]*)### END: DOS Attempts ###/i", $content)) {
-			$row = "# $ip => " . $_SESSION['DOSAttemptsTimer'] . ":" . $_SESSION['DOSAttempts'] . ":" . $_SESSION['DOSCounter'] . ":" . $_SESSION['DOSTimer'];
+			$row = "# $ip => " . $_SESSION['DOS_ATTEMPTS_TIMER'] . ":" . $_SESSION['DOS_ATTEMPTS'] . ":" . $_SESSION['DOS_COUNTER'] . ":" . $_SESSION['DOS_TIMER'];
 			$content = preg_replace("/(### BEGIN: DOS Attempts ###)([\S\s.]*)([\r\n]+### END: DOS Attempts ###)/i",
 				"$1$2$row$3", $content);
 		} else {
 			$content .= "### BEGIN: DOS Attempts ###";
-			$content .= "\r\n# $ip => " . $_SESSION['DOSAttemptsTimer'] . ":" . $_SESSION['DOSAttempts'] . ":" . $_SESSION['DOSCounter'] . ":" . $_SESSION['DOSTimer'];
+			$content .= "\r\n# $ip => " . $_SESSION['DOS_ATTEMPTS_TIMER'] . ":" . $_SESSION['DOS_ATTEMPTS'] . ":" . $_SESSION['DOS_COUNTER'] . ":" . $_SESSION['DOS_TIMER'];
 			$content .= "\r\n### END: DOS Attempts ###";
 		}
 		file_put_contents($file_attempts, $content);
@@ -1135,10 +1189,10 @@ class Security
 	private static function secureDOSReadAttempts($ip, $content) {
 		$ip_quote = preg_quote($ip);
 		if (preg_match("/### BEGIN: DOS Attempts ###[\S\s.]*[\r\n]+# $ip_quote => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\S\s.]*### END: DOS Attempts ###/i", $content, $attemps)) {
-			$_SESSION['DOSAttemptsTimer'] = $attemps[1];
-			$_SESSION['DOSAttempts'] = $attemps[2];
-			$_SESSION['DOSCounter'] = $attemps[3];
-			$_SESSION['DOSTimer'] = $attemps[4];
+			$_SESSION['DOS_ATTEMPTS_TIMER'] = $attemps[1];
+			$_SESSION['DOS_ATTEMPTS'] = $attemps[2];
+			$_SESSION['DOS_COUNTER'] = $attemps[3];
+			$_SESSION['DOS_TIMER'] = $attemps[4];
 		}
 	}
 
@@ -1158,34 +1212,34 @@ class Security
 		$content = @file_get_contents($file_attempts);
 		self::secureDOSRemoveOldAttempts($time_expire, $file_attempts);
 
-		if (!isset($_SESSION['DOSCounter']) || !isset($_SESSION['DOSAttempts']) || empty($_SESSION['DOSAttemptsTimer']) || empty($_SESSION['DOSTimer'])) {
+		if (!isset($_SESSION['DOS_COUNTER']) || !isset($_SESSION['DOS_ATTEMPTS']) || empty($_SESSION['DOS_ATTEMPTS_TIMER']) || empty($_SESSION['DOS_TIMER'])) {
 			self::secureDOSReadAttempts($ip, $file_attempts);
-			$_SESSION['DOSCounter'] = 0;
-			$_SESSION['DOSAttempts'] = 0;
-			$_SESSION['DOSAttemptsTimer'] = $time;
-			$_SESSION['DOSTimer'] = $time;
+			$_SESSION['DOS_COUNTER'] = 0;
+			$_SESSION['DOS_ATTEMPTS'] = 0;
+			$_SESSION['DOS_ATTEMPTS_TIMER'] = $time;
+			$_SESSION['DOS_TIMER'] = $time;
 			self::secureDOSWriteAttempts($ip, $file_attempts);
-		} else if ($_SESSION['DOSTimer'] != $time) {
+		} else if ($_SESSION['DOS_TIMER'] != $time) {
 
-			if ($time > $_SESSION['DOSTimer'] + $time_expire)
-				$_SESSION['DOSAttempts'] = 0;
+			if ($time > $_SESSION['DOS_TIMER'] + $time_expire)
+				$_SESSION['DOS_ATTEMPTS'] = 0;
 
-			if ($_SESSION['DOSCounter'] >= 10 && $_SESSION['DOSAttempts'] < 2) {
-				if ($time > $_SESSION['DOSTimer'] + $time_waiting) {
-					$_SESSION['DOSAttempts'] = $_SESSION['DOSAttempts'] + 1;
-					$_SESSION['DOSAttemptsTimer'] = $time;
-					$_SESSION['DOSTimer'] = $time;
-					$_SESSION['DOSCounter'] = 0;
+			if ($_SESSION['DOS_COUNTER'] >= 10 && $_SESSION['DOS_ATTEMPTS'] < 2) {
+				if ($time > $_SESSION['DOS_TIMER'] + $time_waiting) {
+					$_SESSION['DOS_ATTEMPTS'] = $_SESSION['DOS_ATTEMPTS'] + 1;
+					$_SESSION['DOS_ATTEMPTS_TIMER'] = $time;
+					$_SESSION['DOS_TIMER'] = $time;
+					$_SESSION['DOS_COUNTER'] = 0;
 				} else {
 					$url = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
-					$seconds = round(($_SESSION['DOSTimer'] + $time_waiting) - time());
+					$seconds = round(($_SESSION['DOS_TIMER'] + $time_waiting) - time());
 					if ($seconds < 1) header("Location: {$url}");
 					header("Refresh: {$seconds}; url={$url}");
 
 					self::error(403, 'Permission Denied!<br>You must wait ' . $seconds . ' seconds...');
 				}
 				self::secureDOSWriteAttempts($ip, $file_attempts);
-			} else if ($_SESSION['DOSCounter'] >= 10 && $_SESSION['DOSAttempts'] > 1) {
+			} else if ($_SESSION['DOS_COUNTER'] >= 10 && $_SESSION['DOS_ATTEMPTS'] > 1) {
 				$htaccess_content = file_get_contents($htaccess);
 				if (preg_match("/### BEGIN: BANNED IPs ###\n/i", $content)) {
 					$htaccess_content = preg_replace("/(### BEGIN: BANNED IPs ###[\r\n]+)([\S\s.]*?)([\r\n]+### END: BANNED IPs ###)/i", "$1$2\r\nDeny from $ip$3", $htaccess_content);
@@ -1198,12 +1252,12 @@ class Security
 				file_put_contents($htaccess, $htaccess_content);
 				self::secureDOSRemoveAttempts($ip, $file_attempts);
 			} else {
-				if ($_SESSION['DOSTimer'] > ($time - $time_counter)) {
-					$_SESSION['DOSCounter'] = $_SESSION['DOSCounter'] + 1;
+				if ($_SESSION['DOS_TIMER'] > ($time - $time_counter)) {
+					$_SESSION['DOS_COUNTER'] = $_SESSION['DOS_COUNTER'] + 1;
 				} else {
-					$_SESSION['DOSCounter'] = 0;
+					$_SESSION['DOS_COUNTER'] = 0;
 				}
-				$_SESSION['DOSTimer'] = $time;
+				$_SESSION['DOS_TIMER'] = $time;
 				self::secureDOSWriteAttempts($ip, $file_attempts);
 			}
 		}

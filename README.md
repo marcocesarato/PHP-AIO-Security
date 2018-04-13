@@ -1,5 +1,5 @@
 # PHP AIO Security Class + Antimalware
-__Version 0.2.4__
+__Version 0.2.5__
 
 
 
@@ -186,6 +186,7 @@ USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 | secureBlockBots           | -                  | Void   | Block some generic bad bots/crawler/spiders                  |
 | secureBlockTor            | -                  | Void   | Block TOR clients                                            |
 | secureHijacking           | -                  | Void   | Prevent Hijacking and delete session                         |
+| secureCaptcha             | $input_name        | Void   | Validate captcha                                             |
 
 ### Cleaning Methods
 
@@ -210,6 +211,7 @@ USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 | -------------- | ------------------------------------------------------------ | ------ | ------------------------------------------------------------ |
 | output         | \$buffer, \$type = (html\|css\|js\|json\|xml\|csv\|txt), $cache_days = null, \$compress = true | String | Put in safety HTML if is HTML, compress HTML if is HTML, check for CSRF and add cache headers if isn't HTML (usually used with ob_start) |
 | secureHTML     | $buffer                                                      | String | Put in safety some html elements on output buffer and add automatically the CSRF token |
+| printCaptcha   | -                                                            | Void   | Print captcha image and die                                  |
 | compressOutput | $buffer                                                      | String | Compression generic                                          |
 | compressHTML   | $html                                                        | String | Compression of HTML                                          |
 | compressJS     | $js                                                          | String | Compression of JS                                            |
