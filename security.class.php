@@ -450,27 +450,13 @@ class Security
 				$data[$k] = self::clean($v, $html, $quotes, $escape, $xss);
 			}
 		} else {
-			$data = self::secureVar($data, $html, $quotes, $escape, $xss);
-		}
-		return $data;
-	}
-
-	/**
-	 * Clean variable
-	 * @param $data
-	 * @param bool $html
-	 * @param bool $quotes
-	 * @param bool $escape
-	 * @param bool $xss
-	 * @return mixed
-	 */
-	private static function secureVar($data, $html = true, $quotes = true, $escape = true, $xss = true) {
-		if (!$quotes) $data = str_replace(array('\'', '"'), '', $data);
-		if (!$html) $data = self::stripTags(self::stripTagsContent($data));
-		if ($xss) $data = self::cleanXSS($data);
-		if ($escape && self::$escape_string) {
-			$data = self::stripslashes($data);
-			$data = self::escapeSQL($data);
+			if (!$quotes) $data = str_replace(array('\'', '"'), '', $data);
+			if (!$html) $data = self::stripTagsContent($data);
+			if ($xss) $data = self::escapeXSS($data);
+			if ($escape && self::$escape_string) {
+				$data = self::stripslashes($data);
+				$data = self::escapeSQL($data);
+			}
 		}
 		return $data;
 	}
@@ -570,7 +556,7 @@ class Security
 				$data = preg_replace('@<(\w+)\b.*?>.*?</\1>@si', '', $data);
 			}
 		}
-		return $data;
+		return self::stripTags($data);
 	}
 
 	/**
@@ -578,45 +564,35 @@ class Security
 	 * @param $data
 	 * @return mixed
 	 */
-	public static function cleanXSS($data) {
+	public static function escapeXSS($data) {
 		if (is_array($data)) {
 			foreach ($data as $k => $v) {
-				$data[$k] = self::cleanXSS($v);
+				$data[$k] = self::escapeXSS($v);
 			}
 		} else {
-			$data = self::stripXSS($data);
+			$data = str_replace(array("&amp;", "&lt;", "&gt;"), array("&amp;amp;", "&amp;lt;", "&amp;gt;"), $data);
+			$data = preg_replace("/(&#*\w+)[- ]+;/u", "$1;", $data);
+			$data = preg_replace("/(&#x*[0-9A-F]+);*/iu", "$1;", $data);
+			$data = html_entity_decode($data, ENT_COMPAT, "UTF-8");
+			$data = preg_replace('#(<[^>]+?[- "\'])(?:on|xmlns)[^>]*+>#iu', '$1>', $data);
+			$data = preg_replace('#([a-z]*)[- ]*=[- ]*([`\'"]*)[- ]*j[- ]*a[- ]*v[- ]*a[- ]*s[- ]*c[- ]*r[- ]*i[- ]*p[- ]*t[- ]*:#iu', '$1=$2nojavascript', $data);
+			$data = preg_replace('#([a-z]*)[- ]*=([\'"]*)[- ]*v[- ]*b[- ]*s[- ]*c[- ]*r[- ]*i[- ]*p[- ]*t[- ]*:#iu', '$1=$2novbscript', $data);
+			$data = preg_replace('#([a-z]*)[- ]*=([\'"]*)[- ]*-moz-binding[- ]*:#u', '$1=$2nomozbinding', $data);
+			$data = preg_replace('#(<[^>]+?)style[- ]*=[- ]*[`\'"]*.*?expression[- ]*\([^>]*+>#i', '$1>', $data);
+			$data = preg_replace('#(<[^>]+?)style[- ]*=[- ]*[`\'"]*.*?behaviour[- ]*\([^>]*+>#i', '$1>', $data);
+			$data = preg_replace('#(<[^>]+?)style[- ]*=[- ]*[`\'"]*.*?s[- ]*c[- ]*r[- ]*i[- ]*p[- ]*t[- ]*:*[^>]*+>#iu', '$1>', $data);
+			$data = preg_replace('#</*\w+:\w[^>]*+>#i', '', $data);
+			do {
+				$old_data = $data;
+				$data = preg_replace("#</*(?:applet|b(?:ase|gsound|link)|embed|frame(?:set)?|i(?:frame|layer)|l(?:ayer|ink)|meta|object|s(?:cript|tyle)|title|xml|eval|svg|video|math|keygen)[^>]*+>#i", "", $data);
+			} while ($old_data !== $data);
+			$data = str_replace(chr(0), '', $data);
+			$data = preg_replace('%&\s*\{[^}]*(\}\s*;?|$)%', '', $data);
+			//$data = str_replace('&', '&amp;', $data);
+			$data = preg_replace('/&amp;#([0-9]+;)/', '&#\1', $data);
+			$data = preg_replace('/&amp;#[Xx]0*((?:[0-9A-Fa-f]{2})+;)/', '&#x\1', $data);
+			$data = preg_replace('/&amp;([A-Za-z][A-Za-z0-9]*;)/', '&\1', $data);
 		}
-		return $data;
-	}
-
-	/**
-	 * Fix XSS
-	 * @param $data
-	 * @return string
-	 */
-	private static function stripXSS($data) {
-		$data = str_replace(array("&amp;", "&lt;", "&gt;"), array("&amp;amp;", "&amp;lt;", "&amp;gt;"), $data);
-		$data = preg_replace("/(&#*\w+)[- ]+;/u", "$1;", $data);
-		$data = preg_replace("/(&#x*[0-9A-F]+);*/iu", "$1;", $data);
-		$data = html_entity_decode($data, ENT_COMPAT, "UTF-8");
-		$data = preg_replace('#(<[^>]+?[- "\'])(?:on|xmlns)[^>]*+>#iu', '$1>', $data);
-		$data = preg_replace('#([a-z]*)[- ]*=[- ]*([`\'"]*)[- ]*j[- ]*a[- ]*v[- ]*a[- ]*s[- ]*c[- ]*r[- ]*i[- ]*p[- ]*t[- ]*:#iu', '$1=$2nojavascript', $data);
-		$data = preg_replace('#([a-z]*)[- ]*=([\'"]*)[- ]*v[- ]*b[- ]*s[- ]*c[- ]*r[- ]*i[- ]*p[- ]*t[- ]*:#iu', '$1=$2novbscript', $data);
-		$data = preg_replace('#([a-z]*)[- ]*=([\'"]*)[- ]*-moz-binding[- ]*:#u', '$1=$2nomozbinding', $data);
-		$data = preg_replace('#(<[^>]+?)style[- ]*=[- ]*[`\'"]*.*?expression[- ]*\([^>]*+>#i', '$1>', $data);
-		$data = preg_replace('#(<[^>]+?)style[- ]*=[- ]*[`\'"]*.*?behaviour[- ]*\([^>]*+>#i', '$1>', $data);
-		$data = preg_replace('#(<[^>]+?)style[- ]*=[- ]*[`\'"]*.*?s[- ]*c[- ]*r[- ]*i[- ]*p[- ]*t[- ]*:*[^>]*+>#iu', '$1>', $data);
-		$data = preg_replace('#</*\w+:\w[^>]*+>#i', '', $data);
-		do {
-			$old_data = $data;
-			$data = preg_replace("#</*(?:applet|b(?:ase|gsound|link)|embed|frame(?:set)?|i(?:frame|layer)|l(?:ayer|ink)|meta|object|s(?:cript|tyle)|title|xml|eval|svg|video|math|keygen)[^>]*+>#i", "", $data);
-		} while ($old_data !== $data);
-		$data = str_replace(chr(0), '', $data);
-		$data = preg_replace('%&\s*\{[^}]*(\}\s*;?|$)%', '', $data);
-		//$data = str_replace('&', '&amp;', $data);
-		$data = preg_replace('/&amp;#([0-9]+;)/', '&#\1', $data);
-		$data = preg_replace('/&amp;#[Xx]0*((?:[0-9A-Fa-f]{2})+;)/', '&#x\1', $data);
-		$data = preg_replace('/&amp;([A-Za-z][A-Za-z0-9]*;)/', '&\1', $data);
 		return $data;
 	}
 
