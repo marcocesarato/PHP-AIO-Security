@@ -353,7 +353,7 @@ class Security
 			$item = $doc->createElement("input");
 			$item->setAttribute("name", self::$csrf_formtoken);
 			$item->setAttribute("type", "hidden");
-			$item->setAttribute("value", self::stringEscape($token));
+			$item->setAttribute("value", self::escapeSQL($token));
 			$tag->appendChild($item);
 		}
 
@@ -470,7 +470,7 @@ class Security
 		if ($xss) $data = self::cleanXSS($data);
 		if ($escape && self::$escape_string) {
 			$data = self::stripslashes($data);
-			$data = self::stringEscape($data);
+			$data = self::escapeSQL($data);
 		}
 		return $data;
 	}
@@ -480,16 +480,34 @@ class Security
 	 * @param $data
 	 * @return mixed
 	 */
-	public static function stringEscape($data) {
+	public static function escapeSQL($data) {
 		if (is_array($data)) {
 			foreach ($data as $k => $v) {
-				$data[$k] = self::stringEscape($v);
+				$data[$k] = self::escapeSQL($v);
 			}
 		} else {
 			if (!empty($data) && is_string($data)) {
 				$search = array("\\", "\x00", "\n", "\r", "'", '"', "\x1a");
 				$replace = array("\\\\", "\\0", "\\n", "\\r", "\'", '\"', "\\Z");
 				$data = str_replace($search, $replace, $data);
+			}
+		}
+		return $data;
+	}
+
+	/**
+	 * Attribute escape
+	 * @param $data
+	 * @return mixed
+	 */
+	public static function escapeAttr($data) {
+		if (is_array($data)) {
+			foreach ($data as $k => $v) {
+				$data[$k] = self::escapeAttr($v);
+			}
+		} else {
+			if (!empty($data) && is_string($data)) {
+				$data = htmlentities($data, ENT_QUOTES, ini_get('default_charset'), false);
 			}
 		}
 		return $data;
@@ -540,31 +558,19 @@ class Security
 				$data[$k] = self::stripTagsContent($v, $tags, $invert);
 			}
 		} else {
-			$data = trim(self::_stripTagsContent($data, $tags, $invert));
+			preg_match_all('/<(.+?)[\s]*\/?[\s]*>/si', trim($tags), $tags);
+			$tags = array_unique($tags[1]);
+			if (is_array($tags) AND count($tags) > 0) {
+				if ($invert == false) {
+					$data = preg_replace('@<(?!(?:' . implode('|', $tags) . ')\b)(\w+)\b.*?>.*?</\1>@si', '', $data);
+				} else {
+					$data = preg_replace('@<(' . implode('|', $tags) . ')\b.*?>.*?</\1>@si', '', $data);
+				}
+			} elseif ($invert == false) {
+				$data = preg_replace('@<(\w+)\b.*?>.*?</\1>@si', '', $data);
+			}
 		}
 		return $data;
-	}
-
-	/**
-	 * Strip tags and contents
-	 * @param $text
-	 * @param string $tags
-	 * @param bool $invert
-	 * @return string
-	 */
-	private static function _stripTagsContent($text, $tags = '', $invert = false) {
-		preg_match_all('/<(.+?)[\s]*\/?[\s]*>/si', trim($tags), $tags);
-		$tags = array_unique($tags[1]);
-		if (is_array($tags) AND count($tags) > 0) {
-			if ($invert == false) {
-				return preg_replace('@<(?!(?:' . implode('|', $tags) . ')\b)(\w+)\b.*?>.*?</\1>@si', '', $text);
-			} else {
-				return preg_replace('@<(' . implode('|', $tags) . ')\b.*?>.*?</\1>@si', '', $text);
-			}
-		} elseif ($invert == false) {
-			return preg_replace('@<(\w+)\b.*?>.*?</\1>@si', '', $text);
-		}
-		return $text;
 	}
 
 	/**

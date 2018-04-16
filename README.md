@@ -197,7 +197,8 @@ USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 | restoreGlobals   | -                                                    | Void   | Restore globals to uncleaned/unsafe globals                  |
 | debugGlobals     | -                                                    | Array  | Return an array with the safe, unsafe and the current globals, this is userful for comparing |
 | cleanXSS         | $data                                                | Mixed  | Clean value from XSS recursively                             |
-| stringEscape     | $data                                                | Mixed  | Clean from SQL Injection (similar at mysql_real_escape) recursively |
+| escapeSQL        | $data                                                | Mixed  | Clean from SQL Injection (similar at mysql_real_escape) recursively |
+| escapeAttr       | $data                                                | Mixed  | Escape for HTML attribute values<br />`<html attr="&quot;">`  recursively |
 | stripTags        | $data                                                | Mixed  | Strip tags recursively                                       |
 | stripTagsContent | \$data, \$tags = '', \$invert = false                | Mixed  | Strip tags and contents recursively                          |
 | trim             | $data                                                | Mixed  | Trim recursively                                             |
