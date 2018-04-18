@@ -17,7 +17,7 @@ Also in _Demo_ folder there is my __antimalware scanner__ userful for check viru
 
 __Read more__ after the _instructions_ section if you interested.
 
-Link Repository: https://github.com/marcocesarato/AMWScan
+Link Repository: https://github.com/marcocesarato/PHP-Antimalware-Scanner
 
 ### Instructions
 
@@ -151,7 +151,7 @@ On the __Demo__ folder there is also my __antimalware__ (Demo/scanner.php) that 
 
 __Suggestion:__ if you run the scanner on a Wordpress project type _--exploits_ as argument for a better check.
 
-Link Repository: https://github.com/marcocesarato/AMWScan
+Link Repository: https://github.com/marcocesarato/PHP-Antimalware-Scanner
 
 #### Usage
 
