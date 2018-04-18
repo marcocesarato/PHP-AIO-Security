@@ -1252,7 +1252,7 @@ class Security
 	 * @param string $available_sets
 	 * @return bool|string
 	 */
-	function generatePassword($length = 8, $add_dashes = false, $available_sets = 'luns') {
+	function generatePassword($length = 8, $available_sets = 'luns') {
 		$sets = array();
 		// lowercase
 		if (strpos($available_sets, 'l') !== false)
@@ -1265,7 +1265,7 @@ class Security
 			$sets[] = '0123456789';
 		// special chars
 		if (strpos($available_sets, 's') !== false)
-			$sets[] = '!@#$%&*?';
+			$sets[] = '_-=+!@#$%&*?/';
 		$all = '';
 		$password = '';
 		foreach ($sets as $set) {
@@ -1276,15 +1276,64 @@ class Security
 		for ($i = 0; $i < $length - count($sets); $i++)
 			$password .= $all[array_rand($all)];
 		$password = str_shuffle($password);
-		if (!$add_dashes)
-			return $password;
-		$dash_len = floor(sqrt($length));
-		$dash_str = '';
-		while (strlen($password) > $dash_len) {
-			$dash_str .= substr($password, 0, $dash_len) . '-';
-			$password = substr($password, $dash_len);
+		return $password;
+	}
+
+	/**
+	 * Generate user friendly password
+	 * @param $string
+	 * @param bool $strong_lv (0-2)
+	 * @return mixed|string
+	 *
+	 * @example generateFriendlyPassword("Marco Cesarato 1996"); // RANDOM OUTPUT: Ce$Ar4t0_m4RCo_1996
+	 */
+	public static function generateFriendlyPassword($string, $strong_lv = 1) {
+		$alpha_replace = array(
+			'A' => '4',
+			'B' => '8',
+			'E' => '3',
+			'S' => '$',
+			'I' => '1',
+			'O' => '0',
+			'T' => '7',
+			'L' => '2',
+			'G' => '6',
+		);
+		$numeric_replace = array(
+			'0' => 'O',
+			'1' => '!',
+			'4' => 'A',
+			'5' => 'S',
+			'6' => 'G',
+			'7' => 'T',
+			'8' => 'B',
+		);
+		$special = '_=-+#@%&*!?';
+		$string = strtolower($string);
+
+		$estr = explode(' ', $string);
+
+		foreach ($estr as &$str) {
+
+			$astr = str_split($str);
+			$new_astr = array();
+
+			foreach ($astr as $i => $char) {
+				$char = rand(0, 100) > 50 ? strtoupper($char) : $char;
+				if ($strong_lv > 0 &&
+					(!empty($astr[$i - 1]) && ($new_astr[$i - 1] == $astr[$i - 1] || $astr[$i] == $astr[$i - 1]) ||
+						!empty($astr[$i + 1]) && $astr[$i] == $astr[$i + 1])) {
+					if($strong_lv > 1) $char = str_replace(array_keys($numeric_replace), $numeric_replace, $char);
+					if(strtolower($astr[$i]) == strtolower($char)) $char = str_replace(array_keys($alpha_replace), $alpha_replace, strtoupper($char));
+				}
+				$new_astr[] = $char;
+			}
+			$str = implode('', $new_astr);
 		}
-		$dash_str .= $password;
-		return $dash_str;
+
+		shuffle($estr);
+		$string = implode(' ', $estr);
+		$string = str_replace(' ', $special[rand(0, strlen($special) - 1)], $string);
+		return $string;
 	}
 }
