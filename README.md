@@ -5,6 +5,10 @@ __Version 0.2.5__
 
 _IF YOU USE ON YOUR PROJECT SOME OF THESE METHODS PLEASE TO CREDIT ME :) THANK YOU!_
 
+Github: https://github.com/marcocesarato/PHP-AIO-Security-Class
+
+
+
 This is a security class in php with some useful and automatic static methods. 
 
 The objective of this class is offer an automatic system of protection for developer's projects and simplify some security operations as the check of CSRF or XSS all in a simple class. In fact you could just call the main method to have better security yet without too much complicated operations.
