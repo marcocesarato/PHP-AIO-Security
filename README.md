@@ -228,7 +228,7 @@ USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 | Method                   | Params                                                       | Return  | Description                                                  |
 | ------------------------ | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
 | crypt                    | $action = (encrypt\|decrypt), \$string                       | String  | Encrypt and decrypt strings                                  |
-| generatePassword         | \$length = 8, \$add_dashes = false, \$available_sets = 'luns'<br /><br />(l = lowercase, u = uppercase, n = numbers, s = special chars) | String  | Generate a completly random and strong password              |
+| generatePassword         | \$length = 8, \$available_sets = 'luns'<br /><br />(l = lowercase, u = uppercase, n = numbers, s = special chars) | String  | Generate a completly random and strong password              |
 | generateFriendlyPassword | \$string, \$strong_lv = 1                                    | String  | Generate a user friendly random password. Strong level go from 0 to 2.<br /><br />EXAMPLE: <br />Marco Cesarato 1996 <br />Ce$Ar4t0_m4RCo_1996 |
 | getCookie                | $name                                                        | String  | Get decrypted cookie                                         |
 | setCookie                | \$name, \$value, \$expires = 2592000, \$path = "/", \$domain = null, \$secure = false, \$httponly = true | Boolean | Set encrypted cookie                                         |
