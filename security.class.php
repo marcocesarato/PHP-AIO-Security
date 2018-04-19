@@ -38,6 +38,7 @@ class Security
 	public static $auto_antidos = true; // Block the client ip when there are too many requests
 
 	// Error Template
+	public static $error_callback = null; // Set a callback on errors
 	public static $error_template = '<html><head><title>${ERROR_TITLE}</title></head><body>${ERROR_BODY}</body></html>';
 
 	/**
@@ -939,11 +940,15 @@ class Security
 	 * @param string $title
 	 */
 	public static function error($code = 404, $message = "Not found!", $title = 'Error') {
-		ob_clean();
-		http_response_code($code);
-		$output = str_replace('${ERROR_TITLE}', $title, self::$error_template);
-		$output = str_replace('${ERROR_BODY}', $message, $output);
-		die($output);
+		if(empty(self::$error_callback)) {
+			ob_clean();
+			http_response_code($code);
+			$output = str_replace('${ERROR_TITLE}', $title, self::$error_template);
+			$output = str_replace('${ERROR_BODY}', $message, $output);
+			die($output);
+		}
+		call_user_func(self::$error_callback, $code);
+		return true;
 	}
 
 	public static $SCAN_DEF = array("functions" =>

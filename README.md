@@ -53,6 +53,7 @@ $auto_clean_global = false; // Global clean at start
 $auto_antidos = true; // Block the client ip when there are too many requests
 
 // Error Template
+$error_callback = null; // Set a callback on errors
 $error_template = '<html><head><title>${ERROR_TITLE}</title></head><body>${ERROR_BODY}</body></html>';
 ```
 
