@@ -200,7 +200,7 @@ USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 | Method           | Params                                               | Return | Description                                                  |
 | ---------------- | ---------------------------------------------------- | ------ | ------------------------------------------------------------ |
 | clean            | \$data, \$html = true, \$quotes = true, \$xss = true | Mixed  | Clean value form XSS, SQL Injection etc… recursively         |
-| cleanGlobals     | -                                                    | Void   | Clean all input global vars (\$\__REQUEST,\$\__*POST,*\$\__GET,_\$\_COOKIE)<br />THIS COULD COMPROMISE DATA IF YOU SEND HTML WITH WITH SCRIPT TAGS |
+| cleanGlobals     | -                                                    | Void   | Clean all input global vars (\$\__REQUEST,\$\__*POST,*\$\__GET,_\$\_COOKIE)<br />THIS COULD COMPROMISE SOME DATA |
 | restoreGlobals   | -                                                    | Void   | Restore globals to uncleaned/unsafe globals                  |
 | debugGlobals     | -                                                    | Array  | Return an array with the safe, unsafe and the current globals, this is userful for comparing |
 | escapeXSS        | $data                                                | Mixed  | Clean value from XSS recursively                             |

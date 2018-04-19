@@ -952,6 +952,7 @@ class Security
 	 * @param integer $code
 	 * @param string $message
 	 * @param string $title
+	 * @return bool
 	 */
 	public static function error($code = 404, $message = "Not found!", $title = 'Error') {
 		if(empty(self::$error_callback)) {
