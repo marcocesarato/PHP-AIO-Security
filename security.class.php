@@ -857,12 +857,12 @@ class Security
 
 	/**
 	 * Crypt
-	 * @param $action
 	 * @param $string
 	 * @param $key
+	 * @param $action
 	 * @return bool|string
 	 */
-	public static function crypt($action, $string, $key = null) {
+	public static function crypt($string, $key = null, $action = 'encrypt') {
 
 		if (!function_exists('crypt') || !function_exists('hash') || !function_exists('openssl_encrypt'))
 			return false;
@@ -891,6 +891,16 @@ class Security
 	}
 
 	/**
+	 * Decrypt
+	 * @param $string
+	 * @param $key
+	 * @return bool|string
+	 */
+	public static function decrypt($string, $key = null) {
+		return self::crypt($string,'decrypt', $key);
+	}
+
+	/**
 	 * Set Cookie
 	 * @param $name
 	 * @param $value
@@ -903,7 +913,7 @@ class Security
 	 */
 	public static function setCookie($name, $value, $expires = 2592000, $path = "/", $domain = null, $secure = false, $httponly = false) {
 		if ($name != session_name()) {
-			$newValue = self::crypt('encrypt', $value);
+			$newValue = self::crypt($value);
 			if (!setcookie($name, $newValue, $expires, $path, $domain, $secure, $httponly)) return false;
 			$_COOKIE[$name] = $value;
 			return true;
@@ -931,7 +941,7 @@ class Security
 	 */
 	public static function getCookie($name) {
 		if (isset($_COOKIE[$name])) {
-			$cookie = self::crypt('decrypt', $_COOKIE[$name]);
+			$cookie = self::decrypt($_COOKIE[$name]);
 			return $cookie;
 		}
 		return null;

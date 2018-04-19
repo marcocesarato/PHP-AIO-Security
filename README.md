@@ -230,7 +230,8 @@ USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 
 | Method                   | Params                                                       | Return  | Description                                                  |
 | ------------------------ | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| crypt                    | \$action = (encrypt\|decrypt), \$string, \$key = null        | String  | Encrypt and decrypt strings                                  |
+| crypt                    | \$string, \$key = null, \$action = ([encrypt]\|decrypt)      | String  | Encrypt and decrypt strings                                  |
+| decrypt                  | \$string, \$key = null                                       | String  | Decrypt strings                                              |
 | generateGUID             | -                                                            | String  | Generate a unique GUID                                       |
 | generatePassword         | \$length = 8, \$available_sets = 'luns'<br /><br />(l = lowercase, u = uppercase, n = numbers, s = special chars) | String  | Generate a completly random and strong password              |
 | generateFriendlyPassword | \$string, \$strong_lv = 1                                    | String  | Generate a user friendly random password. Strong level go from 0 to 2.<br /><br />EXAMPLE: <br />Marco Cesarato 1996 <br />Ce$Ar4t0_m4RCo_1996 |
