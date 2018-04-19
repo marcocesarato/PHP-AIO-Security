@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.5
+ * @version   0.2.6
  */
 
 class Security
@@ -19,7 +19,6 @@ class Security
 	public static $session_regenerate_id = false; // Rengenerate session id
 	public static $csrf_session = "_CSRFTOKEN"; // CSRF session token name
 	public static $csrf_formtoken = "_FORMTOKEN"; // CSRF form token input name
-	public static $hijacking_salt = "_SALT"; // Simply a salt
 	public static $headers_cache = true; // Enable header cache
 	public static $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
 	public static $escape_string = true; // If you use PDO I recommend to set this to false
@@ -28,10 +27,12 @@ class Security
 	public static $clean_post_xss = true; // Remove XSS on post global
 	public static $compress_output = true; // Compress output
 
+	protected static $_SALT = "_SALT"; // Salt for encryptions => use setSalt($salt) or change it
+
 	// Autostart
 	public static $auto_session_manager = true; // Run session at start
 	public static $auto_scanner = false; // Could have a bad performance impact and could detect false positive,
-	// then try the method secureScanPath before enable this. BE CAREFUL
+										 // then try the method secureScanPath before enable this. BE CAREFUL
 	public static $auto_block_tor = true; // If you want block TOR clients
 	public static $auto_clean_global = false; // Global clean at start
 	public static $auto_antidos = true; // Block the client ip when there are too many requests
@@ -79,6 +80,16 @@ class Security
 		self::headers($API);
 		self::secureCookies();
 
+	}
+
+	/**
+	 * Set Salt
+	 * @param $salt
+	 * @return bool
+	 */
+	public static function setSalt($salt) {
+		self::$_SALT = $salt;
+		return true;
 	}
 
 	/**
@@ -806,13 +817,13 @@ class Security
 	 * Hijacking prevention
 	 */
 	public static function secureHijacking() {
-		if (!empty($_SESSION['HTTP_USER_TOKEN']) && $_SESSION['HTTP_USER_TOKEN'] != md5($_SERVER['HTTP_USER_AGENT'] . ':' . self::clientIP() . ':' . self::$hijacking_salt)) {
+		if (!empty($_SESSION['HTTP_USER_TOKEN']) && $_SESSION['HTTP_USER_TOKEN'] != md5($_SERVER['HTTP_USER_AGENT'] . ':' . self::clientIP() . ':' . self::$_SALT)) {
 			session_unset();
 			session_destroy();
 			self::error(403, 'Permission denied!');
 		}
 
-		$_SESSION['HTTP_USER_TOKEN'] = md5($_SERVER['HTTP_USER_AGENT'] . ':' . self::clientIP() . ':' . self::$hijacking_salt);
+		$_SESSION['HTTP_USER_TOKEN'] = md5($_SERVER['HTTP_USER_AGENT'] . ':' . self::clientIP() . ':' . self::$_SALT);
 	}
 
 	/**
@@ -840,8 +851,7 @@ class Security
 		header('Content-Type: application/x-octet-stream');
 		header('Content-Transfer-Encoding: binary');
 		header('Content-Disposition: attachment; filename="' . $filename . '";');
-		echo file_get_contents($filename);
-		ob_end_flush();
+		die(file_get_contents($filename));
 	}
 
 	/**
@@ -851,6 +861,10 @@ class Security
 	 * @return bool|string
 	 */
 	public static function crypt($action, $string) {
+
+		if (!function_exists('crypt') || !function_exists('hash') || !function_exists('openssl_encrypt'))
+			return false;
+
 		$output = false;
 		$encrypt_method = "AES-256-CBC";
 
@@ -1248,11 +1262,10 @@ class Security
 	/**
 	 * Generate strong password
 	 * @param int $length
-	 * @param bool $add_dashes
 	 * @param string $available_sets
 	 * @return bool|string
 	 */
-	function generatePassword($length = 8, $available_sets = 'luns') {
+	public static function generatePassword($length = 8, $available_sets = 'luns') {
 		$sets = array();
 		// lowercase
 		if (strpos($available_sets, 'l') !== false)
@@ -1282,7 +1295,7 @@ class Security
 	/**
 	 * Generate user friendly password
 	 * @param $string
-	 * @param bool $strong_lv (0-2)
+	 * @param $strong_lv (0-2)
 	 * @return mixed|string
 	 *
 	 * @example generateFriendlyPassword("Marco Cesarato 1996"); // RANDOM OUTPUT: Ce$Ar4t0_m4RCo_1996
@@ -1335,5 +1348,109 @@ class Security
 		$string = implode(' ', $estr);
 		$string = str_replace(' ', $special[rand(0, strlen($special) - 1)], $string);
 		return $string;
+	}
+
+	/**
+	 * Hash password
+	 * @param $password
+	 * @param array $cost (4-30)
+	 * @return bool|null|string
+	 */
+	public static function passwordHash($password, $cost = 10) {
+		if (!function_exists('crypt')) return false;
+
+		if (is_null($password) || is_int($password)) {
+			$password = (string) $password;
+		}
+		if ($cost < 4 || $cost > 31) {
+			trigger_error(sprintf("Invalid bcrypt cost parameter specified: %d", $cost), E_USER_WARNING);
+			return null;
+		}
+		$required_salt_len = 22;
+		$hash_format = sprintf("$2y$%02d$", $cost);
+		$resultLength = 60;
+		$base64_digits =
+			'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+		$bcrypt64_digits =
+			'./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+		$base64_string = base64_encode(self::$_SALT);
+		$salt = strtr(rtrim($base64_string, '='), $base64_digits, $bcrypt64_digits);
+		$salt = substr($salt, 0, $required_salt_len);
+		$hash = $hash_format . $salt;
+		$ret = crypt($password, $hash);
+		if (!is_string($ret) || strlen($ret) != $resultLength) {
+			return false;
+		}
+		return $ret;
+	}
+
+	/**
+	 * Verify password
+	 * @param $password
+	 * @param $hash
+	 * @return bool
+	 */
+	public static function passwordVerify($password, $hash) {
+		if (!function_exists('crypt')) return false;
+		$ret = crypt($password, $hash);
+		if (!is_string($ret) || strlen($ret) != strlen($hash) || strlen($ret) <= 13) {
+			return false;
+		}
+		$status = 0;
+		for ($i = 0; $i < strlen($ret); $i++) {
+			$status |= (ord($ret[$i]) ^ ord($hash[$i]));
+		}
+		return ($status === 0);
+	}
+
+	/**
+	 * Create a unique GUID
+	 * @return string
+	 */
+	public static function generateGUID() {
+		$microTime = microtime();
+		list($a_dec, $a_sec) = explode(' ', $microTime);
+		$dec_hex = dechex($a_dec * 1000000);
+		$sec_hex = dechex($a_sec);
+
+		$length = 5;
+		$strlen = strlen($dec_hex);
+		if ($strlen < $length) {
+			$dec_hex = str_pad($dec_hex, $length, '0');
+		} elseif ($strlen > $length) {
+			$dec_hex = substr($dec_hex, 0, $length);
+		}
+
+		$length = 6;
+		$strlen = strlen($sec_hex);
+		if ($strlen < $length) {
+			$sec_hex = str_pad($sec_hex, $length, '0');
+		} elseif ($strlen > $length) {
+			$sec_hex = substr($sec_hex, 0, $length);
+		}
+
+		$guid = '';
+		$guid .= $dec_hex;
+		for ($i = 0; $i < 3; ++$i) {
+			$guid .= dechex(mt_rand(0, 15));
+		}
+		$guid .= '-';
+		for ($i = 0; $i < 4; ++$i) {
+			$guid .= dechex(mt_rand(0, 15));
+		}
+		$guid .= '-';
+		for ($i = 0; $i < 4; ++$i) {
+			$guid .= dechex(mt_rand(0, 15));
+		}
+		$guid .= '-';
+		for ($i = 0; $i < 4; ++$i) {
+			$guid .= dechex(mt_rand(0, 15));
+		}
+		$guid .= '-';
+		$guid .= $sec_hex;
+		for ($i = 0; $i < 6; ++$i) {
+			$guid .= dechex(mt_rand(0, 15));
+		}
+		return $guid;
 	}
 }

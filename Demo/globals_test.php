@@ -9,7 +9,7 @@ echo <<<HTML
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Test</title>
+  <title>Globals Test</title>
 </head>
 <body>
   <h1>Security Test</h1>

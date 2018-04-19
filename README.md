@@ -1,5 +1,5 @@
 # PHP AIO Security Class + Antimalware
-__Version 0.2.5__
+__Version 0.2.6__
 
 
 
@@ -35,7 +35,6 @@ $session_lifetime = 288000; // Session lifetime | default = 8 hours
 $session_regenerate_id = false; // Regenerate session id
 $csrf_session = "_CSRFTOKEN"; // CSRF session token name
 $csrf_formtoken = "_FORMTOKEN"; // CSRF form token input name 
-$hijacking_salt = "_SALT"; // Simply a salt
 $headers_cache = true; // Enable header cache
 $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
 $escape_string = true; // If you use PDO I recommend to set this to false
@@ -43,6 +42,8 @@ $scanner_path = "./*.php"; // Folder to scan at start and optionally the file ex
 $scanner_whitelist = array('./shell.php','./libs'); // Example of scan whitelist
 $clean_post_xss = true; // Remove XSS on post global
 $compress_output = true; // Compress output
+
+protected $_SALT = "_SALT"; // Salt for encryptions => use setSalt($salt) or change it
 
 // Autostart
 $auto_session_manager = true; // Run session at start
@@ -178,6 +179,7 @@ USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 | Method                    | Params             | Return | Description                                                  |
 | ------------------------- | ------------------ | ------ | ------------------------------------------------------------ |
 | __construct / putInSafety | $isAPI = false     | Void   | Call some methods:<br /><br />headers `$isAPI`<br />secureSession `$isAPI`<br />secureFormRequest `$isAPI`<br />secureBots<br />secureRequest<br />secureBlockTor<br />secureHijacking<br />secureCookies |
+| setSalt                   | $salt              | Void   | Set salt fro encryptions                                     |
 | secureCSRF                | -                  | Void   | Check for CSRF                                               |
 | secureCSRFToken           | -                  | String | Get CSRF Token                                               |
 | secureRequest             | -                  | Void   | Enable the WAF (Firewall) then check the request method and the URL to prevent some XSS/SQL Injections and bad requests |
@@ -228,8 +230,11 @@ USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 | Method                   | Params                                                       | Return  | Description                                                  |
 | ------------------------ | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
 | crypt                    | $action = (encrypt\|decrypt), \$string                       | String  | Encrypt and decrypt strings                                  |
+| generateGUID             | -                                                            | String  | Generate a unique GUID                                       |
 | generatePassword         | \$length = 8, \$available_sets = 'luns'<br /><br />(l = lowercase, u = uppercase, n = numbers, s = special chars) | String  | Generate a completly random and strong password              |
 | generateFriendlyPassword | \$string, \$strong_lv = 1                                    | String  | Generate a user friendly random password. Strong level go from 0 to 2.<br /><br />EXAMPLE: <br />Marco Cesarato 1996 <br />Ce$Ar4t0_m4RCo_1996 |
+| passwordHash             | \$password, \$cost = 10 (4-30)                               | String  | Hash the passwords                                           |
+| passwordVerify           | \$password, \$hash                                           | Boolean | Verify if password hash (returned by passwordHash) match     |
 | getCookie                | $name                                                        | String  | Get decrypted cookie                                         |
 | setCookie                | \$name, \$value, \$expires = 2592000, \$path = "/", \$domain = null, \$secure = false, \$httponly = true | Boolean | Set encrypted cookie                                         |
 | unsetCookie              | $name                                                        | String  | Unset a cookie                                               |
