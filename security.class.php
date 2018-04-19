@@ -1353,7 +1353,7 @@ class Security
 	/**
 	 * Hash password
 	 * @param $password
-	 * @param array $cost (4-30)
+	 * @param $cost (4-30)
 	 * @return bool|null|string
 	 */
 	public static function passwordHash($password, $cost = 10) {

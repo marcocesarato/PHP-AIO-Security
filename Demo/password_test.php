@@ -6,7 +6,8 @@ $guid = Security::generateGUID();
 $uf_password = Security::generateFriendlyPassword('Marco Cesarato 2018', 1);
 $enc_password = Security::passwordHash($password);
 $check = Security::passwordVerify($password, $enc_password);
-$check_false = Security::passwordVerify($password, $enc_password.'_fail');
+$wrong_password = Security::generatePassword(15);
+$check_false = Security::passwordVerify($wrong_password, $enc_password);
 
 echo <<<HTML
 <h1>Password Tests</h1>
