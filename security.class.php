@@ -277,12 +277,20 @@ class Security
 	 * @param $buf
 	 * @return string
 	 */
-	public static function compressHTML($buf) {
+	public static function compressHTML($buffer) {
 		ini_set("zlib.output_compression", "On");
 		ini_set("zlib.output_compression_level", "9");
-		if (self::isHTML($buf))
-			$buf = preg_replace(array('/<!--[^\[](.*)[^\]]-->/Uis', "/[[:blank:]]+/", '/\s+/'), array('', ' ', ' '), str_replace(array("\n", "\r", "\t"), '', $buf));
-		return $buf;
+		if (self::isHTML($buffer)) {
+			$pattern = "/<script[^>]*>(.*?)<\/script>/is";
+			preg_match_all($pattern, $buffer, $matches, PREG_SET_ORDER, 0);
+			foreach ($matches as $match){
+				$pattern = "/(<script[^>]*>)(".preg_quote($match[1],'/').")(<\/script>)/is";
+				$compress = self::compressJS($match[1]);
+				$buffer = preg_replace($pattern, '$1'.$compress.'$3', $buffer);
+			}
+			$buffer = preg_replace(array('/<!--[^\[](.*)[^\]]-->/Uis', "/[[:blank:]]+/", '/\s+/'), array('', ' ', ' '), str_replace(array("\n", "\r", "\t"), '', $buffer));
+		}
+		return $buffer;
 	}
 
 	/**
@@ -657,8 +665,8 @@ class Security
 	 * Generate CSRF Token
 	 */
 	private static function secureCSRFGenerate() {
-		$random = uniqid(mt_rand(1, mt_getrandmax()));
-		$_SESSION[self::$csrf_session] = md5($random . time() . ":" . session_id());
+		$guid = self::generateGUID();
+		$_SESSION[self::$csrf_session] = md5($guid . time() . ":" . session_id());
 	}
 
 	/**
@@ -870,7 +878,7 @@ class Security
 		$encrypt_method = "AES-256-CBC";
 
 		if (empty($key) && empty($_SESSION['HTTP_USER_KEY']))
-			$_SESSION['HTTP_USER_KEY'] = md5(uniqid(mt_rand(1, mt_getrandmax()), true));
+			$_SESSION['HTTP_USER_KEY'] = md5(self::generateGUID());
 
 		$secret_key = (empty($key) ? $_SESSION['HTTP_USER_KEY'] : $key) . ':KEY'.self::$_SALT;
 		$secret_iv = (empty($key) ? $_SESSION['HTTP_USER_KEY'] : $key) . ':IV'.self::$_SALT;
