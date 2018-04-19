@@ -331,6 +331,9 @@ class Security
 	 * @return string
 	 */
 	public static function secureHTML($buffer) {
+
+		$buffer = preg_replace("/<script(?!.*(src\\=))[^>]*>/", "<script type=\"text/javascript\">", $buffer);
+
 		$doc = new DOMDocument();
 		$doc->formatOutput = true;
 		$doc->preserveWhiteSpace = false;
