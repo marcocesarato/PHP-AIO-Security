@@ -859,9 +859,10 @@ class Security
 	 * Crypt
 	 * @param $action
 	 * @param $string
+	 * @param $key
 	 * @return bool|string
 	 */
-	public static function crypt($action, $string) {
+	public static function crypt($action, $string, $key = null) {
 
 		if (!function_exists('crypt') || !function_exists('hash') || !function_exists('openssl_encrypt'))
 			return false;
@@ -869,11 +870,11 @@ class Security
 		$output = false;
 		$encrypt_method = "AES-256-CBC";
 
-		if (empty($_SESSION['HTTP_USER_KEY']))
+		if (empty($key) && empty($_SESSION['HTTP_USER_KEY']))
 			$_SESSION['HTTP_USER_KEY'] = md5(uniqid(mt_rand(1, mt_getrandmax()), true));
 
-		$secret_key = $_SESSION['HTTP_USER_KEY'] . ':KEY';
-		$secret_iv = $_SESSION['HTTP_USER_KEY'] . ':IV';
+		$secret_key = (empty($key) ? $_SESSION['HTTP_USER_KEY'] : $key) . ':'.self::$_SALT;
+		$secret_iv = (empty($key) ? $_SESSION['HTTP_USER_KEY'] : $key) . ':'.self::$_SALT;
 
 		$key = hash('sha512', $secret_key);
 		$iv = substr(hash('sha512', $secret_iv), 0, 16);
