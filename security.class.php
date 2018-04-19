@@ -477,7 +477,7 @@ class Security
 			if (!$html) $data = self::stripTagsContent($data);
 			if ($xss) $data = self::escapeXSS($data);
 			if ($escape && self::$escape_string) {
-				$data = self::stripslashes($data);
+				//$data = self::stripslashes($data);
 				$data = self::escapeSQL($data);
 			}
 		}
