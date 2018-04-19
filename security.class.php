@@ -867,22 +867,25 @@ class Security
 		if (!function_exists('crypt') || !function_exists('hash') || !function_exists('openssl_encrypt'))
 			return false;
 
-		$output = false;
 		$encrypt_method = "AES-256-CBC";
 
 		if (empty($key) && empty($_SESSION['HTTP_USER_KEY']))
 			$_SESSION['HTTP_USER_KEY'] = md5(uniqid(mt_rand(1, mt_getrandmax()), true));
 
-		$secret_key = (empty($key) ? $_SESSION['HTTP_USER_KEY'] : $key) . ':'.self::$_SALT;
-		$secret_iv = (empty($key) ? $_SESSION['HTTP_USER_KEY'] : $key) . ':'.self::$_SALT;
+		$secret_key = (empty($key) ? $_SESSION['HTTP_USER_KEY'] : $key) . ':KEY'.self::$_SALT;
+		$secret_iv = (empty($key) ? $_SESSION['HTTP_USER_KEY'] : $key) . ':IV'.self::$_SALT;
 
 		$key = hash('sha512', $secret_key);
 		$iv = substr(hash('sha512', $secret_iv), 0, 16);
-		if ($action == 'encrypt') {
-			$output = openssl_encrypt($string, $encrypt_method, $key, 0, $iv);
-			$output = base64_encode($output);
-		} else if ($action == 'decrypt') {
-			$output = openssl_decrypt(base64_decode($string), $encrypt_method, $key, 0, $iv);
+		switch ($action){
+			case 'decrypt':
+				$output = openssl_decrypt(base64_decode($string), $encrypt_method, $key, 0, $iv);
+				break;
+			case 'encrypt':
+			default:
+				$output = openssl_encrypt($string, $encrypt_method, $key, 0, $iv);
+				$output = base64_encode($output);
+				break;
 		}
 		return $output;
 	}
