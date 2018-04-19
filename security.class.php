@@ -1428,49 +1428,36 @@ class Security
 	 * @return string
 	 */
 	public static function generateGUID() {
-		$microTime = microtime();
-		list($a_dec, $a_sec) = explode(' ', $microTime);
+
+		$microtime = microtime();
+		list($a_dec, $a_sec) = explode(' ', $microtime);
 		$dec_hex = dechex($a_dec * 1000000);
 		$sec_hex = dechex($a_sec);
+		$dec_hex = (strlen($dec_hex) <= 5) ? str_pad($dec_hex, 5, '0') : substr($dec_hex, 0, 5);
+		$sec_hex = (strlen($sec_hex) <= 6) ? str_pad($sec_hex, 6, '0') : substr($sec_hex, 0, 6);
 
-		$length = 5;
-		$strlen = strlen($dec_hex);
-		if ($strlen < $length) {
-			$dec_hex = str_pad($dec_hex, $length, '0');
-		} elseif ($strlen > $length) {
-			$dec_hex = substr($dec_hex, 0, $length);
-		}
-
-		$length = 6;
-		$strlen = strlen($sec_hex);
-		if ($strlen < $length) {
-			$sec_hex = str_pad($sec_hex, $length, '0');
-		} elseif ($strlen > $length) {
-			$sec_hex = substr($sec_hex, 0, $length);
-		}
-
-		$guid = '';
-		$guid .= $dec_hex;
-		for ($i = 0; $i < 3; ++$i) {
+		// Section 1 (length 8)
+		$guid = $dec_hex;
+		for ($i = 0; $i < 3; ++$i)
 			$guid .= dechex(mt_rand(0, 15));
-		}
 		$guid .= '-';
-		for ($i = 0; $i < 4; ++$i) {
+		// Section 2 (length 4)
+		for ($i = 0; $i < 4; ++$i)
 			$guid .= dechex(mt_rand(0, 15));
-		}
 		$guid .= '-';
-		for ($i = 0; $i < 4; ++$i) {
+		// Section 3 (length 4)
+		for ($i = 0; $i < 4; ++$i)
 			$guid .= dechex(mt_rand(0, 15));
-		}
 		$guid .= '-';
-		for ($i = 0; $i < 4; ++$i) {
+		// Section 4 (length 4)
+		for ($i = 0; $i < 4; ++$i)
 			$guid .= dechex(mt_rand(0, 15));
-		}
 		$guid .= '-';
+		// Section 5 (length 12)
 		$guid .= $sec_hex;
-		for ($i = 0; $i < 6; ++$i) {
+		for ($i = 0; $i < 6; ++$i)
 			$guid .= dechex(mt_rand(0, 15));
-		}
+
 		return $guid;
 	}
 }
