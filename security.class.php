@@ -1424,15 +1424,15 @@ class Security
 	}
 
 	/**
-	 * Create a unique GUID
+	 * Create a GUID
 	 * @return string
 	 */
 	public static function generateGUID() {
 
 		$microtime = microtime();
-		list($a_dec, $a_sec) = explode(' ', $microtime);
-		$dec_hex = dechex($a_dec * 1000000);
-		$sec_hex = dechex($a_sec);
+		list($dec, $sec) = explode(' ', $microtime);
+		$dec_hex = dechex($dec * 1000000);
+		$sec_hex = dechex($sec);
 		$dec_hex = (strlen($dec_hex) <= 5) ? str_pad($dec_hex, 5, '0') : substr($dec_hex, 0, 5);
 		$sec_hex = (strlen($sec_hex) <= 6) ? str_pad($sec_hex, 6, '0') : substr($sec_hex, 0, 6);
 
