@@ -193,7 +193,6 @@ USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 | secureBlockBots           | -                  | Void   | Block some generic bad bots/crawler/spiders                  |
 | secureBlockTor            | -                  | Void   | Block TOR clients                                            |
 | secureHijacking           | -                  | Void   | Prevent Hijacking and delete session                         |
-| secureCaptcha             | $input_name        | Void   | Validate captcha                                             |
 
 ### Cleaning Methods
 
@@ -219,12 +218,15 @@ USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 | -------------- | ------------------------------------------------------------ | ------ | ------------------------------------------------------------ |
 | output         | \$buffer, \$type = (html\|css\|js\|json\|xml\|csv\|txt), $cache_days = null, \$compress = true | String | Put in safety HTML if is HTML, compress HTML if is HTML, check for CSRF and add cache headers if isn't HTML (usually used with ob_start) |
 | secureHTML     | $buffer                                                      | String | Put in safety some html elements on output buffer and add automatically the CSRF token |
-| printCaptcha   | -                                                            | Void   | Print captcha image and die                                  |
+| captcha        | $base64 = false                                              | Void   | Print captcha image and die or if base64 return the image in base64. |
+| captchaVerify  | \$input_name = 'captcha'                                     | Void   | Validate captcha                                             |
+| captchaPrint   | \$class = '', \$input_name = 'captcha'                       | String | Return the captcha input field and the image in html         |
+| captchaCode    | -                                                            | String | Get captcha code                                             |
 | compressOutput | $buffer                                                      | String | Compression generic                                          |
 | compressHTML   | $html                                                        | String | Compression of HTML                                          |
 | compressJS     | $js                                                          | String | Compression of JS                                            |
 | compressCSS    | $css                                                         | String | Compression of CSS                                           |
-| error          | \$code = 404, \$message = "Not found!", \$title = 'Error'    | Void   | Error <br />(use $error_template)                            |
+| error          | \$code = 404, \$message = "Not found!", \$title = 'Error'    | Void   | Error <br />(use \$error_template and \$error_callback)      |
 
 ### Utility Methods
 

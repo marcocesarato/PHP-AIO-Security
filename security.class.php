@@ -61,6 +61,7 @@ class Security
 			if (self::$auto_scanner)
 				self::secureScan(self::$scanner_path);
 			self::secureFormRequest();
+			self::secureCSRF();
 		}
 
 		if (self::$auto_antidos)
@@ -127,7 +128,6 @@ class Security
 
 		if ($type = 'html' && self::isHTML($buffer)) {
 			header("Content-Type: text/html");
-			self::secureCSRF();
 			$buffer = self::secureHTML($buffer);
 			if ($compress_output) $buffer = self::compressHTML($buffer);
 		} elseif ($type == 'css') {
@@ -286,6 +286,13 @@ class Security
 			foreach ($matches as $match){
 				$pattern = "/(<script[^>]*>)(".preg_quote($match[1],'/').")(<\/script>)/is";
 				$compress = self::compressJS($match[1]);
+				$buffer = preg_replace($pattern, '$1'.$compress.'$3', $buffer);
+			}
+			$pattern = "/<style[^>]*>(.*?)<\/style>/is";
+			preg_match_all($pattern, $buffer, $matches, PREG_SET_ORDER, 0);
+			foreach ($matches as $match){
+				$pattern = "/(<style[^>]*>)(".preg_quote($match[1],'/').")(<\/style>)/is";
+				$compress = self::compressCSS($match[1]);
 				$buffer = preg_replace($pattern, '$1'.$compress.'$3', $buffer);
 			}
 			$buffer = preg_replace(array('/<!--[^\[](.*)[^\]]-->/Uis', "/[[:blank:]]+/", '/\s+/'), array('', ' ', ' '), str_replace(array("\n", "\r", "\t"), '', $buffer));
@@ -641,7 +648,7 @@ class Security
 	public static function secureCSRF() {
 		if ($_SERVER["REQUEST_METHOD"] == "POST") {
 			if (!self::secureCSRFCompare())
-				self::error(403, 'Permission denied!');
+				$_POST = array();
 		}
 		if (!isset($_SESSION[self::$csrf_session])) {
 			self::secureCSRFGenerate();
@@ -773,10 +780,10 @@ class Security
 
 	/**
 	 * Generate captcha image
+	 * @param bool $base64
+	 * @return string
 	 */
-	public static function printCaptcha() {
-
-		ob_clean();
+	public static function captcha($base64 = false) {
 
 		$md5_hash = md5(rand(0, 9999));
 		$security_code = substr($md5_hash, rand(0, 15), 5);
@@ -806,12 +813,40 @@ class Security
 		imageellipse($image, 0, 0, rand($width / 2, $width * 2), rand($height, $height * 2), $shape1_color);
 		imageellipse($image, 0, 0, rand($width / 2, $width * 2), rand($height, $height * 2), $shape2_color);
 
-		header("Content-Type: image/png");
+		if($base64) {
+			$path = tempnam(sys_get_temp_dir(), 'captcha_');
+			imagepng($image, $path);
+			$png = base64_encode(file_get_contents($path));
+			unlink($path);
+			imagedestroy($image);
+			return $png;
+		} else {
+			header("Content-Type: image/png");
+			ob_clean();
+			imagepng($image);
+			imagedestroy($image);
+			die();
+		}
+	}
 
-		imagepng($image);
-		imagedestroy($image);
+	/**
+	 * Return the captcha input code
+	 * @param string $class
+	 * @return string
+	 */
+	public static function captchaPrint($class = '', $input_name = 'captcha'){
+		$img = self::captcha(true);
+		$captcha = '<img class="'.$class.'" src="data:image/png;base64,'.$img.'" alt="Captcha" />';
+		$captcha .= '<input type="text" class="'.$class.'" name="'.$input_name.'">';
+		return $captcha;
+	}
 
-		die();
+	/**
+	 * Return captcha
+	 * @return mixed
+	 */
+	public static function captchaCode(){
+		return $_SESSION["CAPTCHA_CODE"];
 	}
 
 	/**
@@ -819,10 +854,13 @@ class Security
 	 * @param $input_name
 	 * @return bool
 	 */
-	public static function secureCaptcha($input_name) {
-		if ($_REQUEST[$input_name] == $_SESSION["CAPTCHA_CODE"] && !empty($_SESSION["CAPTCHA_CODE"]))
-			return true;
-		return false;
+	public static function captchaVerify($input_name = 'captcha') {
+		if ($_SERVER["REQUEST_METHOD"] == "POST") {
+			if (strtolower($_POST[$input_name]) == strtolower($_SESSION["CAPTCHA_CODE"]) && !empty($_SESSION["CAPTCHA_CODE"]))
+				return true;
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -1228,10 +1266,11 @@ class Security
 	 */
 	public static function secureDOS() {
 
-		$time_safe = 1.5;
-		$time_counter = 3;
-		$time_waiting = 10;
-		$time_expire = 3600;
+		$time_safe = 1.5; // Time safe from counter to wait (for css/js requests if not set $isAPI)
+		$time_counter = 3; // Time within counter (now + ($time_counter - $time_safe))
+
+		$time_waiting = 10; // Time to wait after reach 10 requests
+		$time_expire = 3600; // Time to reset attempts
 
 		$time = $_SERVER['REQUEST_TIME'];
 		$ip = self::clientIP();

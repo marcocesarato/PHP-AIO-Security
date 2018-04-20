@@ -41,7 +41,7 @@ php_flag session.use_only_cookies on
     Header set Access-Control-Allow-Methods "GET, POST"
     # Content policy
     #Header set Content-Security-Policy "default-src 'self'"
-    Header set Content-Security-Policy "default-src 'self'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src *; font-src *; object-src 'none'"
+    Header set Content-Security-Policy "default-src 'self'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data:; font-src * data:; object-src 'self'"
 
 </IfModule>
 
