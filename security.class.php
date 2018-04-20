@@ -7,16 +7,17 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.7.119
+ * @version   0.2.7.120
  */
 
 class Security
 {
 	// Config
 	public static $basedir = __DIR__; // Project basedir where is located .htaccess
+	public static $salt = "_SALT"; // Salt for crypt
 	public static $session_name = "XSESSID"; // Session cookie name
 	public static $session_lifetime = 288000; // Session lifetime | default = 8 hours
-	public static $session_regenerate_id = false; // Rengenerate session id
+	public static $session_regenerate_id = false; // Regenerate session id
 	public static $csrf_session = "_CSRFTOKEN"; // CSRF session token name
 	public static $csrf_formtoken = "_FORMTOKEN"; // CSRF form token input name
 	public static $headers_cache = true; // Enable header cache
@@ -27,8 +28,6 @@ class Security
 	public static $clean_post_xss = true; // Remove XSS on post global
 	public static $compress_output = true; // Compress output
 	public static $hide_errors = true; // Hide php errors (useful for hide vulnerabilities)
-
-	private static $_SALT = "_SALT"; // Salt for encryptions => use setSalt($salt) or change it
 
 	// Autostart
 	public static $auto_session_manager = true; // Run session at start
@@ -41,6 +40,8 @@ class Security
 	// Error Template
 	public static $error_callback = null; // Set a callback on errors
 	public static $error_template = '<html><head><title>${ERROR_TITLE}</title></head><body>${ERROR_BODY}</body></html>';
+	
+	private static $_UNSAFE_GLOB = array();
 
 	/**
 	 * Security constructor.
@@ -92,16 +93,6 @@ class Security
 	}
 
 	/**
-	 * Set Salt
-	 * @param $salt
-	 * @return bool
-	 */
-	public static function setSalt($salt) {
-		self::$_SALT = $salt;
-		return true;
-	}
-
-	/**
 	 * Get Salt
 	 * @return bool|string
 	 */
@@ -109,7 +100,7 @@ class Security
 		$required_salt_len = 22;
 		$base64_digits = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 		$bcrypt64_digits = './ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-		$base64_string = base64_encode(self::$_SALT);
+		$base64_string = base64_encode(self::$salt);
 		$salt = strtr(rtrim($base64_string, '='), $base64_digits, $bcrypt64_digits);
 		$salt = substr($salt, 0, $required_salt_len);
 		return $salt;
@@ -295,8 +286,8 @@ class Security
 
 	/**
 	 * Compress HTML
-	 * @param $buf
-	 * @return string
+	 * @param $buffer
+	 * @return null|string|string[]
 	 */
 	public static function compressHTML($buffer) {
 		ini_set("zlib.output_compression", "On");
@@ -437,11 +428,13 @@ class Security
 	 */
 	private static function saveUnsafeGlobals() {
 		if (!self::$savedGlobals) {
-			$GLOBALS['UNSAFE_SERVER'] = $_SERVER;
-			$GLOBALS['UNSAFE_COOKIE'] = $_COOKIE;
-			$GLOBALS['UNSAFE_GET'] = $_GET;
-			$GLOBALS['UNSAFE_POST'] = $_POST;
-			$GLOBALS['UNSAFE_REQUEST'] = $_REQUEST;
+			self::$_UNSAFE_GLOB['UNSAFE_SERVER'] = $_SERVER;
+			self::$_UNSAFE_GLOB['UNSAFE_COOKIE'] = $_COOKIE;
+			self::$_UNSAFE_GLOB['UNSAFE_GET'] = $_GET;
+			self::$_UNSAFE_GLOB['UNSAFE_POST'] = $_POST;
+			self::$_UNSAFE_GLOB['UNSAFE_REQUEST'] = $_REQUEST;
+			foreach (self::$_UNSAFE_GLOB as $key => $value)
+				$GLOBALS[$key] = $value;
 			self::$savedGlobals = true;
 		}
 	}
@@ -450,11 +443,10 @@ class Security
 	 * Restore unsafe globals
 	 */
 	public static function restoreGlobals() {
-		$_SERVER = $GLOBALS['UNSAFE_SERVER'];
-		$_COOKIE = $GLOBALS['UNSAFE_COOKIE'];
-		$_GET = $GLOBALS['UNSAFE_GET'];
-		$_POST = $GLOBALS['UNSAFE_POST'];
-		$_REQUEST = $GLOBALS['UNSAFE_REQUEST'];
+		foreach (self::$_UNSAFE_GLOB as $key => $value){
+			$key = str_replace('UNSAFE_', '' , $key);
+			$_{$key} = $value;
+		}
 	}
 
 	/**
@@ -465,24 +457,24 @@ class Security
 		$compare = array();
 		// SERVER
 		$compare['SERVER']['current'] = $_SERVER;
-		$compare['SERVER']['unsafe'] = $GLOBALS['UNSAFE_SERVER'];
-		$compare['SERVER']['safe'] = self::clean($GLOBALS['UNSAFE_SERVER']);
+		$compare['SERVER']['unsafe'] = self::$_UNSAFE_GLOB['UNSAFE_SERVER'];
+		$compare['SERVER']['safe'] = self::clean(self::$_UNSAFE_GLOB['UNSAFE_SERVER']);
 		// COOKIE
 		$compare['COOKIE']['current'] = $_COOKIE;
-		$compare['COOKIE']['unsafe'] = $GLOBALS['UNSAFE_COOKIE'];
-		$compare['COOKIE']['safe'] = self::clean($GLOBALS['UNSAFE_COOKIE']);
+		$compare['COOKIE']['unsafe'] = self::$_UNSAFE_GLOB['UNSAFE_COOKIE'];
+		$compare['COOKIE']['safe'] = self::clean(self::$_UNSAFE_GLOB['UNSAFE_COOKIE']);
 		// GET
 		$compare['GET']['current'] = $_GET;
-		$compare['GET']['unsafe'] = $GLOBALS['UNSAFE_GET'];
-		$compare['GET']['safe'] = self::clean($GLOBALS['UNSAFE_GET']);
+		$compare['GET']['unsafe'] = self::$_UNSAFE_GLOB['UNSAFE_GET'];
+		$compare['GET']['safe'] = self::clean(self::$_UNSAFE_GLOB['UNSAFE_GET']);
 		// POST
 		$compare['POST']['current'] = $_POST;
-		$compare['POST']['unsafe'] = $GLOBALS['UNSAFE_POST'];
-		$compare['POST']['safe'] = self::clean($GLOBALS['UNSAFE_POST']);
+		$compare['POST']['unsafe'] = self::$_UNSAFE_GLOB['UNSAFE_POST'];
+		$compare['POST']['safe'] = self::clean(self::$_UNSAFE_GLOB['UNSAFE_POST']);
 		// REQUEST
 		$compare['REQUEST']['current'] = $_REQUEST;
-		$compare['REQUEST']['unsafe'] = $GLOBALS['UNSAFE_REQUEST'];
-		$compare['REQUEST']['safe'] = self::clean($GLOBALS['UNSAFE_REQUEST']);
+		$compare['REQUEST']['unsafe'] = self::$_UNSAFE_GLOB['UNSAFE_REQUEST'];
+		$compare['REQUEST']['safe'] = self::clean(self::$_UNSAFE_GLOB['UNSAFE_REQUEST']);
 		return $compare;
 	}
 
@@ -853,6 +845,7 @@ class Security
 	/**
 	 * Return the captcha input code
 	 * @param string $class
+	 * @param string $input_name
 	 * @return string
 	 */
 	public static function captchaPrint($class = '', $input_name = 'captcha') {

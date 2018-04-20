@@ -30,6 +30,7 @@ These are the options:
 ```php
 // Config
 $basedir = __DIR__; // Project basedir where is located .htaccess
+$salt = "_SALT"; // Salt for crypt
 $session_name = "XSESSID"; // Session cookie name
 $session_lifetime = 288000; // Session lifetime | default = 8 hours
 $session_regenerate_id = false; // Regenerate session id
@@ -43,8 +44,6 @@ $scanner_whitelist = array('./shell.php','./libs'); // Example of scan whitelist
 $clean_post_xss = true; // Remove XSS on post global
 $compress_output = true; // Compress output
 $hide_errors = true;  // Hide php errors (useful for hide vulnerabilities)
-
-private $_SALT = "_SALT"; // Salt for encryptions => use setSalt($salt) or change it
 
 // Autostart
 $auto_session_manager = true; // Run session at start
@@ -181,7 +180,6 @@ USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 | Method                    | Params             | Return | Description                                                  |
 | ------------------------- | ------------------ | ------ | ------------------------------------------------------------ |
 | __construct / putInSafety | $isAPI = false     | Void   | Call some methods:<br /><br />headers `$isAPI`<br />secureSession `$isAPI`<br />secureFormRequest `$isAPI`<br />secureBots<br />secureRequest<br />secureBlockTor<br />secureHijacking<br />secureCookies |
-| setSalt                   | $salt              | Void   | Set salt fro encryptions                                     |
 | secureCSRF                | -                  | Void   | Check for CSRF                                               |
 | secureCSRFToken           | -                  | String | Get CSRF Token                                               |
 | secureRequest             | -                  | Void   | Enable the WAF (Firewall) then check the request method and the URL to prevent some XSS/SQL Injections and bad requests |
