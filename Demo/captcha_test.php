@@ -3,7 +3,7 @@ require_once '../security.class.php';
 Security::putInSafety();
 Security::cleanGlobals();
 
-$verify_captcha = Security::secureCaptcha(); // PS: call before Security::printCaptcha() / Security::captcha()
+$verify_captcha = Security::captchaVerify(); // PS: call before Security::printCaptcha() / Security::captcha()
 $captcha = Security::captchaPrint('captcha');
 
 ob_start();
