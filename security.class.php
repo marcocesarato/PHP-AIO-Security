@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.7
+ * @version   0.2.7.119
  */
 
 class Security
@@ -26,13 +26,14 @@ class Security
 	public static $scanner_whitelist = array(); // Scan paths/files whitelist
 	public static $clean_post_xss = true; // Remove XSS on post global
 	public static $compress_output = true; // Compress output
+	public static $hide_errors = true; // Hide php errors (useful for hide vulnerabilities)
 
-	protected static $_SALT = "_SALT"; // Salt for encryptions => use setSalt($salt) or change it
+	private static $_SALT = "_SALT"; // Salt for encryptions => use setSalt($salt) or change it
 
 	// Autostart
 	public static $auto_session_manager = true; // Run session at start
 	public static $auto_scanner = false; // Could have a bad performance impact and could detect false positive,
-										 // then try the method secureScanPath before enable this. BE CAREFUL
+	// then try the method secureScanPath before enable this. BE CAREFUL
 	public static $auto_block_tor = true; // If you want block TOR clients
 	public static $auto_clean_global = false; // Global clean at start
 	public static $auto_antidos = true; // Block the client ip when there are too many requests
@@ -54,6 +55,12 @@ class Security
 	 * @param bool $API
 	 */
 	public static function putInSafety($API = false) {
+
+		if(self::$hide_errors){
+			ini_set('display_errors', 0);
+			ini_set('display_startup_errors', 0);
+			error_reporting(0);
+		}
 
 		if (!$API) {
 			if (self::$auto_session_manager)
@@ -92,6 +99,20 @@ class Security
 	public static function setSalt($salt) {
 		self::$_SALT = $salt;
 		return true;
+	}
+
+	/**
+	 * Get Salt
+	 * @return bool|string
+	 */
+	protected static function getSalt() {
+		$required_salt_len = 22;
+		$base64_digits = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+		$bcrypt64_digits = './ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+		$base64_string = base64_encode(self::$_SALT);
+		$salt = strtr(rtrim($base64_string, '='), $base64_digits, $bcrypt64_digits);
+		$salt = substr($salt, 0, $required_salt_len);
+		return $salt;
 	}
 
 	/**
@@ -283,17 +304,17 @@ class Security
 		if (self::isHTML($buffer)) {
 			$pattern = "/<script[^>]*>(.*?)<\/script>/is";
 			preg_match_all($pattern, $buffer, $matches, PREG_SET_ORDER, 0);
-			foreach ($matches as $match){
-				$pattern = "/(<script[^>]*>)(".preg_quote($match[1],'/').")(<\/script>)/is";
+			foreach ($matches as $match) {
+				$pattern = "/(<script[^>]*>)(" . preg_quote($match[1], '/') . ")(<\/script>)/is";
 				$compress = self::compressJS($match[1]);
-				$buffer = preg_replace($pattern, '$1'.$compress.'$3', $buffer);
+				$buffer = preg_replace($pattern, '$1' . $compress . '$3', $buffer);
 			}
 			$pattern = "/<style[^>]*>(.*?)<\/style>/is";
 			preg_match_all($pattern, $buffer, $matches, PREG_SET_ORDER, 0);
-			foreach ($matches as $match){
-				$pattern = "/(<style[^>]*>)(".preg_quote($match[1],'/').")(<\/style>)/is";
+			foreach ($matches as $match) {
+				$pattern = "/(<style[^>]*>)(" . preg_quote($match[1], '/') . ")(<\/style>)/is";
 				$compress = self::compressCSS($match[1]);
-				$buffer = preg_replace($pattern, '$1'.$compress.'$3', $buffer);
+				$buffer = preg_replace($pattern, '$1' . $compress . '$3', $buffer);
 			}
 			$buffer = preg_replace(array('/<!--[^\[](.*)[^\]]-->/Uis', "/[[:blank:]]+/", '/\s+/'), array('', ' ', ' '), str_replace(array("\n", "\r", "\t"), '', $buffer));
 		}
@@ -813,7 +834,7 @@ class Security
 		imageellipse($image, 0, 0, rand($width / 2, $width * 2), rand($height, $height * 2), $shape1_color);
 		imageellipse($image, 0, 0, rand($width / 2, $width * 2), rand($height, $height * 2), $shape2_color);
 
-		if($base64) {
+		if ($base64) {
 			$path = tempnam(sys_get_temp_dir(), 'captcha_');
 			imagepng($image, $path);
 			$png = base64_encode(file_get_contents($path));
@@ -834,10 +855,10 @@ class Security
 	 * @param string $class
 	 * @return string
 	 */
-	public static function captchaPrint($class = '', $input_name = 'captcha'){
+	public static function captchaPrint($class = '', $input_name = 'captcha') {
 		$img = self::captcha(true);
-		$captcha = '<img class="'.$class.'" src="data:image/png;base64,'.$img.'" alt="Captcha" />';
-		$captcha .= '<input type="text" class="'.$class.'" name="'.$input_name.'">';
+		$captcha = '<img class="' . $class . '" src="data:image/png;base64,' . $img . '" alt="Captcha" />';
+		$captcha .= '<input type="text" class="' . $class . '" name="' . $input_name . '">';
 		return $captcha;
 	}
 
@@ -845,7 +866,7 @@ class Security
 	 * Return captcha
 	 * @return mixed
 	 */
-	public static function captchaCode(){
+	public static function captchaCode() {
 		return $_SESSION["CAPTCHA_CODE"];
 	}
 
@@ -867,13 +888,13 @@ class Security
 	 * Hijacking prevention
 	 */
 	public static function secureHijacking() {
-		if (!empty($_SESSION['HTTP_USER_TOKEN']) && $_SESSION['HTTP_USER_TOKEN'] != md5($_SERVER['HTTP_USER_AGENT'] . ':' . self::clientIP() . ':' . self::$_SALT)) {
+		if (!empty($_SESSION['HTTP_USER_TOKEN']) && $_SESSION['HTTP_USER_TOKEN'] != md5($_SERVER['HTTP_USER_AGENT'] . ':' . self::clientIP() . ':' . self::getSalt())) {
 			session_unset();
 			session_destroy();
 			self::error(403, 'Permission denied!');
 		}
 
-		$_SESSION['HTTP_USER_TOKEN'] = md5($_SERVER['HTTP_USER_AGENT'] . ':' . self::clientIP() . ':' . self::$_SALT);
+		$_SESSION['HTTP_USER_TOKEN'] = md5($_SERVER['HTTP_USER_AGENT'] . ':' . self::clientIP() . ':' . self::getSalt());
 	}
 
 	/**
@@ -921,12 +942,12 @@ class Security
 		if (empty($key) && empty($_SESSION['HTTP_USER_KEY']))
 			$_SESSION['HTTP_USER_KEY'] = md5(self::generateGUID());
 
-		$secret_key = (empty($key) ? $_SESSION['HTTP_USER_KEY'] : $key) . ':KEY'.self::$_SALT;
-		$secret_iv = (empty($key) ? $_SESSION['HTTP_USER_KEY'] : $key) . ':IV'.self::$_SALT;
+		$secret_key = (empty($key) ? $_SESSION['HTTP_USER_KEY'] : $key) . ':KEY' . self::getSalt();
+		$secret_iv = (empty($key) ? $_SESSION['HTTP_USER_KEY'] : $key) . ':IV' . self::getSalt();
 
 		$key = hash('sha512', $secret_key);
 		$iv = substr(hash('sha512', $secret_iv), 0, 16);
-		switch ($action){
+		switch ($action) {
 			case 'decrypt':
 				$output = openssl_decrypt(base64_decode($string), $encrypt_method, $key, 0, $iv);
 				break;
@@ -946,7 +967,7 @@ class Security
 	 * @return bool|string
 	 */
 	public static function decrypt($string, $key = null) {
-		return self::crypt($string,'decrypt', $key);
+		return self::crypt($string, 'decrypt', $key);
 	}
 
 	/**
@@ -1004,7 +1025,7 @@ class Security
 	 * @return bool
 	 */
 	public static function error($code = 404, $message = "Not found!", $title = 'Error') {
-		if(empty(self::$error_callback)) {
+		if (empty(self::$error_callback)) {
 			ob_clean();
 			http_response_code($code);
 			$output = str_replace('${ERROR_TITLE}', $title, self::$error_template);
@@ -1409,8 +1430,8 @@ class Security
 				if ($strong_lv > 0 &&
 					(!empty($astr[$i - 1]) && ($new_astr[$i - 1] == $astr[$i - 1] || $astr[$i] == $astr[$i - 1]) ||
 						!empty($astr[$i + 1]) && $astr[$i] == $astr[$i + 1])) {
-					if($strong_lv > 1) $char = str_replace(array_keys($numeric_replace), $numeric_replace, $char);
-					if(strtolower($astr[$i]) == strtolower($char)) $char = str_replace(array_keys($alpha_replace), $alpha_replace, strtoupper($char));
+					if ($strong_lv > 1) $char = str_replace(array_keys($numeric_replace), $numeric_replace, $char);
+					if (strtolower($astr[$i]) == strtolower($char)) $char = str_replace(array_keys($alpha_replace), $alpha_replace, strtoupper($char));
 				}
 				$new_astr[] = $char;
 			}
@@ -1433,22 +1454,15 @@ class Security
 		if (!function_exists('crypt')) return false;
 
 		if (is_null($password) || is_int($password)) {
-			$password = (string) $password;
+			$password = (string)$password;
 		}
 		if ($cost < 4 || $cost > 31) {
 			trigger_error(sprintf("Invalid bcrypt cost parameter specified: %d", $cost), E_USER_WARNING);
 			return null;
 		}
-		$required_salt_len = 22;
 		$hash_format = sprintf("$2y$%02d$", $cost);
 		$resultLength = 60;
-		$base64_digits =
-			'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-		$bcrypt64_digits =
-			'./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-		$base64_string = base64_encode(self::$_SALT);
-		$salt = strtr(rtrim($base64_string, '='), $base64_digits, $bcrypt64_digits);
-		$salt = substr($salt, 0, $required_salt_len);
+		$salt = self::getSalt();
 		$hash = $hash_format . $salt;
 		$ret = crypt($password, $hash);
 		if (!is_string($ret) || strlen($ret) != $resultLength) {
@@ -1512,5 +1526,104 @@ class Security
 			$guid .= dechex(mt_rand(0, 15));
 
 		return $guid;
+	}
+
+	/**
+	 * Check environment configuration
+	 * @return array
+	 */
+	public function environmentCheck() {
+		return array(
+			array(
+				"current" => ini_get("allow_url_fopen"),
+				"recommended" => 1,
+				"name" =>"allow_url_fopen",
+			),
+			array(
+				"current" => ini_get("allow_url_include"),
+				"recommended" => 0,
+				"name" => "allow_url_include",
+			),
+			array(
+				"current" => ini_get("register_globals"),
+				"recommended" => 0,
+				"name" => "register_globals",
+			),
+			array(
+				"current" => ini_get("expose_php"),
+				"recommended" => 0,
+				"name" => "expose_php",
+			),
+			array(
+				"current" => ini_get("display_errors"),
+				"recommended" => 0,
+				"name" => "display_error",
+			),
+			array(
+				"current" => ini_get("magic_quotes_gpc"),
+				"recommended" => 0,
+				"name" => "magic_quotes_gpc",
+			),
+			array(
+				"current" => ini_get("magic_quotes_runtime"),
+				"recommended" => 0,
+				"name" => "magic_quotes_runtime",
+			),
+			array(
+				"current" => ini_get("magic_quotes_sybase"),
+				"recommended" => 0,
+				"name" => "magic_quotes_sybase",
+			),
+			array(
+				"current" => ini_get("file_uploads"),
+				"recommended" => 1,
+				"name" => "file_uploads",
+			),
+			array(
+				"current" => ini_get("upload_max_filesize"),
+				"recommended" => 10485760,
+				"name" => "upload_max_filesize",
+			),
+			array(
+				"current" => ini_get("post_max_size"),
+				"recommended" => 10485760,
+				"name" => "post_max_size",
+			),
+			array(
+				"current" => ini_get("memory_limit"),
+				"recommended" => 134217728,
+				"name" => "memory_limit",
+			),
+			array(
+				"current" => ini_get("max_execution_time"),
+				"recommended" => 30,
+				"name" => "max_execution_time",
+			),
+			array(
+				"current" => ini_get("max_input_time"),
+				"recommended" => 120,
+				"name" => "max_input_time",
+			),
+			array(
+				"current" => ini_get("safe_mode"),
+				"recommended" => 1,
+				"name" => "safe_mode",
+			),
+			array(
+				"current" => ini_get("sql.safe_mode"),
+				"recommended" => 1,
+				"name" => "sql.safe_mode",
+			),
+			array(
+				"current" => ini_get("zlib.output_compression"),
+				"recommended" => 1,
+				"name" => "zlib.output_compression",
+			),
+			array(
+				"current" => ini_get("zlib.output_compression_level"),
+				"recommended" => 6,
+				"name" => "zlib.output_compression_level",
+			)
+		);
 	}
 }

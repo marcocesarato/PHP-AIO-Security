@@ -42,8 +42,9 @@ $scanner_path = "./*.php"; // Folder to scan at start and optionally the file ex
 $scanner_whitelist = array('./shell.php','./libs'); // Example of scan whitelist
 $clean_post_xss = true; // Remove XSS on post global
 $compress_output = true; // Compress output
+$hide_errors = true;  // Hide php errors (useful for hide vulnerabilities)
 
-protected $_SALT = "_SALT"; // Salt for encryptions => use setSalt($salt) or change it
+private $_SALT = "_SALT"; // Salt for encryptions => use setSalt($salt) or change it
 
 // Autostart
 $auto_session_manager = true; // Run session at start
@@ -249,3 +250,4 @@ USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 | secureScan               | $path                                                        | Void    | Scan files in directory recursively and rename bad files if detected |
 | secureScanFile           | $filepath                                                    | Boolean | Scan file (detect for shell or php code infected)            |
 | secureScanPath           | $path                                                        | Array   | Scan files in directory recursively (detect for shell or php code infected) |
+| environmentCheck         | -                                                            | Array   | Check environment configuration and return the current and the recommended php.ini configuration |
