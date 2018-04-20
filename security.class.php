@@ -1228,7 +1228,8 @@ class Security
 	 */
 	public static function secureDOS() {
 
-		$time_counter = 2;
+		$time_safe = 1.5;
+		$time_counter = 3;
 		$time_waiting = 10;
 		$time_expire = 3600;
 
@@ -1279,13 +1280,15 @@ class Security
 				file_put_contents($htaccess, $htaccess_content);
 				self::secureDOSRemoveAttempts($ip, $file_attempts);
 			} else {
-				if ($_SESSION['DOS_TIMER'] > ($time - $time_counter)) {
-					$_SESSION['DOS_COUNTER'] = $_SESSION['DOS_COUNTER'] + 1;
-				} else {
-					$_SESSION['DOS_COUNTER'] = 0;
+				if ($_SESSION['DOS_TIMER'] < ($time - $time_safe)) {
+					if ($_SESSION['DOS_TIMER'] > ($time - $time_counter)) {
+						$_SESSION['DOS_COUNTER'] = $_SESSION['DOS_COUNTER'] + 1;
+					} else {
+						$_SESSION['DOS_COUNTER'] = 0;
+					}
+					$_SESSION['DOS_TIMER'] = $time;
+					self::secureDOSWriteAttempts($ip, $file_attempts);
 				}
-				$_SESSION['DOS_TIMER'] = $time;
-				self::secureDOSWriteAttempts($ip, $file_attempts);
 			}
 		}
 	}
