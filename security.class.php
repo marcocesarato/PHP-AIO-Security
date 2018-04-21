@@ -122,6 +122,9 @@ class Security
 		session_start();
 		if (self::$session_regenerate_id)
 			session_regenerate_id(true);
+
+        $session_cookie = setcookie(self::$session_name, $_COOKIE[self::$session_name], self::$session_lifetime,"/", $_SERVER['SERVER_NAME'],true,true);
+        if (!$session_cookie) trigger_error("Could not set secure session cookie", E_USER_WARNING);
 	}
 
 	/**
