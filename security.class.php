@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.7.121
+ * @version   0.2.7.122
  */
 
 class Security
@@ -40,7 +40,7 @@ class Security
 	// Error Template
 	public static $error_callback = null; // Set a callback on errors
 	public static $error_template = '<html><head><title>${ERROR_TITLE}</title></head><body>${ERROR_BODY}</body></html>';
-	
+
 	private static $_UNSAFE_GLOB = array();
 
 	/**
@@ -57,7 +57,7 @@ class Security
 	 */
 	public static function putInSafety($API = false) {
 
-		if(self::$hide_errors){
+		if (self::$hide_errors) {
 			ini_set('display_errors', 0);
 			ini_set('display_startup_errors', 0);
 			error_reporting(0);
@@ -123,8 +123,8 @@ class Security
 		if (self::$session_regenerate_id)
 			session_regenerate_id(true);
 
-        $session_cookie = setcookie(self::$session_name, $_COOKIE[self::$session_name], self::$session_lifetime,"/", null, self::checkHTTPS(), true);
-        if (!$session_cookie) trigger_error("Could not set secure session cookie", E_USER_WARNING);
+		$session_cookie = setcookie(self::$session_name, $_COOKIE[self::$session_name], self::$session_lifetime, "/", null, self::checkHTTPS(), true);
+		if (!$session_cookie) trigger_error("Could not set secure session cookie", E_USER_WARNING);
 	}
 
 	/**
@@ -446,8 +446,8 @@ class Security
 	 * Restore unsafe globals
 	 */
 	public static function restoreGlobals() {
-		foreach (self::$_UNSAFE_GLOB as $key => $value){
-			$key = str_replace('UNSAFE_', '' , $key);
+		foreach (self::$_UNSAFE_GLOB as $key => $value) {
+			$key = str_replace('UNSAFE_', '', $key);
 			$_{$key} = $value;
 		}
 	}
@@ -1533,7 +1533,7 @@ class Security
 			array(
 				"current" => ini_get("allow_url_fopen"),
 				"recommended" => 1,
-				"name" =>"allow_url_fopen",
+				"name" => "allow_url_fopen",
 			),
 			array(
 				"current" => ini_get("allow_url_include"),
