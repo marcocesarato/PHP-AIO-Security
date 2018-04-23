@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.7.120
+ * @version   0.2.7.121
  */
 
 class Security
@@ -123,7 +123,7 @@ class Security
 		if (self::$session_regenerate_id)
 			session_regenerate_id(true);
 
-        $session_cookie = setcookie(self::$session_name, $_COOKIE[self::$session_name], self::$session_lifetime,"/", $_SERVER['SERVER_NAME'],true,true);
+        $session_cookie = setcookie(self::$session_name, $_COOKIE[self::$session_name], self::$session_lifetime,"/", null, self::checkHTTPS(), true);
         if (!$session_cookie) trigger_error("Could not set secure session cookie", E_USER_WARNING);
 	}
 
@@ -224,7 +224,7 @@ class Security
 			//$value = self::clean(self::getCookie($key), false, false);
 			//self::setCookie($key, $value, 0, '/; SameSite=Strict', null, false, true);
 			if ($key != self::$session_name)
-				setcookie($key, $value, 0, '/; SameSite=Strict', null, false, self::checkHTTPS());
+				setcookie($key, $value, 0, '/; SameSite=Strict', null, self::checkHTTPS(), true);
 		}
 	}
 
