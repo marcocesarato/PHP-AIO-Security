@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.7.122
+ * @version   0.2.7.123
  */
 
 class Security
@@ -31,8 +31,10 @@ class Security
 
 	// Autostart
 	public static $auto_session_manager = true; // Run session at start
+
 	public static $auto_scanner = false; // Could have a bad performance impact and could detect false positive,
 	// then try the method secureScanPath before enable this. BE CAREFUL
+
 	public static $auto_block_tor = true; // If you want block TOR clients
 	public static $auto_clean_global = false; // Global clean at start
 	public static $auto_antidos = true; // Block the client ip when there are too many requests
@@ -112,9 +114,10 @@ class Security
 	public static function secureSession() {
 		self::unsetCookie('PHPSESSID');
 
+		ini_set('session.use_cookies', true);
+		ini_set('session.use_only_cookies', true);
 		ini_set("session.cookie_httponly", true);
 		ini_set("session.use_trans_sid", false);
-		ini_set('session.use_only_cookies', true);
 		ini_set("session.cookie_secure", self::checkHTTPS());
 		ini_set("session.gc_maxlifetime", self::$session_lifetime);
 
@@ -123,8 +126,6 @@ class Security
 		if (self::$session_regenerate_id)
 			session_regenerate_id(true);
 
-		$session_cookie = setcookie(self::$session_name, $_COOKIE[self::$session_name], self::$session_lifetime, "/", null, self::checkHTTPS(), true);
-		if (!$session_cookie) trigger_error("Could not set secure session cookie", E_USER_WARNING);
 	}
 
 	/**
