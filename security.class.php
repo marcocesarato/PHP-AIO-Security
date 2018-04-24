@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.126
+ * @version   0.2.8.127
  */
 
 class Security
@@ -222,7 +222,7 @@ class Security
 	 */
 	public static function secureCookies() {
 		foreach ($_COOKIE as $key => $value) {
-			if (self::$cookie_encrypted && $key != self::$session_name){
+			if (self::$cookies_encrypted && $key != self::$session_name){
 				$value = self::getCookie($key);
 				$_COOKIE[$key] = $value;
 			} else {
@@ -993,7 +993,7 @@ class Security
 	public static function setCookie($name, $value, $expires = 2592000, $path = "/", $domain = "", $secure = false, $httponly = false) {
 		$secure = self::checkHTTPS();
 		if ($name != self::$session_name) {
-			$cookie_value = (self::$cookie_encrypted) ? self::crypt($value) : $value;
+			$cookie_value = (self::$cookies_encrypted) ? self::crypt($value) : $value;
 			if (!setcookie($name, $cookie_value, time() + $expires, $path."; SameSite=Strict", $domain, $secure, $httponly)) return false;
 			$_COOKIE[$name] = $value;
 			return true;
@@ -1021,7 +1021,7 @@ class Security
 	 */
 	public static function getCookie($name) {
 		if (isset($_COOKIE[$name])) {
-			$cookie = (self::$cookie_encrypted) ? self::decrypt($_COOKIE[$name]) : $_COOKIE[$name];
+			$cookie = (self::$cookies_encrypted) ? self::decrypt($_COOKIE[$name]) : $_COOKIE[$name];
 			return $cookie;
 		}
 		return null;
