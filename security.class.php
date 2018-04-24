@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.127
+ * @version   0.2.8.128
  */
 
 class Security
@@ -925,11 +925,22 @@ class Security
 	 * Secure download
 	 * @param $filename
 	 */
-	public static function secureDownload($filename) {
+	public static function secureDownload($filename, $name = null) {
+		if(!file_exists($filename)) return false;
+
+		$filename = realpath($filename);
+		$path_parts = pathinfo($filename);
+
+		if(in_array($path_parts['extension'], array('php','php5','php7','htaccess','config'))) return false;
+
 		ob_clean();
+
+		$name_string = (!empty($name)) ? 'name='.$name : 'name='.$path_parts['filename'];
+
 		header('Content-Type: application/x-octet-stream');
 		header('Content-Transfer-Encoding: binary');
-		header('Content-Disposition: attachment; filename="' . $filename . '";');
+		header('Content-Disposition: attachment; filename="' . basename($filename) . '";'.$name_string);
+
 		die(file_get_contents($filename));
 	}
 
@@ -1009,7 +1020,7 @@ class Security
 	public static function unsetCookie($name) {
 		if (isset($_COOKIE[$name])) {
 			unset($_COOKIE[$name]);
-			setcookie($name, null, -1, '/');
+			setcookie($name, null, -1);
 		}
 		return null;
 	}

@@ -244,7 +244,7 @@ USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 | unsetCookie              | $name                                                        | String  | Unset a cookie                                               |
 | clientIP                 | -                                                            | String  | Get real client IP address                                   |
 | clientIsTor              | -                                                            | Boolean | Check if client use TOR                                      |
-| secureDownload           | \$filename                                                   | Void    | Secure headers for download request                          |
+| secureDownload           | \$filename, $name = null                                     | Void    | Secure headers for download request                          |
 | secureUpload             | \$file, \$path                                               | Boolean | File upload with scan                                        |
 | secureScan               | $path                                                        | Void    | Scan files in directory recursively and rename bad files if detected |
 | secureScanFile           | $filepath                                                    | Boolean | Scan file (detect for shell or php code infected)            |
