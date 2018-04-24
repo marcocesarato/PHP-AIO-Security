@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.7.123
+ * @version   0.2.8.125
  */
 
 class Security
@@ -20,11 +20,12 @@ class Security
 	public static $session_regenerate_id = false; // Regenerate session id
 	public static $csrf_session = "_CSRFTOKEN"; // CSRF session token name
 	public static $csrf_formtoken = "_FORMTOKEN"; // CSRF form token input name
+	public static $cookies_encrypted = false; // Encrypt cookies (need Security::getCookie for decrypt) [PHP 5.3+]
 	public static $headers_cache = true; // Enable header cache
 	public static $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
-	public static $escape_string = true; // If you use PDO I recommend to set this to false
 	public static $scanner_path = "./*.php"; // Folder to scan at start and optionally the file extension
 	public static $scanner_whitelist = array(); // Scan paths/files whitelist
+	public static $escape_string = true; // If you use PDO I recommend to set this to false
 	public static $clean_post_xss = true; // Remove XSS on post global
 	public static $compress_output = true; // Compress output
 	public static $hide_errors = true; // Hide php errors (useful for hide vulnerabilities)
@@ -70,6 +71,7 @@ class Security
 				self::secureSession();
 			if (self::$auto_scanner)
 				self::secureScan(self::$scanner_path);
+			self::secureCookies();
 			self::secureFormRequest();
 			self::secureCSRF();
 		}
@@ -83,6 +85,7 @@ class Security
 		if (self::$auto_block_tor)
 			self::secureBlockTor();
 
+
 		self::saveUnsafeGlobals();
 		if (self::$auto_clean_global) {
 			self::cleanGlobals();
@@ -90,7 +93,6 @@ class Security
 
 		self::secureHijacking();
 		self::headers($API);
-		self::secureCookies();
 
 	}
 
@@ -114,11 +116,11 @@ class Security
 	public static function secureSession() {
 		self::unsetCookie('PHPSESSID');
 
-		ini_set('session.use_cookies', true);
-		ini_set('session.use_only_cookies', true);
-		ini_set("session.cookie_httponly", true);
-		ini_set("session.use_trans_sid", false);
-		ini_set("session.cookie_secure", self::checkHTTPS());
+		ini_set('session.use_cookies', 1);
+		ini_set('session.use_only_cookies', 1);
+		ini_set("session.cookie_httponly", 1);
+		ini_set("session.use_trans_sid", 0);
+		ini_set("session.cookie_secure", self::checkHTTPS() ? 1 : 0);
 		ini_set("session.gc_maxlifetime", self::$session_lifetime);
 
 		session_name(self::$session_name);
@@ -196,12 +198,10 @@ class Security
 		header_remove("Server");
 
 		// Php settings
-		ini_set('expose_php', 'off');
-		ini_set('allow_url_fopen', 'off');
-		ini_set('magic_quotes_gpc', 'off');
-		ini_set('register_globals', 'off');
-		ini_set('session.cookie_httponly', 'on');
-		ini_set('session.use_only_cookies', 'on');
+		ini_set('expose_php', 0);
+		ini_set('allow_url_fopen', 0);
+		ini_set('magic_quotes_gpc', 0);
+		ini_set('register_globals', 0);
 	}
 
 	/**
@@ -222,10 +222,13 @@ class Security
 	 */
 	public static function secureCookies() {
 		foreach ($_COOKIE as $key => $value) {
-			//$value = self::clean(self::getCookie($key), false, false);
-			//self::setCookie($key, $value, 0, '/; SameSite=Strict', null, false, true);
-			if ($key != self::$session_name)
-				setcookie($key, $value, 0, '/; SameSite=Strict', null, self::checkHTTPS(), true);
+			if (self::$cookie_encrypted && $key != self::$session_name){
+				$value = self::getCookie($key);
+				$_COOKIE[$key] = $value;
+			} else {
+				$value = self::setCookie($key, $value);
+				$_COOKIE[$key] = $value;
+			}
 		}
 	}
 
@@ -283,8 +286,10 @@ class Security
 	 * @return string
 	 */
 	public static function compressOutput($buffer) {
-		ini_set("zlib.output_compression", "On");
-		ini_set("zlib.output_compression_level", "9");
+		if(ini_get('zlib.output_compression')) {
+			ini_set("zlib.output_compression", 1);
+			ini_set("zlib.output_compression_level", "9");
+		}
 		return preg_replace(array('/\s+/'), array(' '), str_replace(array("\n", "\r", "\t"), '', $buffer));
 	}
 
@@ -294,8 +299,10 @@ class Security
 	 * @return null|string|string[]
 	 */
 	public static function compressHTML($buffer) {
-		ini_set("zlib.output_compression", "On");
-		ini_set("zlib.output_compression_level", "9");
+		if(ini_get('zlib.output_compression')) {
+			ini_set("zlib.output_compression", 1);
+			ini_set("zlib.output_compression_level", "9");
+		}
 		if (self::isHTML($buffer)) {
 			$pattern = "/<script[^>]*>(.*?)<\/script>/is";
 			preg_match_all($pattern, $buffer, $matches, PREG_SET_ORDER, 0);
@@ -322,8 +329,10 @@ class Security
 	 * @return string
 	 */
 	public static function compressCSS($buffer) {
-		ini_set("zlib.output_compression", "On");
-		ini_set("zlib.output_compression_level", "9");
+		if(ini_get('zlib.output_compression')) {
+			ini_set("zlib.output_compression", 1);
+			ini_set("zlib.output_compression_level", "9");
+		}
 		return preg_replace(array('#\/\*[\s\S]*?\*\/#', '/\s+/'), array('', ' '), str_replace(array("\n", "\r", "\t"), '', $buffer));
 	}
 
@@ -333,8 +342,10 @@ class Security
 	 * @return string
 	 */
 	public static function compressJS($buffer) {
-		ini_set("zlib.output_compression", "On");
-		ini_set("zlib.output_compression_level", "9");
+		if(ini_get('zlib.output_compression')) {
+			ini_set("zlib.output_compression", 1);
+			ini_set("zlib.output_compression_level", "9");
+		}
 		return str_replace(array("\n", "\r", "\t"), '', preg_replace(array('#\/\*[\s\S]*?\*\/|([^:]|^)\/\/.*$#m', '/\s+/'), array('', ' '), $buffer));
 	}
 
@@ -946,7 +957,8 @@ class Security
 		$iv = substr(hash('sha512', $secret_iv), 0, 16);
 		switch ($action) {
 			case 'decrypt':
-				$output = openssl_decrypt(base64_decode($string), $encrypt_method, $key, 0, $iv);
+				$string = base64_decode($string);
+				$output = openssl_decrypt($string, $encrypt_method, $key, 0, $iv);
 				break;
 			case 'encrypt':
 			default:
@@ -964,7 +976,7 @@ class Security
 	 * @return bool|string
 	 */
 	public static function decrypt($string, $key = null) {
-		return self::crypt($string, 'decrypt', $key);
+		return self::crypt($string, $key, 'decrypt');
 	}
 
 	/**
@@ -978,10 +990,11 @@ class Security
 	 * @param bool $httponly
 	 * @return bool
 	 */
-	public static function setCookie($name, $value, $expires = 2592000, $path = "/", $domain = null, $secure = false, $httponly = false) {
-		if ($name != session_name()) {
-			$newValue = self::crypt($value);
-			if (!setcookie($name, $newValue, $expires, $path, $domain, $secure, $httponly)) return false;
+	public static function setCookie($name, $value, $expires = 2592000, $path = "/", $domain = "", $secure = false, $httponly = false) {
+		$secure = self::checkHTTPS();
+		if ($name != self::$session_name) {
+			$cookie_value = (self::$cookie_encrypted) ? self::crypt($value) : $value;
+			if (!setcookie($name, $cookie_value, time() + $expires, $path."; SameSite=Strict", $domain, $secure, $httponly)) return false;
 			$_COOKIE[$name] = $value;
 			return true;
 		}
@@ -1008,7 +1021,7 @@ class Security
 	 */
 	public static function getCookie($name) {
 		if (isset($_COOKIE[$name])) {
-			$cookie = self::decrypt($_COOKIE[$name]);
+			$cookie = (self::$cookie_encrypted) ? self::decrypt($_COOKIE[$name]) : $_COOKIE[$name];
 			return $cookie;
 		}
 		return null;
