@@ -232,7 +232,7 @@ USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 
 | Method                   | Params                                                       | Return  | Description                                                  |
 | ------------------------ | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| crypt                    | \$string, \$key = null, \$action = ([encrypt]\|decrypt)      | String  | Encrypt and decrypt strings                                  |
+| encrypt                  | \$string, \$key = null                                       | String  | Encrypt strings                                              |
 | decrypt                  | \$string, \$key = null                                       | String  | Decrypt strings                                              |
 | generateGUID             | -                                                            | String  | Generate a GUID                                              |
 | generatePassword         | \$length = 8, \$available_sets = 'luns'<br /><br />(l = lowercase, u = uppercase, n = numbers, s = special chars) | String  | Generate a completly random and strong password              |

@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.128
+ * @version   0.2.8.129
  */
 
 class Security
@@ -924,6 +924,8 @@ class Security
 	/**
 	 * Secure download
 	 * @param $filename
+	 * @param $name
+	 * @return bool
 	 */
 	public static function secureDownload($filename, $name = null) {
 		if(!file_exists($filename)) return false;
@@ -951,7 +953,7 @@ class Security
 	 * @param $action
 	 * @return bool|string
 	 */
-	public static function crypt($string, $key = null, $action = 'encrypt') {
+	protected static function crypt($string, $key = null, $action = 'encrypt') {
 
 		if (!function_exists('crypt') || !function_exists('hash') || !function_exists('openssl_encrypt'))
 			return false;
@@ -991,6 +993,16 @@ class Security
 	}
 
 	/**
+	 * Encrypt
+	 * @param $string
+	 * @param $key
+	 * @return bool|string
+	 */
+	public static function encrypt($string, $key = null) {
+		return self::crypt($string, $key, 'encrypt');
+	}
+
+	/**
 	 * Set Cookie
 	 * @param $name
 	 * @param $value
@@ -1004,7 +1016,7 @@ class Security
 	public static function setCookie($name, $value, $expires = 2592000, $path = "/", $domain = "", $secure = false, $httponly = false) {
 		$secure = self::checkHTTPS();
 		if ($name != self::$session_name) {
-			$cookie_value = (self::$cookies_encrypted) ? self::crypt($value) : $value;
+			$cookie_value = (self::$cookies_encrypted) ? self::encrypt($value) : $value;
 			if (!setcookie($name, $cookie_value, time() + $expires, $path."; SameSite=Strict", $domain, $secure, $httponly)) return false;
 			$_COOKIE[$name] = $value;
 			return true;
