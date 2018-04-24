@@ -48,7 +48,10 @@ $hide_errors = true;  // Hide php errors (useful for hide vulnerabilities)
 
 // Autostart
 $auto_session_manager = true; // Run session at start
+$auto_cookies_encrypt = true; // Auto encrypt cookies [PHP 5.3+]
+
 $auto_scanner = false; // Could have a bad performance impact and could detect false positive, then try the method secureScanPath before enable this. BE CAREFUL
+
 $auto_block_tor = true; // If you want block TOR clients
 $auto_clean_global = false; // Global clean at start
 $auto_antidos = true; // Block the client ip when there are too many requests

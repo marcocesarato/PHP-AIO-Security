@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.129
+ * @version   0.2.8.130
  */
 
 class Security
@@ -32,6 +32,7 @@ class Security
 
 	// Autostart
 	public static $auto_session_manager = true; // Run session at start
+	public static $auto_cookies_encrypt = true; // Auto encrypt cookies [PHP 5.3+]
 
 	public static $auto_scanner = false; // Could have a bad performance impact and could detect false positive,
 	// then try the method secureScanPath before enable this. BE CAREFUL
@@ -71,7 +72,8 @@ class Security
 				self::secureSession();
 			if (self::$auto_scanner)
 				self::secureScan(self::$scanner_path);
-			self::secureCookies();
+			if (self::$auto_cookies_encrypt)
+				self::secureCookies();
 			self::secureFormRequest();
 			self::secureCSRF();
 		}
@@ -222,11 +224,8 @@ class Security
 	 */
 	public static function secureCookies() {
 		foreach ($_COOKIE as $key => $value) {
-			if (self::$cookies_encrypted && $key != self::$session_name){
+			if ($key != self::$session_name) {
 				$value = self::getCookie($key);
-				$_COOKIE[$key] = $value;
-			} else {
-				$value = self::setCookie($key, $value);
 				$_COOKIE[$key] = $value;
 			}
 		}
@@ -286,7 +285,7 @@ class Security
 	 * @return string
 	 */
 	public static function compressOutput($buffer) {
-		if(ini_get('zlib.output_compression')) {
+		if (ini_get('zlib.output_compression')) {
 			ini_set("zlib.output_compression", 1);
 			ini_set("zlib.output_compression_level", "9");
 		}
@@ -299,7 +298,7 @@ class Security
 	 * @return null|string|string[]
 	 */
 	public static function compressHTML($buffer) {
-		if(ini_get('zlib.output_compression')) {
+		if (ini_get('zlib.output_compression')) {
 			ini_set("zlib.output_compression", 1);
 			ini_set("zlib.output_compression_level", "9");
 		}
@@ -329,7 +328,7 @@ class Security
 	 * @return string
 	 */
 	public static function compressCSS($buffer) {
-		if(ini_get('zlib.output_compression')) {
+		if (ini_get('zlib.output_compression')) {
 			ini_set("zlib.output_compression", 1);
 			ini_set("zlib.output_compression_level", "9");
 		}
@@ -342,7 +341,7 @@ class Security
 	 * @return string
 	 */
 	public static function compressJS($buffer) {
-		if(ini_get('zlib.output_compression')) {
+		if (ini_get('zlib.output_compression')) {
 			ini_set("zlib.output_compression", 1);
 			ini_set("zlib.output_compression_level", "9");
 		}
@@ -928,20 +927,20 @@ class Security
 	 * @return bool
 	 */
 	public static function secureDownload($filename, $name = null) {
-		if(!file_exists($filename)) return false;
+		if (!file_exists($filename)) return false;
 
 		$filename = realpath($filename);
 		$path_parts = pathinfo($filename);
 
-		if(in_array($path_parts['extension'], array('php','php5','php7','htaccess','config'))) return false;
+		if (in_array($path_parts['extension'], array('php', 'php5', 'php7', 'htaccess', 'config'))) return false;
 
 		ob_clean();
 
-		$name_string = (!empty($name)) ? 'name='.$name : 'name='.$path_parts['filename'];
+		$name_string = (!empty($name)) ? 'name=' . $name : 'name=' . $path_parts['filename'];
 
 		header('Content-Type: application/x-octet-stream');
 		header('Content-Transfer-Encoding: binary');
-		header('Content-Disposition: attachment; filename="' . basename($filename) . '";'.$name_string);
+		header('Content-Disposition: attachment; filename="' . basename($filename) . '";' . $name_string);
 
 		die(file_get_contents($filename));
 	}
@@ -1016,8 +1015,11 @@ class Security
 	public static function setCookie($name, $value, $expires = 2592000, $path = "/", $domain = "", $secure = false, $httponly = false) {
 		$secure = self::checkHTTPS();
 		if ($name != self::$session_name) {
-			$cookie_value = (self::$cookies_encrypted) ? self::encrypt($value) : $value;
-			if (!setcookie($name, $cookie_value, time() + $expires, $path."; SameSite=Strict", $domain, $secure, $httponly)) return false;
+			$cookie_encrypted = false;
+			if(self::$cookies_encrypted)
+				$cookie_encrypted = self::encrypt($value);
+			$cookie_value = (self::$cookies_encrypted && $cookie_encrypted != false) ? $cookie_encrypted : $value;
+			if (!setcookie($name, $cookie_value, time() + $expires, $path . "; SameSite=Strict", $domain, $secure, $httponly)) return false;
 			$_COOKIE[$name] = $value;
 			return true;
 		}
@@ -1044,7 +1046,10 @@ class Security
 	 */
 	public static function getCookie($name) {
 		if (isset($_COOKIE[$name])) {
-			$cookie = (self::$cookies_encrypted) ? self::decrypt($_COOKIE[$name]) : $_COOKIE[$name];
+			$cookie_decrypted = false;
+			if(self::$cookies_encrypted)
+				$cookie_decrypted = self::decrypt($_COOKIE[$name]);
+			$cookie = (self::$cookies_encrypted && $cookie_decrypted != false) ? $cookie_decrypted : $_COOKIE[$name];
 			return $cookie;
 		}
 		return null;
