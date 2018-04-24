@@ -20,7 +20,8 @@ class Security
 	public static $session_regenerate_id = false; // Regenerate session id
 	public static $csrf_session = "_CSRFTOKEN"; // CSRF session token name
 	public static $csrf_formtoken = "_FORMTOKEN"; // CSRF form token input name
-	public static $cookies_encrypted = false; // Encrypt cookies (need Security::getCookie for decrypt) [PHP 5.3+]
+	public static $cookies_encrypted = false; // Encrypt cookies (need Security::setCookie for encrypt) [PHP 5.3+]
+	public static $cookies_enc_prefix = 'SEC_'; // Cookies encrypted prefix
 	public static $headers_cache = true; // Enable header cache
 	public static $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
 	public static $scanner_path = "./*.php"; // Folder to scan at start and optionally the file extension
@@ -32,7 +33,7 @@ class Security
 
 	// Autostart
 	public static $auto_session_manager = true; // Run session at start
-	public static $auto_cookies_encrypt = true; // Auto encrypt cookies [PHP 5.3+]
+	public static $auto_cookies_decrypt = false; // Auto encrypt cookies [PHP 5.3+]
 
 	public static $auto_scanner = false; // Could have a bad performance impact and could detect false positive,
 	// then try the method secureScanPath before enable this. BE CAREFUL
@@ -72,7 +73,7 @@ class Security
 				self::secureSession();
 			if (self::$auto_scanner)
 				self::secureScan(self::$scanner_path);
-			if (self::$auto_cookies_encrypt)
+			if (self::$auto_cookies_decrypt)
 				self::secureCookies();
 			self::secureFormRequest();
 			self::secureCSRF();
@@ -224,7 +225,7 @@ class Security
 	 */
 	public static function secureCookies() {
 		foreach ($_COOKIE as $key => $value) {
-			if ($key != self::$session_name) {
+			if ($key != self::$session_name && self::isBase64($value)) {
 				$value = self::getCookie($key);
 				$_COOKIE[$key] = $value;
 			}
@@ -356,6 +357,18 @@ class Security
 	public static function isHTML($string) {
 		//return self::secureStripTagsContent($string) == '' ? true : false;
 		return preg_match('/<html.*>/', $string) ? true : false;
+	}
+
+	/**
+	 * Check if string is base64
+	 * @param $string
+	 * @return bool
+	 */
+	public static function isBase64($string) {
+		$charset_base64 = (bool) preg_match('#^[a-zA-Z0-9+/]+={0,2}$#', $string);
+		if (base64_encode(base64_decode($string, true)) === $string && $charset_base64)
+			return true;
+		return false;
 	}
 
 	/**
@@ -969,8 +982,12 @@ class Security
 		$iv = substr(hash('sha512', $secret_iv), 0, 16);
 		switch ($action) {
 			case 'decrypt':
-				$string = base64_decode($string);
-				$output = openssl_decrypt($string, $encrypt_method, $key, 0, $iv);
+				if(self::isBase64($string)) {
+					$string = base64_decode($string);
+					$output = openssl_decrypt($string, $encrypt_method, $key, 0, $iv);
+				} else {
+					$output = $string;
+				}
 				break;
 			case 'encrypt':
 			default:
@@ -1013,14 +1030,23 @@ class Security
 	 * @return bool
 	 */
 	public static function setCookie($name, $value, $expires = 2592000, $path = "/", $domain = "", $secure = false, $httponly = false) {
+
+		if(self::$cookies_encrypted)
+			$name = self::$cookies_enc_prefix.$name;
+
 		$secure = self::checkHTTPS();
+
 		if ($name != self::$session_name) {
+
 			$cookie_encrypted = false;
 			if(self::$cookies_encrypted)
 				$cookie_encrypted = self::encrypt($value);
+
 			$cookie_value = (self::$cookies_encrypted && $cookie_encrypted != false) ? $cookie_encrypted : $value;
+
 			if (!setcookie($name, $cookie_value, time() + $expires, $path . "; SameSite=Strict", $domain, $secure, $httponly)) return false;
 			$_COOKIE[$name] = $value;
+
 			return true;
 		}
 		return false;
@@ -1045,11 +1071,16 @@ class Security
 	 * @return null
 	 */
 	public static function getCookie($name) {
+
+		if(self::$cookies_encrypted)
+			$name = self::$cookies_enc_prefix.$name;
+
+		$cookie_decrypted = false;
+		if(self::$cookies_encrypted)
+			$cookie_decrypted = self::decrypt($_COOKIE[$name]);
+
 		if (isset($_COOKIE[$name])) {
-			$cookie_decrypted = false;
-			if(self::$cookies_encrypted)
-				$cookie_decrypted = self::decrypt($_COOKIE[$name]);
-			$cookie = (self::$cookies_encrypted && $cookie_decrypted != false) ? $cookie_decrypted : $_COOKIE[$name];
+			$cookie = (self::$cookies_encrypted && $cookie_decrypted != false)  ? $cookie_decrypted : $_COOKIE[$name];
 			return $cookie;
 		}
 		return null;
@@ -1070,7 +1101,7 @@ class Security
 			$output = str_replace('${ERROR_BODY}', $message, $output);
 			die($output);
 		}
-		call_user_func(self::$error_callback, $code);
+		call_user_func(self::$error_callback, $code, $message, $title);
 		return true;
 	}
 

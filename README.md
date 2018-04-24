@@ -38,6 +38,7 @@ $csrf_session = "_CSRFTOKEN"; // CSRF session token name
 $csrf_formtoken = "_FORMTOKEN"; // CSRF form token input name 
 $headers_cache = true; // Enable header cache
 $cookies_encrypted = false; // Encrypt cookies [PHP 5.3+]
+$cookies_enc_prefix = 'SEC_'; // Cookies encrypted prefix
 $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
 $scanner_path = "./*.php"; // Folder to scan at start and optionally the file extension
 $scanner_whitelist = array('./shell.php','./libs'); // Example of scan whitelist
@@ -48,7 +49,7 @@ $hide_errors = true;  // Hide php errors (useful for hide vulnerabilities)
 
 // Autostart
 $auto_session_manager = true; // Run session at start
-$auto_cookies_encrypt = true; // Auto encrypt cookies [PHP 5.3+]
+$auto_cookies_decrypt = true; // Auto encrypt cookies [PHP 5.3+]
 
 $auto_scanner = false; // Could have a bad performance impact and could detect false positive, then try the method secureScanPath before enable this. BE CAREFUL
 
