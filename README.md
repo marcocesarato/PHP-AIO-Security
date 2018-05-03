@@ -221,7 +221,7 @@ USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 | Method         | Params                                                       | Return | Description                                                  |
 | -------------- | ------------------------------------------------------------ | ------ | ------------------------------------------------------------ |
 | output         | \$buffer, \$type = (html\|css\|js\|json\|xml\|csv\|txt), $cache_days = null, \$compress = true | String | Put in safety HTML if is HTML, compress HTML if is HTML, check for CSRF and add cache headers if isn't HTML (usually used with ob_start) |
-| secureHTML     | $buffer                                                      | String | Put in safety some html elements on output buffer and add automatically the CSRF token |
+| secureHTML     | $buffer                                                      | String | Put in safety some html elements, block old browsers console scripts executions on output buffer and add automatically the CSRF token |
 | captcha        | $base64 = false                                              | Void   | Print captcha image and die or if base64 return the image in base64. |
 | captchaVerify  | \$input_name = 'captcha'                                     | Void   | Validate captcha                                             |
 | captchaPrint   | \$class = '', \$input_name = 'captcha'                       | String | Return the captcha input field and the image in html         |
