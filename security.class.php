@@ -88,7 +88,6 @@ class Security
 		if (self::$auto_block_tor)
 			self::secureBlockTor();
 
-
 		self::saveUnsafeGlobals();
 		if (self::$auto_clean_global) {
 			self::cleanGlobals();
@@ -388,8 +387,8 @@ class Security
 		$days_to_cache = self::$headers_cache_days * (60 * 60 * 24);
 		$ts = gmdate("D, d M Y H:i:s", time() + $days_to_cache) . " GMT";
 		$tags = $doc->getElementsByTagName('head');
-		foreach ($tags as $tag) {
 
+		foreach ($tags as $tag) {
 			$item = $doc->createElement("meta");
 			$item->setAttribute("http-equiv", "cache-control");
 			$item->setAttribute("content", "max-age=$days_to_cache, must-revalidate");
@@ -403,6 +402,24 @@ class Security
 			$item = $doc->createElement("meta");
 			$item->setAttribute("http-equiv", "pragma");
 			$item->setAttribute("content", "cache");
+			$tag->appendChild($item);
+
+			$item = $doc->createElement("script", "
+			(function() {
+			    var _z = console;
+				Object.defineProperty( window, \"console\", {
+					get : function(){
+					    if( _z._commandLineAPI ){
+						throw \"Sorry, Can't execute scripts!\";
+					          }
+					    return _z; 
+					},
+					set : function(val){
+					    _z = val;
+					}
+				});
+			});");
+			$item->setAttribute("type", "text/javascript");
 			$tag->appendChild($item);
 		}
 
@@ -430,6 +447,7 @@ class Security
 		foreach ($tags as $tag) {
 			$tag->setAttribute("rel", "noopener noreferrer");
 		}
+
 		$output = $doc->saveHTML();
 		return $output;
 	}
