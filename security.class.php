@@ -7,12 +7,17 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.133
+ * @version   0.2.8.134
  */
 
 class Security
 {
-	// Config
+
+	/*********************************************
+	 *             Security settings
+	 *  Change these settings based on your needs
+	 *********************************************/
+
 	public static $basedir = __DIR__; // Project basedir where is located .htaccess
 	public static $salt = "_SALT"; // Salt for crypt
 	public static $session_name = "XSESSID"; // Session cookie name
@@ -46,6 +51,12 @@ class Security
 	public static $error_callback = null; // Set a callback on errors
 	public static $error_template = '<html><head><title>${ERROR_TITLE}</title></head><body>${ERROR_BODY}</body></html>';
 
+	/*******************************************/
+
+	// Protected
+	protected static $salt_encoded = null;
+
+	// Private
 	private static $_UNSAFE_GLOB = array();
 
 	/**
@@ -103,13 +114,16 @@ class Security
 	 * @return bool|string
 	 */
 	protected static function getSalt() {
-		$required_salt_len = 22;
-		$base64_digits = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-		$bcrypt64_digits = './ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-		$base64_string = base64_encode(self::$salt);
-		$salt = strtr(rtrim($base64_string, '='), $base64_digits, $bcrypt64_digits);
-		$salt = substr($salt, 0, $required_salt_len);
-		return $salt;
+		if(empty(self::$salt_encoded)) {
+			$required_salt_len = 22;
+			$base64_digits = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+			$bcrypt64_digits = './ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+			$base64_string = base64_encode(self::$salt);
+			$salt = strtr(rtrim($base64_string, '='), $base64_digits, $bcrypt64_digits);
+			$salt = substr($salt, 0, $required_salt_len);
+			self::$salt_encoded = $salt;
+		}
+		return self::$salt_encoded;
 	}
 
 	/**
@@ -160,7 +174,7 @@ class Security
 		} elseif ($type == 'js' || $type == 'javascript') {
 			header('Content-Type: application/javascript');
 			if ($compress_output) $buffer = self::compressJS($buffer);
-		} elseif ($type == 'json') {
+		} elseif ($type == 'json' && !empty(json_decode($buffer))) {
 			header('Content-Type: application/json');
 			if ($compress_output) $buffer = self::compressOutput($buffer);
 		} elseif ($type == 'xml') {
