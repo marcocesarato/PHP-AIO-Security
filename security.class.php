@@ -57,6 +57,7 @@ class Security
 	protected static $salt_encoded = null;
 
 	// Private
+	private static $savedGlobals = false;
 	private static $_UNSAFE_GLOB = array();
 
 	/**
@@ -480,8 +481,6 @@ class Security
 		$_REQUEST = array_merge($_GET, $_POST);
 	}
 
-	private static $savedGlobals = false;
-
 	/**
 	 * Save uncleaned globals
 	 */
@@ -731,7 +730,7 @@ class Security
 	 * CSRF token compare
 	 * @return bool
 	 */
-	private static function secureCSRFCompare() {
+	protected static function secureCSRFCompare() {
 		$referer = $_SERVER["HTTP_REFERER"];
 		if (!isset($referer)) return false;
 		if (strpos($_SERVER["SERVER_NAME"], $referer) != 0) return false;
@@ -746,7 +745,7 @@ class Security
 	/**
 	 * Generate CSRF Token
 	 */
-	private static function secureCSRFGenerate() {
+	protected static function secureCSRFGenerate() {
 		$guid = self::generateGUID();
 		$_SESSION[self::$csrf_session] = md5($guid . time() . ":" . session_id());
 	}
@@ -837,7 +836,7 @@ class Security
 	/**
 	 * Prevent Fake Google Bots
 	 */
-	private static function blockFakeGoogleBots() {
+	protected static function blockFakeGoogleBots() {
 		$user_agent = (isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '');
 		if (preg_match('/googlebot/i', $user_agent, $matches)) {
 			$ip = self::clientIP();
@@ -1292,7 +1291,7 @@ class Security
 	 * @param int $flags
 	 * @return array
 	 */
-	private static function recursiveGlob($pattern, $flags = 0) {
+	protected static function recursiveGlob($pattern, $flags = 0) {
 		$files = glob($pattern, $flags);
 		foreach (glob(dirname($pattern) . '/*', GLOB_ONLYDIR | GLOB_NOSORT) as $dir) {
 			$files = array_merge($files, self::recursiveGlob($dir . '/' . basename($pattern), $flags));
@@ -1303,7 +1302,7 @@ class Security
 	/**
 	 * Check if the request is HTTPS
 	 */
-	private static function checkHTTPS() {
+	public static function checkHTTPS() {
 		if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) {
 			return true;
 		}
@@ -1315,7 +1314,7 @@ class Security
 	 * @param $ip
 	 * @param $file_attempts
 	 */
-	private static function secureDOSWriteAttempts($ip, $file_attempts) {
+	protected static function secureDOSWriteAttempts($ip, $file_attempts) {
 		$ip_quote = preg_quote($ip);
 		$content = @file_get_contents($file_attempts);
 		if (preg_match("/### BEGIN: DOS Attempts ###[\S\s.]*# $ip_quote => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\S\s.]*### END: DOS Attempts ###/i", $content, $attemps)) {
@@ -1339,7 +1338,7 @@ class Security
 	 * @param $ip
 	 * @param $file_attempts
 	 */
-	private static function secureDOSRemoveAttempts($ip, $file_attempts) {
+	protected static function secureDOSRemoveAttempts($ip, $file_attempts) {
 		$ip_quote = preg_quote($ip);
 		$content = @file_get_contents($file_attempts);
 		if (preg_match("/### BEGIN: DOS Attempts ###[\S\s.]*[\r\n]+# $ip_quote => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\S\s.]*### END: DOS Attempts ###/i", $content, $attemps)) {
@@ -1353,7 +1352,7 @@ class Security
 	 * @param $time_expire
 	 * @param $file_attempts
 	 */
-	private static function secureDOSRemoveOldAttempts($time_expire, $file_attempts) {
+	protected static function secureDOSRemoveOldAttempts($time_expire, $file_attempts) {
 		$time = $_SERVER['REQUEST_TIME'];
 		$pattern = "/# ((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])) => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\r\n]+/i";
 		$content = @file_get_contents($file_attempts);
@@ -1373,7 +1372,7 @@ class Security
 	 * @param $ip
 	 * @param $content
 	 */
-	private static function secureDOSReadAttempts($ip, $content) {
+	protected static function secureDOSReadAttempts($ip, $content) {
 		$ip_quote = preg_quote($ip);
 		if (preg_match("/### BEGIN: DOS Attempts ###[\S\s.]*[\r\n]+# $ip_quote => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\S\s.]*### END: DOS Attempts ###/i", $content, $attemps)) {
 			$_SESSION['DOS_ATTEMPTS_TIMER'] = $attemps[1];
