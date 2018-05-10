@@ -245,6 +245,7 @@ USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 | passwordVerify           | \$password, \$hash                                           | Boolean | Verify if password hash (returned by passwordHash) match     |
 | getCookie                | $name                                                        | String  | Get decrypted cookie                                         |
 | setCookie                | \$name, \$value, \$expires = 2592000, \$path = "/", \$domain = null, \$secure = false, \$httponly = true | Boolean | Set encrypted cookie                                         |
+| checkHTTPS               | -                                                            | Boolean | Check if site is running over https                          |
 | unsetCookie              | $name                                                        | String  | Unset a cookie                                               |
 | clientIP                 | -                                                            | String  | Get real client IP address                                   |
 | clientIsTor              | -                                                            | Boolean | Check if client use TOR                                      |
