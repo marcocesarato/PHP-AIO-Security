@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.134
+ * @version   0.2.8.136
  */
 
 class Security
@@ -54,10 +54,10 @@ class Security
 	/*******************************************/
 
 	// Protected
-	protected static $salt_encoded = null;
+	protected static $_salt_encoded = null;
 
 	// Private
-	private static $savedGlobals = false;
+	private static $_saved_unsafe_glob = false;
 	private static $_UNSAFE_GLOB = array();
 
 	/**
@@ -115,16 +115,16 @@ class Security
 	 * @return bool|string
 	 */
 	protected static function getSalt() {
-		if(empty(self::$salt_encoded)) {
+		if(empty(self::$_salt_encoded)) {
 			$required_salt_len = 22;
 			$base64_digits = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 			$bcrypt64_digits = './ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 			$base64_string = base64_encode(self::$salt);
 			$salt = strtr(rtrim($base64_string, '='), $base64_digits, $bcrypt64_digits);
 			$salt = substr($salt, 0, $required_salt_len);
-			self::$salt_encoded = $salt;
+			self::$_salt_encoded = $salt;
 		}
-		return self::$salt_encoded;
+		return self::$_salt_encoded;
 	}
 
 	/**
@@ -485,7 +485,7 @@ class Security
 	 * Save uncleaned globals
 	 */
 	private static function saveUnsafeGlobals() {
-		if (!self::$savedGlobals) {
+		if (!self::$_saved_unsafe_glob) {
 			self::$_UNSAFE_GLOB['UNSAFE_SERVER'] = $_SERVER;
 			self::$_UNSAFE_GLOB['UNSAFE_COOKIE'] = $_COOKIE;
 			self::$_UNSAFE_GLOB['UNSAFE_GET'] = $_GET;
@@ -493,7 +493,7 @@ class Security
 			self::$_UNSAFE_GLOB['UNSAFE_REQUEST'] = $_REQUEST;
 			foreach (self::$_UNSAFE_GLOB as $key => $value)
 				$GLOBALS[$key] = $value;
-			self::$savedGlobals = true;
+			self::$_saved_unsafe_glob = true;
 		}
 	}
 
