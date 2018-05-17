@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.139
+ * @version   0.2.8.140
  */
 
 class Security
@@ -1372,10 +1372,14 @@ class Security
 		$content = @file_get_contents($file_attempts);
 		if (preg_match_all($pattern, $content, $attemps)) {
 			foreach ($attemps as $attemp) {
-				preg_match($pattern, $attemp[0], $attemp);
-				$ip_quote = preg_quote($attemp[1]);
-				if ($time > $attemp[5] + $time_expire || $time > $attemp[8] + $time_expire)
-					$content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)([\r\n]+# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i", "$1$3", $content);
+				if (!empty($attemp[0])) {
+					preg_match($pattern, $attemp[0], $attemp);
+					if (!empty($attemp)) {
+						$ip_quote = preg_quote($attemp[1]);
+						if ($time > $attemp[5] + $time_expire || $time > $attemp[8] + $time_expire)
+							$content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)([\r\n]+# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i", "$1$3", $content);
+					}
+				}
 			}
 		}
 		file_put_contents($file_attempts, $content);
