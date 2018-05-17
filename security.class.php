@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.141
+ * @version   0.2.8.142
  */
 
 class Security
@@ -393,6 +393,8 @@ class Security
 	public static function secureHTML($buffer) {
 
 		$buffer = preg_replace("/<script(?!.*(src\\=))[^>]*>/", "<script type=\"text/javascript\">", $buffer);
+
+		libxml_use_internal_errors(true);
 
 		$doc = new DOMDocument();
 		$doc->formatOutput = true;
