@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.140
+ * @version   0.2.8.141
  */
 
 class Security
@@ -188,7 +188,7 @@ class Security
 			if ($compress_output) $buffer = self::compressOutput($buffer);
 		}
 
-		header('Content-Length: ' . strlen($buffer)); // For cache header
+		@header('Content-Length: ' . strlen($buffer)); // For cache header
 
 		return $buffer;
 	}
