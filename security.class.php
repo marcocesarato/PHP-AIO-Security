@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.143
+ * @version   0.2.8.144
  */
 
 class Security
@@ -161,7 +161,7 @@ class Security
 
 		$compress_output = (self::$compress_output && $compress);
 
-		if ($type = 'html' && self::isHTML($buffer)) {
+		if ($type == 'html' && self::isHTML($buffer)) {
 			header("Content-Type: text/html");
 			$buffer = self::secureHTML($buffer);
 			if ($compress_output) $buffer = self::compressHTML($buffer);
