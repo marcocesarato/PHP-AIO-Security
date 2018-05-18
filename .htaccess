@@ -7,15 +7,15 @@ Options All -Indexes
 # Hide server informations
 ServerSignature Off
 
-LimitRequestBody 10240000
+#LimitRequestBody 10240000
 
 # Security php settings
-php_flag expose_php off
-php_flag allow_url_fopen off
-php_flag magic_quotes_gpc  off
-php_flag register_globals off
-php_flag session.cookie_httponly on
-php_flag session.use_only_cookies on
+#php_flag expose_php off
+#php_flag allow_url_fopen off
+#php_flag magic_quotes_gpc  off
+#php_flag register_globals off
+#php_flag session.cookie_httponly on
+#php_flag session.use_only_cookies on
 
 # Headers protection/improvements
 <IfModule mod_headers.c>
