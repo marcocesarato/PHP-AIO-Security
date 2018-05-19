@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.145
+ * @version   0.2.8.146
  */
 
 class Security
@@ -34,6 +34,7 @@ class Security
 	public static $escape_string = true; // If you use PDO I recommend to set this to false
 	public static $clean_post_xss = true; // Remove XSS on post global
 	public static $compress_output = true; // Compress output
+    public static $force_https = false; // Force HTTPS
 	public static $hide_errors = true; // Hide php errors (useful for hide vulnerabilities)
 
 	// Autostart
@@ -78,6 +79,13 @@ class Security
 			ini_set('display_errors', 0);
 			ini_set('display_startup_errors', 0);
 			error_reporting(0);
+		}
+
+		if(self::$force_https && self::checkHTTPS()){
+			$redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+			header('HTTP/1.1 301 Moved Permanently');
+			header('Location: ' . $redirect);
+			die();
 		}
 
 		if (!$API) {

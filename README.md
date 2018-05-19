@@ -45,6 +45,7 @@ $scanner_whitelist = array('./shell.php','./libs'); // Example of scan whitelist
 $escape_string = true; // If you use PDO I recommend to set this to false
 $clean_post_xss = true; // Remove XSS on post global
 $compress_output = true; // Compress output
+$force_https = false; // Force HTTPS
 $hide_errors = true;  // Hide php errors (useful for hide vulnerabilities)
 
 // Autostart
