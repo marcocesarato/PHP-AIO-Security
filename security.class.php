@@ -949,11 +949,12 @@ class Security
 	 * Hijacking prevention
 	 */
 	public static function secureHijacking() {
-		if (!empty($_SESSION['HTTP_USER_TOKEN']) && $_SESSION['HTTP_USER_TOKEN'] != md5($_SERVER['HTTP_USER_AGENT'] . ':' . self::clientIP() . ':' . self::getSalt())) {
-			session_unset();
-			session_destroy();
-			self::error(403, 'Permission denied!');
-		}
+        if (!empty($_SESSION['HTTP_USER_TOKEN']) && $_SESSION['HTTP_USER_TOKEN'] != md5($_SERVER['HTTP_USER_AGENT'] . ':' . self::clientIP() . ':' . self::getSalt())) {
+            session_unset();
+            session_destroy();
+            $_POST = array();
+            $_REQUEST = array();
+        }
 
 		$_SESSION['HTTP_USER_TOKEN'] = md5($_SERVER['HTTP_USER_AGENT'] . ':' . self::clientIP() . ':' . self::getSalt());
 	}
