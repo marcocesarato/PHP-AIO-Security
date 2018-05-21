@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.146
+ * @version   0.2.8.148
  */
 
 class Security
@@ -27,7 +27,7 @@ class Security
 	public static $csrf_formtoken = "_FORMTOKEN"; // CSRF form token input name
 	public static $cookies_encrypted = false; // Encrypt cookies (need Security::setCookie for encrypt) [PHP 5.3+]
 	public static $cookies_enc_prefix = 'SEC_'; // Cookies encrypted prefix
-	public static $headers_cache = false; // Enable header cache (CARE SOME HOST DOSNT PERMIT IT)
+	public static $headers_cache = false; // Enable header cache (CARE SOME HOST DON'T PERMIT IT)
 	public static $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
 	public static $scanner_path = "./*.php"; // Folder to scan at start and optionally the file extension
 	public static $scanner_whitelist = array(); // Scan paths/files whitelist
