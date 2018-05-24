@@ -34,7 +34,7 @@ class Security
 	public static $escape_string = true; // If you use PDO I recommend to set this to false
 	public static $clean_post_xss = true; // Remove XSS on post global
 	public static $compress_output = true; // Compress output
-    public static $force_https = false; // Force HTTPS
+   	public static $force_https = false; // Force HTTPS
 	public static $hide_errors = true; // Hide php errors (useful for hide vulnerabilities)
 
 	// Autostart
@@ -1544,7 +1544,7 @@ class Security
 			'7' => 'T',
 			'8' => 'B',
 		);
-		$special = '_=-+#@%&*!?';
+		$special = '_=-+#@%&*!?;:.,\\/';
 		$string = strtolower($string);
 
 		$estr = explode(' ', $string);
@@ -1571,6 +1571,36 @@ class Security
 		$string = implode(' ', $estr);
 		$string = str_replace(' ', $special[rand(0, strlen($special) - 1)], $string);
 		return $string;
+	}
+	
+	/**
+	 * Return password strength score
+	 * @param $password
+	 * @return int
+	 */
+	public static function passwordStrength($password){
+
+		$score = 0;
+
+		$uppercase = preg_match('/[A-Z]/', $password);
+		$lowercase = preg_match('/[a-z]/', $password);
+		$number    = preg_match('/[0-9]/', $password);
+		$special_1 = preg_match('/[\-\_\=\+\&\!\?\;\.\,]/', $password);
+		$special_2 = preg_match('/[\#\%\@\*\\\'\>\>\\\\\/\$\[\]\(\)]/', $password);
+		$special_3 = preg_match('/[\|^\`\~\±\{\}\§]/', $password);
+
+		if($uppercase) $score++;
+		if($lowercase) $score++;
+		if($number) $score++;
+		if(strlen($password) < 6) $score++;
+		if(strlen($password) < 8) $score++;
+		if(strlen($password) < 10) $score++;
+
+		if($special_1) $score++;
+		else if($special_2) $score += 2;
+		else if($special_3) $score += 3;
+
+		return $score;
 	}
 
 	/**
