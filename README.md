@@ -1,7 +1,5 @@
 # PHP AIO Security Class + Antimalware
 
-![](cover.png)
-
 __Version 0.2.8__
 
 
@@ -158,6 +156,8 @@ Enjoy!
 
 ### AMWSCAN - PHP Antimalware Scanner
 
+![](cover.png)
+
 On the __Demo__ folder there is also my __antimalware__ (Demo/scanner.php) that use the scan definitions of __PHP AIO Security Class__. To use it you run the php file from a console try it! 
 
 __Suggestion:__ if you run the scanner on a Wordpress project type _--exploits_ as argument for a better check.
@@ -247,6 +247,7 @@ USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 | generateFriendlyPassword | \$string, \$strong_lv = 1                                    | String  | Generate a user friendly random password. Strong level go from 0 to 2.<br /><br />EXAMPLE: <br />Marco Cesarato 1996 <br />Ce$Ar4t0_m4RCo_1996 |
 | passwordHash             | \$password, \$cost = 10 (4-30)                               | String  | Hash the passwords                                           |
 | passwordVerify           | \$password, \$hash                                           | Boolean | Verify if password hash (returned by passwordHash) match     |
+| passwordStrength         | \$password                                                   | Integer | Return password strength score from 0 to 10 (under 6 is a bad score) |
 | getCookie                | $name                                                        | String  | Get decrypted cookie                                         |
 | setCookie                | \$name, \$value, \$expires = 2592000, \$path = "/", \$domain = null, \$secure = false, \$httponly = true | Boolean | Set encrypted cookie                                         |
 | checkHTTPS               | -                                                            | Boolean | Check if site is running over https                          |

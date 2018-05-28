@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.150
+ * @version   0.2.8.151
  */
 
 class Security
@@ -437,7 +437,7 @@ class Security
 					    if( _z._commandLineAPI ){
 						throw \"Sorry, Can't execute scripts!\";
 					          }
-					    return _z; 
+					    return _z;
 					},
 					set : function(val){
 					    _z = val;
@@ -1572,9 +1572,9 @@ class Security
 		$string = str_replace(' ', $special[rand(0, strlen($special) - 1)], $string);
 		return $string;
 	}
-	
+
 	/**
-	 * Return password strength score
+	 * Return password strength score from 0 to 10 (under 6 is a bad score)
 	 * @param $password
 	 * @return int
 	 */
@@ -1609,10 +1609,11 @@ class Security
 		if($special_3) $score += 3;
 
 		// Special cases
-		if($score > 6 && strlen($password) < 4) $score = 2;
-		else if($score > 6 && strlen($password) < 5) $score = 3;
-		else if($score > 6 && strlen($password) < 6) $score = 5;
-		else if($score > $max_score) $score = $max_score;
+		if($score > 6 && strlen($password) < 4) return 2;
+		else if($score > 6 && strlen($password) < 5) return 3;
+		else if($score > 6 && strlen($password) < 6) return 5;
+		else if($score > $max_score) return $max_score;
+		if($score < 0) return 0;
 
 		return $score;
 	}
