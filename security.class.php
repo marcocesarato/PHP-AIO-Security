@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.148
+ * @version   0.2.8.150
  */
 
 class Security
@@ -1578,27 +1578,41 @@ class Security
 	 * @param $password
 	 * @return int
 	 */
-	public static function passwordStrength($password){
+	function passwordStrength($password){
 
 		$score = 0;
+		$max_score = 10;
 
 		$uppercase = preg_match('/[A-Z]/', $password);
 		$lowercase = preg_match('/[a-z]/', $password);
 		$number    = preg_match('/[0-9]/', $password);
 		$special_1 = preg_match('/[\-\_\=\+\&\!\?\;\.\,]/', $password);
-		$special_2 = preg_match('/[\#\%\@\*\\\'\>\>\\\\\/\$\[\]\(\)]/', $password);
-		$special_3 = preg_match('/[\|^\`\~\±\{\}\§]/', $password);
+		$special_2 = preg_match('/[\#\%\@\*\\\'\>\>\\\\\/\$\[\]\(\)\{\}\|]/', $password);
+		$special_3 = preg_match('/[\^\`\~\±\§]/', $password);
 
-		if($uppercase) $score++;
-		if($lowercase) $score++;
-		if($number) $score++;
-		if(strlen($password) < 6) $score++;
-		if(strlen($password) < 8) $score++;
-		if(strlen($password) < 10) $score++;
+		// Length
+		if(strlen($password) >= 6) $score++;
+		if(strlen($password) >= 8) $score++;
+		if(strlen($password) >= 10) $score++;
+		if(strlen($password) >= 12) $score++;
 
-		if($special_1) $score++;
-		else if($special_2) $score += 2;
-		else if($special_3) $score += 3;
+		// Chars
+		if(strlen(count_chars($password, 3)) == strlen($password)) $score += 2;
+		else if(strlen(count_chars($password, 3)) > (strlen($password) / 1.5)) $score += 1;
+		if(strlen(count_chars($password, 3)) == 1) $score = 1;
+
+		// Chars case and type
+		if($uppercase) $score++; else if($score > 3) $score -= 2; else if($score > 2) $score--;
+		if($lowercase) $score++; else if($score > 3) $score -= 2; else if($score > 2) $score--;
+		if($number) $score++; else if($score > 3) $score -= 2; else if($score > 2) $score--;
+		if($special_2) $score += 2; else if($special_1) $score++;
+		if($special_3) $score += 3;
+
+		// Special cases
+		if($score > 6 && strlen($password) < 4) $score = 2;
+		else if($score > 6 && strlen($password) < 5) $score = 3;
+		else if($score > 6 && strlen($password) < 6) $score = 5;
+		else if($score > $max_score) $score = $max_score;
 
 		return $score;
 	}

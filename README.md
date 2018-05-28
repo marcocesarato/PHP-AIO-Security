@@ -1,4 +1,7 @@
 # PHP AIO Security Class + Antimalware
+
+![](cover.png)
+
 __Version 0.2.8__
 
 
