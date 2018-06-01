@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.151
+ * @version   0.2.8.152
  */
 
 class Security
@@ -488,7 +488,7 @@ class Security
 		$_COOKIE = self::clean($_COOKIE, false);
 		$_GET = self::clean($_GET, false, false);
 		$_POST = self::clean($_POST, true, true, true, self::$clean_post_xss);
-		$_REQUEST = array_merge($_GET, $_POST);
+		$_REQUEST = array_unique(array_merge($_GET, $_POST, array_diff_assoc($_REQUEST,$_COOKIE)));
 	}
 
 	/**
@@ -526,15 +526,15 @@ class Security
 		// SERVER
 		$compare['SERVER']['current'] = $_SERVER;
 		$compare['SERVER']['unsafe'] = self::$_UNSAFE_GLOB['UNSAFE_SERVER'];
-		$compare['SERVER']['safe'] = self::clean(self::$_UNSAFE_GLOB['UNSAFE_SERVER']);
+		$compare['SERVER']['safe'] = self::clean(self::$_UNSAFE_GLOB['UNSAFE_SERVER'], false, false);
 		// COOKIE
 		$compare['COOKIE']['current'] = $_COOKIE;
 		$compare['COOKIE']['unsafe'] = self::$_UNSAFE_GLOB['UNSAFE_COOKIE'];
-		$compare['COOKIE']['safe'] = self::clean(self::$_UNSAFE_GLOB['UNSAFE_COOKIE']);
+		$compare['COOKIE']['safe'] = self::clean(self::$_UNSAFE_GLOB['UNSAFE_COOKIE'], false);
 		// GET
 		$compare['GET']['current'] = $_GET;
 		$compare['GET']['unsafe'] = self::$_UNSAFE_GLOB['UNSAFE_GET'];
-		$compare['GET']['safe'] = self::clean(self::$_UNSAFE_GLOB['UNSAFE_GET']);
+		$compare['GET']['safe'] = self::clean(self::$_UNSAFE_GLOB['UNSAFE_GET'], false, false);
 		// POST
 		$compare['POST']['current'] = $_POST;
 		$compare['POST']['unsafe'] = self::$_UNSAFE_GLOB['UNSAFE_POST'];
@@ -542,7 +542,7 @@ class Security
 		// REQUEST
 		$compare['REQUEST']['current'] = $_REQUEST;
 		$compare['REQUEST']['unsafe'] = self::$_UNSAFE_GLOB['UNSAFE_REQUEST'];
-		$compare['REQUEST']['safe'] = self::clean(self::$_UNSAFE_GLOB['UNSAFE_REQUEST']);
+		$compare['REQUEST']['safe'] = array_merge($compare['POST']['safe'], $compare['GET']['safe'], array_diff_assoc(self::$_UNSAFE_GLOB['UNSAFE_REQUEST'],self::$_UNSAFE_GLOB['UNSAFE_COOKIE']));
 		return $compare;
 	}
 
