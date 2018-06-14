@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.152
+ * @version   0.2.8.153
  */
 
 class Security
@@ -183,7 +183,7 @@ class Security
 		} elseif ($type == 'js' || $type == 'javascript') {
 			header('Content-Type: application/javascript');
 			if ($compress_output) $buffer = self::compressJS($buffer);
-		} elseif ($type == 'json' && !empty(json_decode($buffer))) {
+		} elseif ($type == 'json' && json_decode($buffer) != false) {
 			header('Content-Type: application/json');
 			if ($compress_output) $buffer = self::compressOutput($buffer);
 		} elseif ($type == 'xml') {
