@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.153
+ * @version   0.2.8.154
  */
 
 class Security
@@ -88,9 +88,10 @@ class Security
 			die();
 		}
 
+        if (self::$auto_session_manager)
+            self::secureSession();
+
 		if (!$API) {
-			if (self::$auto_session_manager)
-				self::secureSession();
 			if (self::$auto_scanner)
 				self::secureScan(self::$scanner_path);
 			if (self::$auto_cookies_decrypt)
