@@ -1,14 +1,15 @@
 # PHP AIO Security Class + Antimalware
 
-__Version 0.2.8__
+**Version:** 0.2.8.155 beta
 
+**Github:** https://github.com/marcocesarato/PHP-AIO-Security-Class
 
+**Author:** Marco Cesarato
 
 _IF YOU USE ON YOUR PROJECT SOME OF THESE METHODS PLEASE TO CREDIT ME :) THANK YOU!_
 
-Github: https://github.com/marcocesarato/PHP-AIO-Security-Class
 
-
+## Description
 
 This is a security class in php with some useful and automatic static methods. 
 
