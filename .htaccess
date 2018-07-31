@@ -52,6 +52,9 @@ ServerSignature Off
     Options +FollowSymlinks
     Options +SymLinksIfOwnerMatch
 
+    RewriteCond %{REQUEST_METHOD} ^(TRACE|OPTIONS)
+    RewriteRule .* – [F]
+
     # HTTPS
     #RewriteCond %{HTTPS} !on
     #RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}

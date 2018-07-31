@@ -1,6 +1,6 @@
 # PHP AIO Security Class + Antimalware
 
-**Version:** 0.2.8.155 beta
+**Version:** 0.2.8.157 beta
 
 **Github:** https://github.com/marcocesarato/PHP-AIO-Security-Class
 
