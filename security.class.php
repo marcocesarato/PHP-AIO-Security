@@ -7,9 +7,12 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.157
+ * @version   0.2.8.158
  */
 
+/**
+ * Class Security
+ */
 class Security
 {
 
@@ -23,6 +26,7 @@ class Security
 	public static $session_name = "XSESSID"; // Session cookie name
 	public static $session_lifetime = 288000; // Session lifetime | default = 8 hours
 	public static $session_regenerate_id = false; // Regenerate session id
+	public static $session_database = false; // Store sessions on database
 	public static $csrf_session = "_CSRFTOKEN"; // CSRF session token name
 	public static $csrf_formtoken = "_FORMTOKEN"; // CSRF form token input name
 	public static $cookies_encrypted = false; // Encrypt cookies (need Security::setCookie for encrypt) [PHP 5.3+]
@@ -36,6 +40,7 @@ class Security
 	public static $compress_output = true; // Compress output
    	public static $force_https = false; // Force HTTPS
 	public static $hide_errors = true; // Hide php errors (useful for hide vulnerabilities)
+	public static $database = null; // PDO instance
 
 	// Autostart
 	public static $auto_session_manager = true; // Run session at start
@@ -70,10 +75,20 @@ class Security
 	}
 
 	/**
+	 * Set PDO database instance
+	 * @param $db
+	 */
+	public static function setDatabase($db){
+		self::$database = $db;
+	}
+
+	/**
 	 * Secure initialization
 	 * @param bool $API
 	 */
 	public static function putInSafety($API = false) {
+
+		@ob_start();
 
 		if (self::$hide_errors) {
 			ini_set('display_errors', 0);
@@ -142,15 +157,24 @@ class Security
 	public static function secureSession() {
 		self::unsetCookie('PHPSESSID');
 
+		$session_hash = "sha512";
+
 		ini_set('session.use_cookies', 1);
 		ini_set('session.use_only_cookies', 1);
 		ini_set("session.cookie_httponly", 1);
 		ini_set("session.use_trans_sid", 0);
 		ini_set("session.cookie_secure", self::checkHTTPS() ? 1 : 0);
 		ini_set("session.gc_maxlifetime", self::$session_lifetime);
+		if (in_array($session_hash, hash_algos())) {
+			ini_set("session.hash_function", $session_hash);
+		}
+		ini_set("session.hash_bits_per_character", 8);
 
 		session_name(self::$session_name);
-		session_start();
+
+		if (self::$session_database) new SecuritySession();
+		else session_start();
+
 		if (self::$session_regenerate_id)
 			session_regenerate_id(true);
 
@@ -469,9 +493,10 @@ class Security
 			$tag->appendChild($item);
 		}
 
+		// Prevent Phishing by Navigating Browser Tabs
 		$tags = $doc->getElementsByTagName('a');
 		foreach ($tags as $tag) {
-			$tag->setAttribute("rel", "noopener noreferrer");
+			$tag->setAttribute("rel", $tag->getAttribute("rel") . " noopener noreferrer");
 		}
 
 		$output = $doc->saveHTML();
@@ -1801,4 +1826,165 @@ class Security
 			)
 		);
 	}
+}
+
+/**
+ * Class SecuritySession
+ */
+class SecuritySession
+{
+	public static $db;
+
+	/**
+	 * Session constructor.
+	 */
+	public function __construct() {
+
+		if (Security::$database) {
+			// Set handler to override SESSION
+			session_set_save_handler(
+				array($this, "_open"),
+				array($this, "_close"),
+				array($this, "_read"),
+				array($this, "_write"),
+				array($this, "_destroy"),
+				array($this, "_gc")
+			);
+
+			if (!in_array('sessions', self::$db->getTables()))
+				self::$db->query('CREATE TABLE sessions (
+									id VARCHAR(128) NOT NULL,
+									access INT(10) UNSIGNED,
+									data TEXT NULL DEFAULT NULL,
+									client_ip VARCHAR(15) NULL DEFAULT NULL,
+									PRIMARY KEY (id)
+								);');
+		}
+
+		// Start the session
+		session_start();
+	}
+
+	/**
+	 * Open session
+	 * @return bool
+	 */
+	public static function _open() {
+		// If successful
+		if (Security::$database) {
+			// Return True
+			return true;
+		}
+		// Return False
+		return false;
+	}
+
+	/**
+	 * Close session
+	 * @return bool
+	 */
+	public static function _close() {
+		return true;
+	}
+
+	/**
+	 * Read session
+	 * @param $id
+	 * @return string
+	 */
+	public static function _read($id) {
+		// Set query
+		$stmt = Security::$database->prepare('SELECT `data` FROM sessions WHERE id = :id');
+		if ($stmt) {
+			// Bind the Id
+			$stmt->bindParam(':id', $id);
+			// Attempt execution
+			// If successful
+			if ($stmt->execute()) {
+				// Save returned row
+				$row = $stmt->fetch(PDO::FETCH_ASSOC);
+				// Return the data
+				return base64_decode($row['data']);
+			} else {
+				// Return an empty string
+				return '';
+			}
+		}
+	}
+
+	/**
+	 * Write session
+	 * @param $id
+	 * @param $data
+	 * @return bool
+	 */
+	public static function _write($id, $data) {
+		// Create time stamp
+		$access = time();
+		// Set query
+		$stmt = Security::$database->prepare('REPLACE INTO sessions VALUES (:id, :access, :data, :client_ip)');
+		// Bind data
+		if ($stmt) {
+			$data = base64_encode($data);
+			$ip = Security::clientIP();
+			$stmt->bindParam(':id', $id);
+			$stmt->bindParam(':access', $access);
+			$stmt->bindParam(':data', $data);
+			$stmt->bindParam(':client_ip', $ip);
+			// Attempt Execution
+			// If successful
+			if ($stmt->execute()) {
+				// Return True
+				return true;
+			}
+		}
+		// Return False
+		return false;
+	}
+
+	/**
+	 * Destroy session
+	 * @param $id
+	 * @return bool
+	 */
+	public static function _destroy($id) {
+		// Set query
+		$stmt = Security::$database->prepare('DELETE FROM sessions WHERE id = :id');
+		if ($stmt) {
+			// Bind data
+			$stmt->bindParam(':id', $id);
+			// Attempt execution
+			// If successful
+			if ($stmt->execute()) {
+				// Return True
+				return true;
+			}
+		}
+		// Return False
+		return false;
+	}
+
+	/**
+	 * GC
+	 * @param $max
+	 * @return bool
+	 */
+	public static function _gc($max) {
+		// Calculate what is to be deemed old
+		$old = time() - $max;
+		// Set query
+		$stmt = Security::$database->prepare('DELETE FROM sessions WHERE access < :old');
+		if ($stmt) {
+			// Bind data
+			$stmt->bindParam(':old', $old);
+			// Attempt execution
+			if ($stmt->execute()) {
+				// Return True
+				return true;
+			}
+		}
+		// Return False
+		return false;
+	}
+
 }

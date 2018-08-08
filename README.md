@@ -1,6 +1,6 @@
 # PHP AIO Security Class + Antimalware
 
-**Version:** 0.2.8.157 beta
+**Version:** 0.2.8.158 beta
 
 **Github:** https://github.com/marcocesarato/PHP-AIO-Security-Class
 
@@ -23,9 +23,9 @@ Link Repository: https://github.com/marcocesarato/PHP-Antimalware-Scanner
 
 ### Instructions
 
-1-0 - Move **.htaccess** on your ROOT directory
+1.0 - Move **.htaccess** on your ROOT directory
 
-1-1 - Move the class on directory and config the class if you need it. 
+1.1 - Move the class on directory and config the class if you need it. 
 
 These are the options:
 
@@ -36,6 +36,7 @@ $salt = "_SALT"; // Salt for crypt
 $session_name = "XSESSID"; // Session cookie name
 $session_lifetime = 288000; // Session lifetime | default = 8 hours
 $session_regenerate_id = false; // Regenerate session id
+$session_database = false; // Store sessions on database
 $csrf_session = "_CSRFTOKEN"; // CSRF session token name
 $csrf_formtoken = "_FORMTOKEN"; // CSRF form token input name 
 $headers_cache = true; // Enable header cache
@@ -49,6 +50,7 @@ $clean_post_xss = true; // Remove XSS on post global
 $compress_output = true; // Compress output
 $force_https = false; // Force HTTPS
 $hide_errors = true;  // Hide php errors (useful for hide vulnerabilities)
+$database = null; // PDO instance for store sessions if enabled before
 
 // Autostart
 $auto_session_manager = true; // Run session at start
@@ -73,13 +75,20 @@ __PS:__ *You can change the configuration as following for each parameters or si
 Security::$session_name = "MYSESSID"
 ```
 
-1-2 - Include the class
+1.2 - Include the class
 
 ```php
 include 'classes/security.class.php';
 ```
 
-2 - Just create a new object to be more at safe (the **constructor/putInSafety** filter \$_REQUEST and \$_GET globals, add some useful headers for security, check if there is an **Hijacking** and check the URL Request)
+1.3 - Session store on database (Optional) (PDO/CPDO instances only)
+
+```php
+$conn = new PDO(...);
+Security::setDatabase($conn); // Or Security::$database = $conn;
+```
+
+2.0 - Just create a new object to be more at safe (the **constructor/putInSafety** filter \$_REQUEST and \$_GET globals, add some useful headers for security, check if there is an **Hijacking** and check the URL Request)
 
 ```php
 $isAPI = false; // default is FALSE (this remove some check that could block API request)
@@ -189,6 +198,7 @@ USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 
 | Method                    | Params             | Return | Description                                                  |
 | ------------------------- | ------------------ | ------ | ------------------------------------------------------------ |
+| setDatabase               | $conn              | Void   | Set PDO datbase instance for store sessions (only if enabled)                                              |
 | __construct / putInSafety | $isAPI = false     | Void   | Call some methods:<br /><br />headers `$isAPI`<br />secureSession `$isAPI`<br />secureFormRequest `$isAPI`<br />secureBots<br />secureRequest<br />secureBlockTor<br />secureHijacking<br />secureCookies |
 | secureCSRF                | -                  | Void   | Check for CSRF                                               |
 | secureCSRFToken           | -                  | String | Get CSRF Token                                               |
