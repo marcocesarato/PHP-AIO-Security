@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.159
+ * @version   0.2.8.160
  */
 
 /**
@@ -454,7 +454,7 @@ class Security
 		$doc = new DOMDocument();
 		$doc->formatOutput = true;
 		$doc->preserveWhiteSpace = false;
-		$doc->loadHTML($buffer);
+		$doc->loadHTML(html_entity_decode($buffer, ENT_COMPAT | ENT_HTML401, 'UTF-8'));
 
 		$days_to_cache = self::$headers_cache_days * (60 * 60 * 24);
 		$ts = gmdate("D, d M Y H:i:s", time() + $days_to_cache) . " GMT";
