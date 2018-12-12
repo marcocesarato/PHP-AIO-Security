@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.160
+ * @version   0.2.8.161
  */
 
 /**
@@ -506,13 +506,15 @@ class Security
 		$tags = $doc->getElementsByTagName('form');
 		foreach ($tags as $tag) {
 			$tag->setAttribute("autocomplete", "off");
-			// CSRF
-			$token = $_SESSION[self::$csrf_session];
-			$item = $doc->createElement("input");
-			$item->setAttribute("name", self::$csrf_formtoken);
-			$item->setAttribute("type", "hidden");
-			$item->setAttribute("value", self::escapeSQL($token));
-			$tag->appendChild($item);
+			if(strtolower($item->getAttribute("method")) != 'get') {
+				// CSRF
+				$token = $_SESSION[self::$csrf_session];
+				$item = $doc->createElement("input");
+				$item->setAttribute("name", self::$csrf_formtoken);
+				$item->setAttribute("type", "hidden");
+				$item->setAttribute("value", self::escapeSQL($token));
+				$tag->appendChild($item);
+			}
 		}
 
 		// Prevent Phishing by Navigating Browser Tabs
