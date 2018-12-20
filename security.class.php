@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.161
+ * @version   0.2.8.162
  */
 
 /**
@@ -506,7 +506,7 @@ class Security
 		$tags = $doc->getElementsByTagName('form');
 		foreach ($tags as $tag) {
 			$tag->setAttribute("autocomplete", "off");
-			if(strtolower($item->getAttribute("method")) != 'get') {
+			if($tags->hasAttribute("method") && strtolower($tags->getAttribute("method")) != 'get') {
 				// CSRF
 				$token = $_SESSION[self::$csrf_session];
 				$item = $doc->createElement("input");
