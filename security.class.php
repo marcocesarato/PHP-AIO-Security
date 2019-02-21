@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.163
+ * @version   0.2.8.164
  */
 
 /**
@@ -790,7 +790,7 @@ class Security
 	 * CSRF token compare
 	 * @return bool
 	 */
-	protected static function secureCSRFCompare() {
+	public static function secureCSRFCompare() {
 		$referer = $_SERVER["HTTP_REFERER"];
 		if (!isset($referer)) return false;
 		if (strpos($_SERVER["SERVER_NAME"], $referer) != 0) return false;
@@ -805,9 +805,10 @@ class Security
 	/**
 	 * Generate CSRF Token
 	 */
-	protected static function secureCSRFGenerate() {
+	public static function secureCSRFGenerate() {
 		$guid = self::generateGUID();
 		$_SESSION[self::$csrf_session] = md5($guid . time() . ":" . session_id());
+		return $guid;
 	}
 
 	/**
