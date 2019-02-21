@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.165
+ * @version   0.2.8.166
  */
 
 /**
@@ -788,27 +788,33 @@ class Security
 
 	/**
 	 * CSRF token compare
+	 * @param string $csrf_key
+	 * @param null $formtoken
 	 * @return bool
 	 */
-	public static function secureCSRFCompare() {
+	public static function secureCSRFCompare($csrf_key = "", $formtoken = null) {
 		$referer = $_SERVER["HTTP_REFERER"];
 		if (!isset($referer)) return false;
 		if (strpos($_SERVER["SERVER_NAME"], $referer) != 0) return false;
-		$token = $_SESSION[self::$csrf_session];
-		if ($_POST[self::$csrf_formtoken] == $token) {
-			self::secureCSRFGenerate();
+
+		$GLOBALS[self::$csrf_session . $csrf_key] = $_SESSION[self::$csrf_session . $csrf_key];
+		$token = $GLOBALS[self::$csrf_session . $csrf_key];
+
+		if (!empty($token) && $_POST[empty($formtoken) ? self::$csrf_formtoken : $formtoken] == $token) {
 			return true;
+		} else {
+			return false;
 		}
-		return false;
 	}
 
 	/**
 	 * Generate CSRF Token
+	 * @param string $csrf_key
 	 */
-	public static function secureCSRFGenerate() {
-		$guid = self::generateGUID();
-		$_SESSION[self::$csrf_session] = md5($guid . time() . ":" . session_id());
-		return $guid;
+	public static function secureCSRFGenerate($csrf_key = "") {
+		$random = uniqid(mt_rand(1, mt_getrandmax()));
+		$GLOBALS[self::$csrf_session . $csrf_key] = md5($random . time() . ":" . session_id());
+		return $GLOBALS[self::$csrf_session . $csrf_key];
 	}
 
 	/**

@@ -1,6 +1,6 @@
 # PHP AIO Security Class
 
-**Version:** 0.2.8.165 beta
+**Version:** 0.2.8.166 beta
 
 **Github:** https://github.com/marcocesarato/PHP-AIO-Security-Class
 
@@ -209,8 +209,8 @@ Notes: For open files with nano or vim run the scripts with "-d disable_function
 | setDatabase               | $conn              | Void   | Set PDO datbase instance for store sessions (only if enabled)                                              |
 | __construct / putInSafety | $isAPI = false     | Void   | Call some methods:<br /><br />headers `$isAPI`<br />secureSession `$isAPI`<br />secureFormRequest `$isAPI`<br />secureBots<br />secureRequest<br />secureBlockTor<br />secureHijacking<br />secureCookies |
 | secureCSRF                | -                  | Void   | Check for CSRF                                               |
-| secureCSRFCompare         | -                  | Bool   | Compare CSRF Token                                              |
-| secureCSRFGenerate        | -                  | String | Generate CSRF Token                                               |
+| secureCSRFCompare         | \$key = '', \$input_name = null| Bool   | Compare CSRF Token                                              |
+| secureCSRFGenerate        | \$key = ''         | String | Generate CSRF Token                                               |
 | secureCSRFToken           | -                  | String | Get CSRF Token                                               |
 | secureRequest             | -                  | Void   | Enable the WAF (Firewall) then check the request method and the URL to prevent some XSS/SQL Injections and bad requests |
 | secureFormRequest         | $isAPI = false     | Void   | Check if the form origin come from the same website          |
