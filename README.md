@@ -1,6 +1,6 @@
-# PHP AIO Security Class + Antimalware
+# PHP AIO Security Class
 
-**Version:** 0.2.8.164 beta
+**Version:** 0.2.8.165 beta
 
 **Github:** https://github.com/marcocesarato/PHP-AIO-Security-Class
 
@@ -164,30 +164,38 @@ Enjoy!
 
 
 
-### AMWSCAN - PHP Antimalware Scanner
+### PHP Antimalware Scanner
 
-![](cover.png)
-
-On the __Demo__ folder there is also my __antimalware__ (Demo/scanner.php) that use the scan definitions of __PHP AIO Security Class__. To use it you run the php file from a console try it! 
-
-__Suggestion:__ if you run the scanner on a Wordpress project type _--exploits_ as argument for a better check.
+Also in _Demo_ folder there is my __antimalware scanner__ userful for check virus on our projects. 
 
 Link Repository: https://github.com/marcocesarato/PHP-Antimalware-Scanner
 
 #### Usage
 
-```
-OPTIONS:
+```		
+Arguments:
+<path>                       Define the path to scan (default: current directory)
 
-    -e   --exploits    Check only exploits and not the functions
-    -h   --help        Show the available options
-    -l   --log         Write a log file 'scanner.log' with all the operations done
-    -p   --path <dir>  Define the path to scan
-    -s   --scan        Scan only mode without check and remove malware. It also write
-                       all malware paths found to 'scanner_infected.log' file
-
-NOTES: Better if your run with php -d disable_functions=''
-USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
+Flags:
+-a   --agile                 Help to have less false positive on WordPress and others platforms
+                             enabling exploits mode and removing some common exploit pattern
+                             but this method could not find some malware
+-e   --only-exploits         Check only exploits and not the functions
+                             -- Recommended for WordPress or others platforms
+-f   --only-functions        Check only functions and not the exploits
+-h   --help                  Show the available flags and arguments
+-l   --log                   Write a log file 'scanner.log' with all the operations done
+-s   --scan                  Scan only mode without check and remove malware. It also write
+                             all malware paths found to 'scanner_infected.log' file
+                             
+     --exploits="..."        Filter exploits
+     --functions="..."       Define functions to search
+     --whitelist-only-path   Check on whitelist only file path and not line number
+     
+Notes: For open files with nano or vim run the scripts with "-d disable_functions=''"
+       examples: php -d disable_functions='' scanner ./mywebsite/http/ --log --agile --only-exploits
+                 php -d disable_functions='' scanner --agile --only-exploits
+                 php -d disable_functions='' scanner --exploits="double_var2" --functions="eval, str_replace"
 ```
 
 
@@ -270,7 +278,4 @@ USAGE: php -d disable_functions='' scanner -p ./mywebsite/http/ -l
 | secureJSONP              | \$json, \$callback                                           | String  | Prevent malicious callbacks from being used in JSONP requests. |
 | secureDownload           | \$filename, $name = null                                     | Void    | Secure headers for download request                          |
 | secureUpload             | \$file, \$path                                               | Boolean | File upload with scan                                        |
-| secureScan               | $path                                                        | Void    | Scan files in directory recursively and rename bad files if detected |
-| secureScanFile           | $filepath                                                    | Boolean | Scan file (detect for shell or php code infected)            |
-| secureScanPath           | $path                                                        | Array   | Scan files in directory recursively (detect for shell or php code infected) |
 | environmentCheck         | -                                                            | Array   | Check environment configuration and return the current and the recommended php.ini configuration |
