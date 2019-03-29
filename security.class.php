@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.166
+ * @version   0.2.8.167
  */
 
 /**
@@ -819,10 +819,11 @@ class Security
 
 	/**
 	 * Get CSRF Token
+	 * @param string $csrf_key
 	 * @return mixed
 	 */
-	public static function secureCSRFToken() {
-		$token = $_SESSION[self::$csrf_session];
+	public static function secureCSRFToken($csrf_key = "") {
+		$token = $_SESSION[self::$csrf_session . $csrf_key];
 		return $token;
 	}
 
@@ -831,22 +832,29 @@ class Security
 	 * @return bool
 	 */
 	public static function clientIsTor() {
-		$ip = self::clientIP();
+
+		$ips = self::clientIPs();
 		$ip_server = gethostbyname($_SERVER['SERVER_NAME']);
 
-		$query = array(
-			implode('.', array_reverse(explode('.', $ip))),
-			$_SERVER["SERVER_PORT"],
-			implode('.', array_reverse(explode('.', $ip_server))),
-			'ip-port.exitlist.torproject.org'
-		);
+		foreach($ips as $ip) {
 
-		$torExitNode = implode('.', $query);
+			$query = array(
+				implode('.', array_reverse(explode('.', $ip))),
+				$_SERVER["SERVER_PORT"],
+				implode('.', array_reverse(explode('.', $ip_server))),
+				'ip-port.exitlist.torproject.org'
+			);
 
-		$dns = dns_get_record($torExitNode, DNS_A);
+			$torExitNode = implode('.', $query);
 
-		if (array_key_exists(0, $dns) && array_key_exists('ip', $dns[0])) {
-			if ($dns[0]['ip'] == '127.0.0.2') return true;
+			$dns = dns_get_record($torExitNode, DNS_A);
+
+			if(array_key_exists(0, $dns) && array_key_exists('ip', $dns[0])) {
+				if($dns[0]['ip'] == '127.0.0.2') {
+					return true;
+				}
+			}
+
 		}
 
 		return false;
@@ -861,10 +869,11 @@ class Security
 	}
 
 	/**
-	 * Get Real IP Address
-	 * @return string
+	 * Get all client IP Address
+	 * @return array
 	 */
-	public static function clientIP() {
+	public static  function clientIPs() {
+		$ips = array();
 		foreach (
 			array(
 				'HTTP_CF_CONNECTING_IP',
@@ -874,16 +883,88 @@ class Security
 				'HTTP_X_CLUSTER_CLIENT_IP',
 				'HTTP_FORWARDED_FOR',
 				'HTTP_FORWARDED',
+				'HTTP_VIA',
 				'REMOTE_ADDR'
 			) as $key) {
 			if (array_key_exists($key, $_SERVER) === true) {
 				foreach (explode(',', $_SERVER[$key]) as $ip) {
-					if ($ip == "::1") return "127.0.0.1";
-					return $ip;
+					if ($ip == "::1") {
+						$ips[] = "127.0.0.1";
+					}
+					if(self::validateIPAddress($ip)) {
+						$ips[] = $ip;
+					}
+				}
+			}
+		}
+		if(empty($ips)){
+			$ips = array('0.0.0.0');
+		}
+		$ips = array_unique($ips);
+		return $ips;
+	}
+
+	/**
+	 * Get Real IP Address
+	 * @return string
+	 */
+	public static  function clientIP() {
+		foreach (
+			array(
+				'HTTP_CF_CONNECTING_IP',
+				'HTTP_CLIENT_IP',
+				'HTTP_X_FORWARDED_FOR',
+				'HTTP_X_FORWARDED',
+				'HTTP_X_CLUSTER_CLIENT_IP',
+				'HTTP_FORWARDED_FOR',
+				'HTTP_FORWARDED',
+				'HTTP_VIA',
+				'REMOTE_ADDR'
+			) as $key) {
+			if (array_key_exists($key, $_SERVER) === true) {
+				foreach (explode(',', $_SERVER[$key]) as $ip) {
+					if ($ip == "::1") {
+						return "127.0.0.1";
+					}
+					if(self::validateIPAddress($ip)) {
+						return $ip;
+					}
 				}
 			}
 		}
 		return "0.0.0.0";
+	}
+
+	/**
+	 * Ensures an ip address is both a valid IP and does not fall within
+	 * a private network range.
+	 * @param $ip
+	 * @return bool
+	 */
+	private static function validateIPAddress($ip) {
+		if (strtolower($ip) === 'unknown')
+			return false;
+
+		// generate ipv4 network address
+		$ip = ip2long($ip);
+
+		// if the ip is set and not equivalent to 255.255.255.255
+		if ($ip !== false && $ip !== -1) {
+			// make sure to get unsigned long representation of ip
+			// due to discrepancies between 32 and 64 bit OSes and
+			// signed numbers (ints default to signed in PHP)
+			$ip = sprintf('%u', $ip);
+			// do private network range checking
+			if ($ip >= 0 && $ip <= 50331647) return false;
+			if ($ip >= 167772160 && $ip <= 184549375) return false;
+			if ($ip >= 2130706432 && $ip <= 2147483647) return false;
+			if ($ip >= 2851995648 && $ip <= 2852061183) return false;
+			if ($ip >= 2886729728 && $ip <= 2887778303) return false;
+			if ($ip >= 3221225984 && $ip <= 3221226239) return false;
+			if ($ip >= 3232235520 && $ip <= 3232301055) return false;
+			if ($ip >= 4294967040) return false;
+		}
+		return true;
 	}
 
 	/**

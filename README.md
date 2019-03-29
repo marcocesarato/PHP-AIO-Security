@@ -1,6 +1,6 @@
 # PHP AIO Security Class
 
-**Version:** 0.2.8.166 beta
+**Version:** 0.2.8.167 beta
 
 **Github:** https://github.com/marcocesarato/PHP-AIO-Security-Class
 
@@ -211,7 +211,7 @@ Notes: For open files with nano or vim run the scripts with "-d disable_function
 | secureCSRF                | -                  | Void   | Check for CSRF                                               |
 | secureCSRFCompare         | \$key = '', \$input_name = null| Bool   | Compare CSRF Token                                              |
 | secureCSRFGenerate        | \$key = ''         | String | Generate CSRF Token                                               |
-| secureCSRFToken           | -                  | String | Get CSRF Token                                               |
+| secureCSRFToken           | \$key = ''         | String | Get CSRF Token                                               |
 | secureRequest             | -                  | Void   | Enable the WAF (Firewall) then check the request method and the URL to prevent some XSS/SQL Injections and bad requests |
 | secureFormRequest         | $isAPI = false     | Void   | Check if the form origin come from the same website          |
 | secureSession             | -                  | Void   | Set custom session name for prevent fast identification of php and add some secure param to session cookie. PS: This method call `session_start` |
@@ -274,6 +274,7 @@ Notes: For open files with nano or vim run the scripts with "-d disable_function
 | checkHTTPS               | -                                                            | Boolean | Check if site is running over https                          |
 | unsetCookie              | $name                                                        | String  | Unset a cookie                                               |
 | clientIP                 | -                                                            | String  | Get real client IP address                                   |
+| clientIPs                | -                                                            | Array   | Get all client IP addresses                                  |
 | clientIsTor              | -                                                            | Boolean | Check if client use TOR                                      |
 | secureJSONP              | \$json, \$callback                                           | String  | Prevent malicious callbacks from being used in JSONP requests. |
 | secureDownload           | \$filename, $name = null                                     | Void    | Secure headers for download request                          |
