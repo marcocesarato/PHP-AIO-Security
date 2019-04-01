@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.167
+ * @version   0.2.8.168
  */
 
 /**
@@ -876,22 +876,35 @@ class Security
 		$ips = array();
 		foreach (
 			array(
+				'GD_PHP_HANDLER',
+				'HTTP_AKAMAI_ORIGIN_HOP',
 				'HTTP_CF_CONNECTING_IP',
 				'HTTP_CLIENT_IP',
-				'HTTP_X_FORWARDED_FOR',
-				'HTTP_X_FORWARDED',
-				'HTTP_X_CLUSTER_CLIENT_IP',
-				'HTTP_FORWARDED_FOR',
+				'HTTP_FASTLY_CLIENT_IP',
 				'HTTP_FORWARDED',
+				'HTTP_FORWARDED_FOR',
+				'HTTP_INCAP_CLIENT_IP',
+				'HTTP_TRUE_CLIENT_IP',
+				'HTTP_X_CLIENTIP',
+				'HTTP_X_CLUSTER_CLIENT_IP',
+				'HTTP_X_FORWARDED',
+				'HTTP_X_FORWARDED_FOR',
+				'HTTP_X_IP_TRAIL',
+				'HTTP_X_REAL_IP',
+				'HTTP_X_VARNISH',
 				'HTTP_VIA',
 				'REMOTE_ADDR'
 			) as $key) {
 			if (array_key_exists($key, $_SERVER) === true) {
-				foreach (explode(',', $_SERVER[$key]) as $ip) {
-					if ($ip == "::1") {
-						$ips[] = "127.0.0.1";
+				foreach(explode(',', $_SERVER[$key]) as $ip) {
+					$ip = trim($ip);
+					// Check for IPv4 IP cast as IPv6
+					if (preg_match('/^::ffff:(\d+\.\d+\.\d+\.\d+)$/', $ip, $matches)) {
+						$ip = $matches[1];
 					}
-					if(self::validateIPAddress($ip)) {
+					if($ip == "::1") {
+						$ips[] = "127.0.0.1";
+					} else if(self::validateIPAddress($ip)) {
 						$ips[] = $ip;
 					}
 				}
@@ -911,8 +924,8 @@ class Security
 	public static  function clientIP() {
 		foreach (
 			array(
-				'HTTP_CF_CONNECTING_IP',
 				'HTTP_CLIENT_IP',
+				'HTTP_CF_CONNECTING_IP',
 				'HTTP_X_FORWARDED_FOR',
 				'HTTP_X_FORWARDED',
 				'HTTP_X_CLUSTER_CLIENT_IP',
@@ -922,9 +935,22 @@ class Security
 				'REMOTE_ADDR'
 			) as $key) {
 			if (array_key_exists($key, $_SERVER) === true) {
-				foreach (explode(',', $_SERVER[$key]) as $ip) {
-					if ($ip == "::1") {
-						return "127.0.0.1";
+				foreach(explode(',', $_SERVER[$key]) as $ip) {
+
+					$ip = trim( $ip);
+					// Check for IPv4 IP cast as IPv6
+					if (preg_match('/^::ffff:(\d+\.\d+\.\d+\.\d+)$/', $ip, $matches)) {
+						$ip = $matches[1];
+					}
+					if($ip == "::1") {
+						$ip = "127.0.0.1";
+					}
+					if ($ip == '127.0.0.1' || self::isPrivateIP($ip)) {
+						$ip = $_SERVER['REMOTE_ADDR'];
+						if($ip == "::1") {
+							$ip = "127.0.0.1";
+						}
+						return $ip;
 					}
 					if(self::validateIPAddress($ip)) {
 						return $ip;
@@ -933,6 +959,39 @@ class Security
 			}
 		}
 		return "0.0.0.0";
+	}
+
+	/**
+	 * Detect if is private IP
+	 * @param $ip
+	 * @return bool
+	 */
+	private static function isPrivateIP($ip) {
+
+		// Dealing with ipv6, so we can simply rely on filter_var
+		if(false === strpos($ip, '.')) {
+			return !@filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+		}
+
+		$long_ip               = ip2long($ip);
+		// Dealing with ipv4
+		$private_ip4_addresses = array(
+			'10.0.0.0|10.255.255.255',     // single class A network
+			'172.16.0.0|172.31.255.255',   // 16 contiguous class B network
+			'192.168.0.0|192.168.255.255', // 256 contiguous class C network
+			'169.254.0.0|169.254.255.255', // Link-local address also referred to as Automatic Private IP Addressing
+			'127.0.0.0|127.255.255.255'    // localhost
+		);
+		if(- 1 != $long_ip) {
+			foreach($private_ip4_addresses as $pri_addr) {
+				list ($start, $end) = explode('|', $pri_addr);
+				if($long_ip >= ip2long($start) && $long_ip <= ip2long($end)) {
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 
 	/**
