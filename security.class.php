@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.168
+ * @version   0.2.8.169
  */
 
 /**
@@ -387,7 +387,7 @@ class Security
 				$compress = self::compressCSS($match[1]);
 				$buffer = preg_replace($pattern, '$1' . $compress . '$3', $buffer);
 			}
-			$buffer = preg_replace(array('/<!--[^\[](.*)[^\]]-->/Uis', "/[[:blank:]]+/", '/\s+/'), array('', ' ', ' '), str_replace(array("\n", "\r", "\t"), '', $buffer));
+			$buffer = preg_replace(array('/<!--[^\[](.*)[^\]]-->/Uuis', "/[[:blank:]]+/u", '/\s+/u'), array('', ' ', ' '), str_replace(array("\n", "\r", "\t"), '', $buffer));
 		}
 		return $buffer;
 	}
@@ -454,7 +454,7 @@ class Security
 		$doc = new DOMDocument();
 		$doc->formatOutput = true;
 		$doc->preserveWhiteSpace = false;
-		$doc->loadHTML(html_entity_decode($buffer, ENT_COMPAT | ENT_HTML401, 'UTF-8'));
+		$doc->loadHTML($buffer);
 
 		$days_to_cache = self::$headers_cache_days * (60 * 60 * 24);
 		$ts = gmdate("D, d M Y H:i:s", time() + $days_to_cache) . " GMT";
