@@ -9,7 +9,7 @@ namespace marcocesarato\security;
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.170
+ * @version   0.2.8.171
  */
 
 /**
@@ -1273,7 +1273,7 @@ class Security
         $info = pathinfo($file);
         $_FILE_PATH = $info->getPathname();
 
-        if(self::isInfectedFavicon($file))
+        if(self::isInfectedFavicon($info))
             return true;
 
         $mime_type = 'text/php';
