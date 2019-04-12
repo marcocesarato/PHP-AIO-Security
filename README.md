@@ -1,6 +1,6 @@
 # PHP AIO Security Class
 
-**Version:** 0.2.8.169 beta
+**Version:** 0.2.8.170 beta
 
 **Github:** https://github.com/marcocesarato/PHP-AIO-Security-Class
 
@@ -23,10 +23,15 @@ Link Repository: https://github.com/marcocesarato/PHP-Antimalware-Scanner
 
 ### Instructions
 
-1.0 - Move **.htaccess** on your ROOT directory
+##### Composer
+1. Install composer
+2. Type `composer require marcocesarato/security`
+3. Go on `vendor/marcocesarato/security/` for have source
+5. Move `.htaccess` on your ROOT directory (or try to merge it with your `.htaccess`)
+6. Config the class
+7. Enjoy
 
-1.1 - Move the class on directory and config the class if you need it. 
-
+### Options
 These are the options:
 
 ```php
@@ -55,8 +60,6 @@ $database = null; // PDO instance for store sessions if enabled before
 // Autostart
 $auto_session_manager = true; // Run session at start
 $auto_cookies_decrypt = true; // Auto encrypt cookies [PHP 5.3+]
-
-$auto_scanner = false; // Could have a bad performance impact and could detect false positive, then try the method secureScanPath before enable this. BE CAREFUL
 
 $auto_block_tor = true; // If you want block TOR clients
 $auto_clean_global = false; // Global clean at start
@@ -223,40 +226,6 @@ Notes: For open files with nano or vim run the scripts with "-d disable_function
 | secureBlockTor            | -                  | Void   | Block TOR clients                                            |
 | secureHijacking           | -                  | Void   | Prevent Hijacking and delete session                         |
 
-### Cleaning Methods
-
-| Method           | Params                                               | Return | Description                                                  |
-| ---------------- | ---------------------------------------------------- | ------ | ------------------------------------------------------------ |
-| clean            | \$data, \$html = true, \$quotes = true, \$xss = true | Mixed  | Clean value form XSS, SQL Injection etc… recursively         |
-| cleanGlobals     | -                                                    | Void   | Clean all input global vars (\$\__REQUEST,\$\__*POST,*\$\__GET,_\$\_COOKIE)<br />THIS COULD COMPROMISE SOME DATA |
-| restoreGlobals   | -                                                    | Void   | Restore globals to uncleaned/unsafe globals                  |
-| debugGlobals     | -                                                    | Array  | Return an array with the safe, unsafe and the current globals, this is userful for comparing |
-| escapeXSS        | $data                                                | Mixed  | Clean value from XSS recursively                             |
-| escapeSQL        | $data                                                | Mixed  | Clean from SQL Injection (similar at mysql_real_escape) recursively |
-| escapeAttr       | $data                                                | Mixed  | Escape for HTML attribute values<br />`<html attr="&quot;">`  recursively |
-| stripTags        | $data                                                | Mixed  | Strip tags recursively                                       |
-| stripTagsContent | \$data, \$tags = '', \$invert = false                | Mixed  | Strip tags and contents recursively                          |
-| trim             | $data                                                | Mixed  | Trim recursively                                             |
-| stripslashes     | $data                                                | Mixed  | Strip slashes recursively                                    |
-
-
-
-### Output Methods
-
-| Method         | Params                                                       | Return | Description                                                  |
-| -------------- | ------------------------------------------------------------ | ------ | ------------------------------------------------------------ |
-| output         | \$buffer, \$type = (html\|css\|js\|json\|xml\|csv\|txt), $cache_days = null, \$compress = true | String | Put in safety HTML if is HTML, compress HTML if is HTML, check for CSRF and add cache headers if isn't HTML (usually used with ob_start) |
-| secureHTML     | $buffer                                                      | String | Put in safety some html elements, block old browsers console scripts executions on output buffer and add automatically the CSRF token |
-| captcha        | $base64 = false                                              | Void   | Print captcha image and die or if base64 return the image in base64. |
-| captchaVerify  | \$input_name = 'captcha'                                     | Void   | Validate captcha                                             |
-| captchaPrint   | \$class = '', \$input_name = 'captcha'                       | String | Return the captcha input field and the image in html         |
-| captchaCode    | -                                                            | String | Get captcha code                                             |
-| compressOutput | $buffer                                                      | String | Compression generic                                          |
-| compressHTML   | $html                                                        | String | Compression of HTML                                          |
-| compressJS     | $js                                                          | String | Compression of JS                                            |
-| compressCSS    | $css                                                         | String | Compression of CSS                                           |
-| error          | \$code = 404, \$message = "Not found!", \$title = 'Error'    | Void   | Error <br />(use \$error_template and \$error_callback)      |
-
 ### Utility Methods
 
 | Method                   | Params                                                       | Return  | Description                                                  |
@@ -280,3 +249,35 @@ Notes: For open files with nano or vim run the scripts with "-d disable_function
 | secureDownload           | \$filename, $name = null                                     | Void    | Secure headers for download request                          |
 | secureUpload             | \$file, \$path                                               | Boolean | File upload with scan                                        |
 | environmentCheck         | -                                                            | Array   | Check environment configuration and return the current and the recommended php.ini configuration |
+
+### Cleaning Methods
+
+| Method           | Params                                               | Return | Description                                                  |
+| ---------------- | ---------------------------------------------------- | ------ | ------------------------------------------------------------ |
+| clean            | \$data, \$html = true, \$quotes = true, \$xss = true | Mixed  | Clean value form XSS, SQL Injection etc… recursively         |
+| cleanGlobals     | -                                                    | Void   | Clean all input global vars (\$\__REQUEST,\$\__*POST,*\$\__GET,_\$\_COOKIE)<br />THIS COULD COMPROMISE SOME DATA |
+| restoreGlobals   | -                                                    | Void   | Restore globals to uncleaned/unsafe globals                  |
+| debugGlobals     | -                                                    | Array  | Return an array with the safe, unsafe and the current globals, this is userful for comparing |
+| escapeXSS        | $data                                                | Mixed  | Clean value from XSS recursively                             |
+| escapeSQL        | $data                                                | Mixed  | Clean from SQL Injection (similar at mysql_real_escape) recursively |
+| escapeAttr       | $data                                                | Mixed  | Escape for HTML attribute values<br />`<html attr="&quot;">`  recursively |
+| stripTags        | $data                                                | Mixed  | Strip tags recursively                                       |
+| stripTagsContent | \$data, \$tags = '', \$invert = false                | Mixed  | Strip tags and contents recursively                          |
+| trim             | $data                                                | Mixed  | Trim recursively                                             |
+| stripslashes     | $data                                                | Mixed  | Strip slashes recursively                                    |
+
+### Output Methods
+
+| Method         | Params                                                       | Return | Description                                                  |
+| -------------- | ------------------------------------------------------------ | ------ | ------------------------------------------------------------ |
+| output         | \$buffer, \$type = (html\|css\|js\|json\|xml\|csv\|txt), $cache_days = null, \$compress = true | String | Put in safety HTML if is HTML, compress HTML if is HTML, check for CSRF and add cache headers if isn't HTML (usually used with ob_start) |
+| secureHTML     | $buffer                                                      | String | Put in safety some html elements, block old browsers console scripts executions on output buffer and add automatically the CSRF token |
+| captcha        | $base64 = false                                              | Void   | Print captcha image and die or if base64 return the image in base64. |
+| captchaVerify  | \$input_name = 'captcha'                                     | Void   | Validate captcha                                             |
+| captchaPrint   | \$class = '', \$input_name = 'captcha'                       | String | Return the captcha input field and the image in html         |
+| captchaCode    | -                                                            | String | Get captcha code                                             |
+| compressOutput | $buffer                                                      | String | Compression generic                                          |
+| compressHTML   | $html                                                        | String | Compression of HTML                                          |
+| compressJS     | $js                                                          | String | Compression of JS                                            |
+| compressCSS    | $css                                                         | String | Compression of CSS                                           |
+| error          | \$code = 404, \$message = "Not found!", \$title = 'Error'    | Void   | Error <br />(use \$error_template and \$error_callback)      |
