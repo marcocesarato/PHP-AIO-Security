@@ -1,6 +1,6 @@
 # PHP AIO Security Class
 
-**Version:** 0.2.8.172 beta
+**Version:** 0.2.8.173 beta
 
 **Github:** https://github.com/marcocesarato/PHP-AIO-Security-Class
 
@@ -15,15 +15,15 @@ This is a security class in php with some useful and automatic static methods.
 
 The objective of this class is offer an automatic system of protection for developer's projects and simplify some security operations as the check of CSRF or XSS all in a simple class. In fact you could just call the main method to have better security yet without too much complicated operations.
 
-Also in _Demo_ folder there is my __antimalware scanner__ userful for check virus on our projects. 
 
-__Read more__ after the _instructions_ section if you interested.
+### Antimalware Scanner
 
 Link Repository: https://github.com/marcocesarato/PHP-Antimalware-Scanner
 
+
 ### Instructions
 
-##### Composer
+#### Composer
 1. Install composer
 2. Type `composer require marcocesarato/security`
 3. Go on `vendor/marcocesarato/security/` for have source
@@ -31,58 +31,9 @@ Link Repository: https://github.com/marcocesarato/PHP-Antimalware-Scanner
 6. Config the class
 7. Enjoy
 
-### Options
-These are the options:
+#### Implementation
 
-#### Configs
-
-|  Option | Description | Default |
-| --- | --- | --- |
-|  $basedir | Project basedir where is located .htaccess | \_\_DIR\_\_ |
-|  $salt | Salt for crypt | "_SALT" |
-|  $session_name | Session cookie name | "XSESSID" |
-|  $session_lifetime | Session lifetime | "288000" (8 hours) |
-|  $session_regenerate_id | Regenerate session id | FALSE |
-|  $session_database | Store sessions on database | FALSE |
-|  $csrf_session | CSRF session token name | "_CSRFTOKEN" |
-|  $csrf_formtoken | CSRF form token input name |  "_FORMTOKEN" |
-|  $headers_cache | Enable header cache | TRUE |
-|  $cookies_encrypted | Encrypt cookies \[PHP 5.3+\] | FALSE |
-|  $cookies_enc_prefix | Cookies encrypted prefix | "SEC_" |
-|  $headers_cache_days | Cache on NO HTML response (set 0 to disable) | 30 |
-|  $escape_string | If you use PDO I recommend to set this to false | TRUE |
-|  $clean_post_xss | Remove XSS on post global | TRUE |
-|  $compress_output | Compress output | TRUE |
-|  $force_https | Force HTTPS (recommended if you have https) | FALSE |
-|  $hide_errors | Hide php errors (useful for hide vulnerabilities) | TRUE |
-|  $database | PDO instance for store sessions if enabled before | null |
-
-#### Autostart
-
-|  Option | Description | Default |
-| --- | --- | --- |
-|  $auto_session_manager | Run session at start | TRUE |
-|  $auto_cookies_decrypt | Auto encrypt cookies \[PHP 5.3+\] | FALSE |
-|  $auto_block_tor | If you want block TOR clients | TRUE |
-|  $auto_clean_global | Global clean at start | FALSE |
-|  $auto_antidos | Block the client ip when there are too many requests | TRUE |
-
-#### Error template
-```php
-// Error Template
-$error_callback = null; // Set a callback on errors
-$error_template = '<html><head><title>${ERROR_TITLE}</title></head><body>${ERROR_BODY}</body></html>';
-```
-
-`$auto_scanner = true;`  Could have a bad performance impact and could detect __false positive__, then try the method __secureScanPath__, that return an *array* with all probable malware, before enable this feature.
-
-__PS:__ *You can change the configuration as following for each parameters or simply editing the var directly on the class file:*
-
-```php
-Security::$session_name = "MYSESSID"
-```
-
-1.2 - Include the class
+1.1 - Include the class
 
 ```php
 use marcocesarato\security\Security;
@@ -94,7 +45,7 @@ or
 include 'Security.php';
 ```
 
-1.3 - Session store on database (Optional) (PDO/CPDO instances only)
+1.2 - Session store on database (Optional) (PDO/CPDO instances only)
 
 ```php
 $conn = new PDO(...);
@@ -175,43 +126,55 @@ echo = $output;
 
 Enjoy!
 
+## Options
+These are the options availables:
 
+__PS:__ *You can change the configuration as following for each parameters or simply editing the var directly on the class file:*
 
-### PHP Antimalware Scanner
-
-Also in _Demo_ folder there is my __antimalware scanner__ userful for check virus on our projects. 
-
-Link Repository: https://github.com/marcocesarato/PHP-Antimalware-Scanner
-
-#### Usage
-
-```		
-Arguments:
-<path>                       Define the path to scan (default: current directory)
-
-Flags:
--a   --agile                 Help to have less false positive on WordPress and others platforms
-                             enabling exploits mode and removing some common exploit pattern
-                             but this method could not find some malware
--e   --only-exploits         Check only exploits and not the functions
-                             -- Recommended for WordPress or others platforms
--f   --only-functions        Check only functions and not the exploits
--h   --help                  Show the available flags and arguments
--l   --log                   Write a log file 'scanner.log' with all the operations done
--s   --scan                  Scan only mode without check and remove malware. It also write
-                             all malware paths found to 'scanner_infected.log' file
-                             
-     --exploits="..."        Filter exploits
-     --functions="..."       Define functions to search
-     --whitelist-only-path   Check on whitelist only file path and not line number
-     
-Notes: For open files with nano or vim run the scripts with "-d disable_functions=''"
-       examples: php -d disable_functions='' scanner ./mywebsite/http/ --log --agile --only-exploits
-                 php -d disable_functions='' scanner --agile --only-exploits
-                 php -d disable_functions='' scanner --exploits="double_var2" --functions="eval, str_replace"
+```php
+Security::$session_name = "MYSESSID"
 ```
 
 
+### Configs
+
+|  Option | Description | Default |
+| --- | --- | --- |
+|  $basedir | Project basedir where is located .htaccess | \_\_DIR\_\_ |
+|  $salt | Salt for crypt | "_SALT" |
+|  $session_name | Session cookie name | "XSESSID" |
+|  $session_lifetime | Session lifetime | "288000" (8 hours) |
+|  $session_regenerate_id | Regenerate session id | FALSE |
+|  $session_database | Store sessions on database | FALSE |
+|  $csrf_session | CSRF session token name | "_CSRFTOKEN" |
+|  $csrf_formtoken | CSRF form token input name |  "_FORMTOKEN" |
+|  $headers_cache | Enable header cache | TRUE |
+|  $cookies_encrypted | Encrypt cookies \[PHP 5.3+\] | FALSE |
+|  $cookies_enc_prefix | Cookies encrypted prefix | "SEC_" |
+|  $headers_cache_days | Cache on NO HTML response (set 0 to disable) | 30 |
+|  $escape_string | If you use PDO I recommend to set this to false | TRUE |
+|  $clean_post_xss | Remove XSS on post global | TRUE |
+|  $compress_output | Compress output | TRUE |
+|  $force_https | Force HTTPS (recommended if you have https) | FALSE |
+|  $hide_errors | Hide php errors (useful for hide vulnerabilities) | TRUE |
+|  $database | PDO instance for store sessions if enabled before | null |
+
+### Autostart
+
+|  Option | Description | Default |
+| --- | --- | --- |
+|  $auto_session_manager | Run session at start | TRUE |
+|  $auto_cookies_decrypt | Auto encrypt cookies \[PHP 5.3+\] | FALSE |
+|  $auto_block_tor | If you want block TOR clients | TRUE |
+|  $auto_clean_global | Global clean at start | FALSE |
+|  $auto_antidos | Block the client ip when there are too many requests | TRUE |
+
+### Error template
+```php
+// Error Template
+$error_callback = null; // Set a callback on errors
+$error_template = '<html><head><title>${ERROR_TITLE}</title></head><body>${ERROR_BODY}</body></html>';
+```
 
 ## Methods available:
 
