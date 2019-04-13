@@ -1,6 +1,6 @@
 # PHP AIO Security Class
 
-**Version:** 0.2.8.171 beta
+**Version:** 0.2.8.172 beta
 
 **Github:** https://github.com/marcocesarato/PHP-AIO-Security-Class
 
@@ -34,37 +34,41 @@ Link Repository: https://github.com/marcocesarato/PHP-Antimalware-Scanner
 ### Options
 These are the options:
 
+#### Configs
+
+|  Option | Description | Default |
+| --- | --- | --- |
+|  $basedir | Project basedir where is located .htaccess | \_\_DIR\_\_ |
+|  $salt | Salt for crypt | "_SALT" |
+|  $session_name | Session cookie name | "XSESSID" |
+|  $session_lifetime | Session lifetime | "288000" (8 hours) |
+|  $session_regenerate_id | Regenerate session id | FALSE |
+|  $session_database | Store sessions on database | FALSE |
+|  $csrf_session | CSRF session token name | "_CSRFTOKEN" |
+|  $csrf_formtoken | CSRF form token input name |  "_FORMTOKEN" |
+|  $headers_cache | Enable header cache | TRUE |
+|  $cookies_encrypted | Encrypt cookies \[PHP 5.3+\] | FALSE |
+|  $cookies_enc_prefix | Cookies encrypted prefix | "SEC_" |
+|  $headers_cache_days | Cache on NO HTML response (set 0 to disable) | 30 |
+|  $escape_string | If you use PDO I recommend to set this to false | TRUE |
+|  $clean_post_xss | Remove XSS on post global | TRUE |
+|  $compress_output | Compress output | TRUE |
+|  $force_https | Force HTTPS (recommended if you have https) | FALSE |
+|  $hide_errors | Hide php errors (useful for hide vulnerabilities) | TRUE |
+|  $database | PDO instance for store sessions if enabled before | null |
+
+#### Autostart
+
+|  Option | Description | Default |
+| --- | --- | --- |
+|  $auto_session_manager | Run session at start | TRUE |
+|  $auto_cookies_decrypt | Auto encrypt cookies \[PHP 5.3+\] | FALSE |
+|  $auto_block_tor | If you want block TOR clients | TRUE |
+|  $auto_clean_global | Global clean at start | FALSE |
+|  $auto_antidos | Block the client ip when there are too many requests | TRUE |
+
+#### Error template
 ```php
-// Config
-$basedir = __DIR__; // Project basedir where is located .htaccess
-$salt = "_SALT"; // Salt for crypt
-$session_name = "XSESSID"; // Session cookie name
-$session_lifetime = 288000; // Session lifetime | default = 8 hours
-$session_regenerate_id = false; // Regenerate session id
-$session_database = false; // Store sessions on database
-$csrf_session = "_CSRFTOKEN"; // CSRF session token name
-$csrf_formtoken = "_FORMTOKEN"; // CSRF form token input name 
-$headers_cache = true; // Enable header cache
-$cookies_encrypted = false; // Encrypt cookies [PHP 5.3+]
-$cookies_enc_prefix = 'SEC_'; // Cookies encrypted prefix
-$headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
-$scanner_path = "./*.php"; // Folder to scan at start and optionally the file extension
-$scanner_whitelist = array('./shell.php','./libs'); // Example of scan whitelist
-$escape_string = true; // If you use PDO I recommend to set this to false
-$clean_post_xss = true; // Remove XSS on post global
-$compress_output = true; // Compress output
-$force_https = false; // Force HTTPS
-$hide_errors = true;  // Hide php errors (useful for hide vulnerabilities)
-$database = null; // PDO instance for store sessions if enabled before
-
-// Autostart
-$auto_session_manager = true; // Run session at start
-$auto_cookies_decrypt = true; // Auto encrypt cookies [PHP 5.3+]
-
-$auto_block_tor = true; // If you want block TOR clients
-$auto_clean_global = false; // Global clean at start
-$auto_antidos = true; // Block the client ip when there are too many requests
-
 // Error Template
 $error_callback = null; // Set a callback on errors
 $error_template = '<html><head><title>${ERROR_TITLE}</title></head><body>${ERROR_BODY}</body></html>';
@@ -81,7 +85,13 @@ Security::$session_name = "MYSESSID"
 1.2 - Include the class
 
 ```php
-include 'classes/security.class.php';
+use marcocesarato\security\Security;
+```
+
+or 
+
+```php
+include 'Security.php';
 ```
 
 1.3 - Session store on database (Optional) (PDO/CPDO instances only)
@@ -247,7 +257,9 @@ Notes: For open files with nano or vim run the scripts with "-d disable_function
 | clientIsTor              | -                                                            | Boolean | Check if client use TOR                                      |
 | secureJSONP              | \$json, \$callback                                           | String  | Prevent malicious callbacks from being used in JSONP requests. |
 | secureDownload           | \$filename, $name = null                                     | Void    | Secure headers for download request                          |
-| secureUpload             | \$file, \$path                                               | Boolean | File upload with scan                                        |
+| isInfectedFavicon        | \$file                                               | Boolean | Return if is an infected favicon file                                        |
+| isInfectedFile           | \$file                                               | Boolean | Return if is an infected php file                                     |
+| secureUpload             | \$file, \$destination                                               | Boolean | File upload with scan                                        |
 | environmentCheck         | -                                                            | Array   | Check environment configuration and return the current and the recommended php.ini configuration |
 
 ### Cleaning Methods

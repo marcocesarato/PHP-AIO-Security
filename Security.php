@@ -9,11 +9,7 @@ namespace marcocesarato\security;
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.171
- */
-
-/**
- * Class Security
+ * @version   0.2.8.172
  */
 class Security
 {
@@ -35,14 +31,12 @@ class Security
 	public static $cookies_enc_prefix = 'SEC_'; // Cookies encrypted prefix
 	public static $headers_cache = false; // Enable header cache (CARE SOME HOST DON'T PERMIT IT)
 	public static $headers_cache_days = 30; // Cache on NO HTML response (set 0 to disable)
-	public static $scanner_path = "./*.php"; // Folder to scan at start and optionally the file extension
-	public static $scanner_whitelist = array(); // Scan paths/files whitelist
-	public static $escape_string = true; // If you use PDO I recommend to set this to false
+	public static $escape_string = true; // If you use \PDO I recommend to set this to false
 	public static $clean_post_xss = true; // Remove XSS on post global
 	public static $compress_output = true; // Compress output
    	public static $force_https = false; // Force HTTPS
 	public static $hide_errors = true; // Hide php errors (useful for hide vulnerabilities)
-	public static $database = null; // PDO instance
+	public static $database = null; // \PDO instance
 
 	// Autostart
 	public static $auto_session_manager = true; // Run session at start
@@ -74,7 +68,7 @@ class Security
 	}
 
 	/**
-	 * Set PDO database instance
+	 * Set \PDO database instance
 	 * @param $db
 	 */
 	public static function setDatabase($db){
@@ -448,7 +442,7 @@ class Security
 
 		libxml_use_internal_errors(true);
 
-		$doc = new DOMDocument();
+		$doc = new \DOMDocument();
 		$doc->formatOutput = true;
 		$doc->preserveWhiteSpace = false;
 		$doc->loadHTML($buffer);
@@ -1256,9 +1250,10 @@ class Security
      * @return bool
      */
     public static function isInfectedFavicon($file) {
+        $info = pathinfo($file);
         // Case favicon_[random chars].ico
-        $_FILE_NAME      = $file->getFilename();
-        $_FILE_EXTENSION = $file->getExtension();
+        $_FILE_NAME      = $info['filename'];
+        $_FILE_EXTENSION = $info['extension'];
 
         return (((strpos($_FILE_NAME, 'favicon_') === 0) && ($_FILE_EXTENSION === 'ico') && (strlen($_FILE_NAME) > 12)) || preg_match('/^\.[\w]+\.ico/i', trim($_FILE_NAME)));
     }
@@ -1268,20 +1263,18 @@ class Security
      * @param $file
      * @return bool
      */
-    public static function secureFile($file) {
-        $fc = file_get_contents($file);
-        $info = pathinfo($file);
-        $_FILE_PATH = $info->getPathname();
+    public static function isInfectedFile($file) {
+        $fc = php_strip_whitespace($file);
 
-        if(self::isInfectedFavicon($info))
+        if(self::isInfectedFavicon($file))
             return true;
 
-        $mime_type = 'text/php';
+        $mime_type = 'text';
         if(function_exists('mime_content_type')) {
-            $mime_type = mime_content_type($_FILE_PATH);
+            $mime_type = mime_content_type($file);
         } elseif(function_exists('finfo_open')) {
             $finfo     = finfo_open(FILEINFO_MIME);
-            $mime_type = finfo_file($finfo, $_FILE_PATH);
+            $mime_type = finfo_file($finfo, $file);
             finfo_close($finfo);
         }
 
@@ -1303,7 +1296,7 @@ class Security
     public static function secureUpload($file, $path) {
         if (!file_exists($path)) return false;
         if (!is_uploaded_file($_FILES[$file]["tmp_name"])) return false;
-        if (!self::secureFile($_FILES[$file]["tmp_name"])) return false;
+        if (!self::isInfectedFile($_FILES[$file]["tmp_name"])) return false;
         if (move_uploaded_file($_FILES[$file]["tmp_name"], $path)) {
             return true;
         }
@@ -2018,7 +2011,7 @@ class Security
 			// If successful
 			if ($stmt->execute()) {
 				// Save returned row
-				$row = $stmt->fetch(PDO::FETCH_ASSOC);
+				$row = $stmt->fetch(\PDO::FETCH_ASSOC);
 				// Return the data
 				return base64_decode($row['data']);
 			} else {
