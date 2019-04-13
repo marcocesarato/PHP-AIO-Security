@@ -89,7 +89,7 @@ class Security
 			error_reporting(0);
 		}
 
-		if(self::$force_https && self::checkHTTPS()){
+		if(self::$force_https && !self::checkHTTPS()){
 			$redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 			header('HTTP/1.1 301 Moved Permanently');
 			header('Location: ' . $redirect);
@@ -1501,10 +1501,14 @@ class Security
 	 * Check if the request is HTTPS
 	 */
 	public static function checkHTTPS() {
-		if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) {
-			return true;
-		}
-		return false;
+        if (isset($_SERVER['HTTP_HOST'])){
+            if(((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443)
+                || !empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https' || !empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on'){
+                return true;
+            }
+            return false;
+        }
+        return false;
 	}
 
 	/**
