@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.176
+ * @version   0.2.8.177
  */
 
 namespace marcocesarato\security {
@@ -1353,11 +1353,10 @@ namespace marcocesarato\security {
 		 */
 		public static function isInfectedFavicon($file) {
 			$info = pathinfo($file);
+			$filename  = $info['filename'];
+			$extension = $info['extension'];
 			// Case favicon_[random chars].ico
-			$_FILE_NAME      = $info['filename'];
-			$_FILE_EXTENSION = $info['extension'];
-
-			return (((strpos($_FILE_NAME, 'favicon_') === 0) && ($_FILE_EXTENSION === 'ico') && (strlen($_FILE_NAME) > 12)) || preg_match('/^\.[\w]+\.ico/i', trim($_FILE_NAME)));
+			return (((strpos($filename, 'favicon_') === 0) && ($extension === 'ico') && (strlen($filename) > 12)) || preg_match('/^\.[\w]+\.ico/i', trim($filename)));
 		}
 
 		/**
@@ -1400,21 +1399,19 @@ namespace marcocesarato\security {
 		 */
 		public static function secureUpload($file, $path) {
 
-			if(!is_uploaded_file($_FILES[$file]["tmp_name"])) {
-				return false;
-			}
-			if(!self::isInfectedFile($_FILES[$file]["tmp_name"])) {
+			if(!is_uploaded_file($_FILES[$file]["tmp_name"]) || self::isInfectedFile($_FILES[$file]["tmp_name"])) {
 				return false;
 			}
 
-			if(is_dir($path)){
+			if(is_dir($path)) {
 				$path = $path . '/' . basename($file);
 			}
 
 			$dest_file = basename($path);
 
-			$filename      = pathinfo($dest_file, PATHINFO_FILENAME);
-			$extension     = pathinfo($dest_file, PATHINFO_EXTENSION);
+			$info          = pathinfo($dest_file);
+			$filename      = $info['filename'];
+			$extension     = $info['extension'];
 			$original_name = $filename;
 
 			$dest_dir = dirname($path);
