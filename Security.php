@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.175
+ * @version   0.2.8.176
  */
 
 namespace marcocesarato\security {
@@ -398,8 +398,9 @@ namespace marcocesarato\security {
 				ini_set("zlib.output_compression", 1);
 				ini_set("zlib.output_compression_level", "9");
 			}
-			$min = new Minfier();
+			$min    = new Minfier();
 			$buffer = $min->minifyHTML($buffer);
+
 			return $buffer;
 		}
 
@@ -413,8 +414,9 @@ namespace marcocesarato\security {
 				ini_set("zlib.output_compression", 1);
 				ini_set("zlib.output_compression_level", "9");
 			}
-			$min = new Minfier();
+			$min    = new Minfier();
 			$buffer = $min->minifyCSS($buffer);
+
 			return $buffer;
 		}
 
@@ -428,8 +430,9 @@ namespace marcocesarato\security {
 				ini_set("zlib.output_compression", 1);
 				ini_set("zlib.output_compression_level", "9");
 			}
-			$min = new Minfier();
+			$min    = new Minfier();
 			$buffer = $min->minifyJS($buffer);
+
 			return $buffer;
 		}
 
@@ -1248,8 +1251,8 @@ namespace marcocesarato\security {
 
 		/**
 		 * Exploits
-		 * @package    AMWScan
-		 * @version 0.4.0.61 beta
+		 * @package MWScan
+		 * @version 0.4.0.61b
 		 */
 		public static $SCAN_EXPLOITS = array(
 			"eval_chr"                => '/chr[\s\r\n]*\([\s\r\n]*101[\s\r\n]*\)[\s\r\n]*\.[\s\r\n]*chr[\s\r\n]*\([\s\r\n]*118[\s\r\n]*\)[\s\r\n]*\.[\s\r\n]*chr[\s\r\n]*\([\s\r\n]*97[\s\r\n]*\)[\s\r\n]*\.[\s\r\n]*chr[\s\r\n]*\([\s\r\n]*108[\s\r\n]*\)/i',
@@ -1343,8 +1346,8 @@ namespace marcocesarato\security {
 
 		/**
 		 * Detect infected favicon
-		 * @package    AMWScan
-		 * @version 0.4.0.61 beta
+		 * @package AMWScan
+		 * @version 0.4.0.61b
 		 * @param $file
 		 * @return bool
 		 */
@@ -1396,14 +1399,31 @@ namespace marcocesarato\security {
 		 * @return bool
 		 */
 		public static function secureUpload($file, $path) {
-			if(!file_exists($path)) {
-				return false;
-			}
+
 			if(!is_uploaded_file($_FILES[$file]["tmp_name"])) {
 				return false;
 			}
 			if(!self::isInfectedFile($_FILES[$file]["tmp_name"])) {
 				return false;
+			}
+
+			if(is_dir($path)){
+				$path = $path . '/' . basename($file);
+			}
+
+			$dest_file = basename($path);
+
+			$filename      = pathinfo($dest_file, PATHINFO_FILENAME);
+			$extension     = pathinfo($dest_file, PATHINFO_EXTENSION);
+			$original_name = $filename;
+
+			$dest_dir = dirname($path);
+
+			$i = 1;
+			while(file_exists($dest_dir . '/' . $filename . "." . $extension)) {
+				$filename = (string) $original_name . '-' . $i;
+				$path     = $dest_dir . '/' . $filename . "." . $extension;
+				$i ++;
 			}
 			if(move_uploaded_file($_FILES[$file]["tmp_name"], $path)) {
 				return true;

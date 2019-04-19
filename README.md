@@ -1,6 +1,6 @@
 # PHP AIO Security Class
 
-**Version:** 0.2.8.175 beta
+**Version:** 0.2.8.176 beta
 
 **Github:** https://github.com/marcocesarato/PHP-AIO-Security-Class
 
