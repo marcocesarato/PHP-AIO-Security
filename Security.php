@@ -7,11 +7,15 @@
  * @copyright Copyright (c) 2014-2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.177
+ * @version   0.2.8.178
  */
 
 namespace marcocesarato\security {
 
+	/**
+	 * Class Security
+	 * @package marcocesarato\security
+	 */
 	class Security {
 
 		/*********************************************
@@ -398,7 +402,7 @@ namespace marcocesarato\security {
 				ini_set("zlib.output_compression", 1);
 				ini_set("zlib.output_compression_level", "9");
 			}
-			$min    = new Minfier();
+			$min    = new Minifier();
 			$buffer = $min->minifyHTML($buffer);
 
 			return $buffer;
@@ -414,7 +418,7 @@ namespace marcocesarato\security {
 				ini_set("zlib.output_compression", 1);
 				ini_set("zlib.output_compression_level", "9");
 			}
-			$min    = new Minfier();
+			$min    = new Minifier();
 			$buffer = $min->minifyCSS($buffer);
 
 			return $buffer;
@@ -430,7 +434,7 @@ namespace marcocesarato\security {
 				ini_set("zlib.output_compression", 1);
 				ini_set("zlib.output_compression_level", "9");
 			}
-			$min    = new Minfier();
+			$min    = new Minifier();
 			$buffer = $min->minifyJS($buffer);
 
 			return $buffer;
@@ -2325,7 +2329,11 @@ namespace marcocesarato\security {
 		}
 	}
 
-	class Minfier {
+	/**
+	 * Class Minifier
+	 * @package marcocesarato\security
+	 */
+	class Minifier {
 
 		private $minificationStore = array();
 		private $singleQuoteSequenceFinder;
@@ -2334,7 +2342,7 @@ namespace marcocesarato\security {
 		private $lineCommentFinder;
 
 		/**
-		 * Minfier constructor.
+		 * Minifier constructor.
 		 */
 		public function __construct() {
 			$this->singleQuoteSequenceFinder = new MinifierQuoteSequenceFinder('\'');
@@ -2348,9 +2356,16 @@ namespace marcocesarato\security {
 		 * @param $javascript
 		 * @return string
 		 */
-		public function minifyJS($javascript) {
+		public function minifyJS($javascript){			$this->minificationStore = array();
+			return self::minifyJSRecursive($javascript);
+		}
 
-			$this->minificationStore = array();
+		/**
+		 * Minify Javascript Recursive Function
+		 * @param $javascript
+		 * @return string
+		 */
+		private function minifyJSRecursive($javascript) {
 
 			$java_special_chars = array(
 				$this->blockCommentFinder,// JavaScript Block Comment
@@ -2404,8 +2419,16 @@ namespace marcocesarato\security {
 		 * @return string
 		 */
 		public function minifyCSS($css) {
-
 			$this->minificationStore = array();
+			return self::minifyCSSRecursive($css);
+		}
+
+		/**
+		 * Minify CSS Recursive Function
+		 * @param $css
+		 * @return string
+		 */
+		private function minifyCSSRecursive($css) {
 
 			$css_special_chars = array(
 				$this->blockCommentFinder,// CSS Comment
@@ -2442,8 +2465,16 @@ namespace marcocesarato\security {
 		 * @return string
 		 */
 		public function minifyHTML($html) {
-
 			$this->minificationStore = array();
+			return self::minifyHTMLRecursive($html);
+		}
+
+		/**
+		 * Minify HTML Recursive Function
+		 * @param $html
+		 * @return string
+		 */
+		private function minifyHTMLRecursive($html) {
 
 			$html_special_chars = array(
 				new MinifierRegexSequenceFinder('javascript', "/<\s*script(?:[^>]*)>(.*?)<\s*\/script\s*>/si"),
@@ -2460,18 +2491,18 @@ namespace marcocesarato\security {
 				// subsequence (css/javascript/pre) needs special handeling, tags can still be minimized using minifyPHP
 				$sub_start = $sequence->sub_start_idx - $sequence->start_idx;
 				$sub_end   = $sub_start + strlen($sequence->sub_match);
-				switch($sequence->type) {
+				switch($sequence->type){
 					case 'javascript':
-						$quote = $this->minifyHTML(substr($quote, 0, $sub_start)) . $this->minifyJS($sequence->sub_match) . $this->minifyHTML(substr($quote, $sub_end));
+						$quote = $this->minifyHTMLRecursive(substr($quote, 0, $sub_start)) . $this->minifyJSRecursive($sequence->sub_match) . $this->minifyHTMLRecursive(substr($quote, $sub_end));
 						break;
 					case 'css':
-						$quote = $this->minifyHTML(substr($quote, 0, $sub_start)) . $this->minifyCSS($sequence->sub_match) . $this->minifyHTML(substr($quote, $sub_end));
+						$quote = $this->minifyHTMLRecursive(substr($quote, 0, $sub_start)) . $this->minifyCSSRecursive($sequence->sub_match) . $this->minifyHTMLRecursive(substr($quote, $sub_end));
 						break;
-					default: // strings that need to be preservered, e.g. between <pre> tags
-						$quote = $this->minifyHTML(substr($quote, 0, $sub_start)) . $sequence->sub_match . $this->minifyHTML(substr($quote, $sub_end));
+					default: // strings that need to be preserved, e.g. between <pre> tags
+						$quote = $this->minifyHTMLRecursive(substr($quote, 0, $sub_start)) . $sequence->sub_match . $this->minifyHTMLRecursive(substr($quote, $sub_end));
 				}
 				$this->minificationStore[$placeholder] = $quote;
-				$html                                  = substr($html, 0, $sequence->start_idx) . $placeholder . substr($html, $sequence->end_idx);
+				$html = substr($html, 0, $sequence->start_idx) . $placeholder . substr($html, $sequence->end_idx);
 			}
 			// condense white space
 			$html = preg_replace(
@@ -2519,47 +2550,37 @@ namespace marcocesarato\security {
 		}
 	}
 
+	/**
+	 * Class MinificationSequenceFinder
+	 * @package marcocesarato\security
+	 */
 	abstract class MinifierSequenceFinder {
 		public $start_idx;
 		public $end_idx;
 		public $type;
 
-		/**
-		 * Find first value
-		 * @param $string
-		 * @return mixed
-		 */
 		abstract protected function findFirstValue($string);
 
-		/**
-		 * Is valid
-		 * @return bool
-		 */
 		public function isValid() {
 			return $this->start_idx !== false;
 		}
 	}
 
+	/**
+	 * Class RegexSequenceFinder
+	 * @package marcocesarato\security
+	 */
 	class MinifierRegexSequenceFinder extends MinifierSequenceFinder {
 		protected $regex;
 		public $full_match;
 		public $sub_match;
 		public $sub_start_idx;
 
-		/**
-		 * MinfierRegexSequenceFinder constructor.
-		 * @param $type
-		 * @param $regex
-		 */
 		function __construct($type, $regex) {
 			$this->type  = $type;
 			$this->regex = $regex;
 		}
 
-		/**
-		 * Find first value
-		 * @param $string
-		 */
 		public function findFirstValue($string) {
 			$this->start_idx = false; // reset
 			preg_match($this->regex, $string, $matches, PREG_OFFSET_CAPTURE);
@@ -2575,21 +2596,15 @@ namespace marcocesarato\security {
 		}
 	}
 
+	/**
+	 * Class QuoteSequenceFinder
+	 * @package marcocesarato\security
+	 */
 	class MinifierQuoteSequenceFinder extends MinifierSequenceFinder {
-
-		/**
-		 * MinifierQuoteSequenceFinder constructor.
-		 * @param $type
-		 */
 		function __construct($type) {
 			$this->type = $type;
 		}
 
-		/**
-		 * Find first value
-		 * @param $string
-		 * @return mixed|void
-		 */
 		public function findFirstValue($string) {
 			$this->start_idx = strpos($string, $this->type);
 			if($this->isValid()) {
@@ -2613,27 +2628,20 @@ namespace marcocesarato\security {
 		}
 	}
 
+	/**
+	 * Class StringSequenceFinder
+	 * @package marcocesarato\security
+	 */
 	class MinifierStringSequenceFinder extends MinifierSequenceFinder {
-
 		protected $start_delimiter;
 		protected $end_delimiter;
 
-		/**
-		 * MinifierStringSequenceFinder constructor.
-		 * @param $start_delimiter
-		 * @param $end_delimiter
-		 */
 		function __construct($start_delimiter, $end_delimiter) {
 			$this->type            = $start_delimiter;
 			$this->start_delimiter = $start_delimiter;
 			$this->end_delimiter   = $end_delimiter;
 		}
 
-		/**
-		 * Find first value
-		 * @param $string
-		 * @return mixed|void
-		 */
 		public function findFirstValue($string) {
 			$this->start_idx = strpos($string, $this->start_delimiter);
 			if($this->isValid()) {
