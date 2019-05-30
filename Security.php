@@ -4,10 +4,10 @@
  * AIO Security Class
  * @category  Security
  * @author    Marco Cesarato <cesarato.developer@gmail.com>
- * @copyright Copyright (c) 2014-2018
+ * @copyright Copyright (c) 2014-2019
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.178
+ * @version   0.2.8.179
  */
 
 namespace marcocesarato\security {
@@ -1453,11 +1453,11 @@ namespace marcocesarato\security {
 
 			ob_clean();
 
-			$name_string = (!empty($name)) ? 'name=' . $name : 'name=' . $path_parts['filename'];
+			$name = (!empty($name)) ? $name : $path_parts['filename'];
 
 			header('Content-Type: application/x-octet-stream');
 			header('Content-Transfer-Encoding: binary');
-			header('Content-Disposition: attachment; filename="' . basename($filename) . '";' . $name_string);
+			header('Content-Disposition: attachment; filename="' . $name . '"');
 
 			die(file_get_contents($filename));
 		}
