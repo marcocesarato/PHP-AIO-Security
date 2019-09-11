@@ -3,7 +3,7 @@
   "description": "AIO Security Class offer an automatic system of protection for developers's projects and simplify some security operations as the check of CSRF or XSS all in a simple class. Infact you could just call the main method to have better security yet without too much complicated operations.",
   "type": "console",
   "license": "GPL-3.0-or-later",
-  "minimum-stability": "dev",
+  "minimum-stability": "stable",
   "authors": [
     {
       "name": "Marco Cesarato",
