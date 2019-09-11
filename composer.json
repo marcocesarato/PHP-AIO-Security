@@ -10,6 +10,11 @@
       "email": "cesarato.developer@gmail.com"
     }
   ],
+  "autoload": {
+    "psr-4": {
+      "marcocesarato\\security\\": "src"
+    }
+  },
   "require": {
     "php": ">=5.1.2"
   }
