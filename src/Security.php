@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2019
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.179
+ * @version   0.2.8.180
  */
 
 namespace marcocesarato\security {
@@ -47,6 +47,7 @@ namespace marcocesarato\security {
 		public static $auto_cookies_decrypt = false; // Auto encrypt cookies [PHP 5.3+]
 
 		public static $auto_block_tor = true; // If you want block TOR clients
+        public static $auto_csrf = false; // If you want enable CSRF (need use output)
 		public static $auto_clean_global = false; // Global clean at start
 		public static $auto_antidos = true; // Block the client ip when there are too many requests
 
@@ -109,7 +110,9 @@ namespace marcocesarato\security {
 					self::secureCookies();
 				}
 				self::secureFormRequest();
-				self::secureCSRF();
+				if(self::$auto_csrf) {
+                    self::secureCSRF();
+                }
 			}
 
 			if(self::$auto_antidos) {
@@ -874,7 +877,7 @@ namespace marcocesarato\security {
 		 * @param string $csrf_key
 		 */
 		public static function secureCSRFGenerate($csrf_key = "") {
-			$random                                   = uniqid(mt_rand(1, mt_getrandmax()));
+			$random                                   = uniqid(mt_rand(1, mt_getrandmax()), true);
 			$GLOBALS[self::$csrf_session . $csrf_key] = md5($random . time() . ":" . session_id());
 
 			return $GLOBALS[self::$csrf_session . $csrf_key];
@@ -1155,8 +1158,8 @@ namespace marcocesarato\security {
 		 */
 		public static function captcha($base64 = false) {
 
-			$md5_hash      = md5(rand(0, 9999));
-			$security_code = substr($md5_hash, rand(0, 15), 5);
+			$md5_hash      = md5(mt_rand(0, 9999));
+			$security_code = substr($md5_hash, mt_rand(0, 15), 5);
 
 			$spook = ': : : : : : : : : : :';
 
@@ -1178,10 +1181,10 @@ namespace marcocesarato\security {
 
 			imagestring($image, 5, 30, 4, $security_code, $text_color);
 
-			imagestring($image, 0, rand(0, $width / 2), rand(0, $height), $spook, $strange1_color);
-			imagestring($image, 0, rand(0, $width / 2), rand(0, $height), $spook, $strange2_color);
-			imageellipse($image, 0, 0, rand($width / 2, $width * 2), rand($height, $height * 2), $shape1_color);
-			imageellipse($image, 0, 0, rand($width / 2, $width * 2), rand($height, $height * 2), $shape2_color);
+			imagestring($image, 0, mt_rand(0, $width / 2), mt_rand(0, $height), $spook, $strange1_color);
+			imagestring($image, 0, mt_rand(0, $width / 2), mt_rand(0, $height), $spook, $strange2_color);
+			imageellipse($image, 0, 0, mt_rand($width / 2, $width * 2), mt_rand($height, $height * 2), $shape1_color);
+			imageellipse($image, 0, 0, mt_rand($width / 2, $width * 2), mt_rand($height, $height * 2), $shape2_color);
 
 			if($base64) {
 				$path = tempnam(sys_get_temp_dir(), 'captcha_');
@@ -1654,7 +1657,7 @@ namespace marcocesarato\security {
 		public static function checkHTTPS() {
 			if(isset($_SERVER['HTTP_HOST'])) {
 				if(((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443)
-				   || !empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https' || !empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on') {
+                   || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') || !empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on') {
 					return true;
 				}
 
@@ -1670,7 +1673,7 @@ namespace marcocesarato\security {
 		 * @param $file_attempts
 		 */
 		protected static function secureDOSWriteAttempts($ip, $file_attempts) {
-			$ip_quote = preg_quote($ip);
+			$ip_quote = preg_quote($ip, '/');
 			$content  = @file_get_contents($file_attempts);
 			if(preg_match("/### BEGIN: DOS Attempts ###[\S\s.]*# $ip_quote => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\S\s.]*### END: DOS Attempts ###/i", $content, $attemps)) {
 				$row_replace = "# $ip => " . $_SESSION['DOS_ATTEMPTS_TIMER'] . ":" . $_SESSION['DOS_ATTEMPTS'] . ":" . $_SESSION['DOS_COUNTER'] . ":" . $_SESSION['DOS_TIMER'];
@@ -1694,7 +1697,7 @@ namespace marcocesarato\security {
 		 * @param $file_attempts
 		 */
 		protected static function secureDOSRemoveAttempts($ip, $file_attempts) {
-			$ip_quote = preg_quote($ip);
+			$ip_quote = preg_quote($ip, '/');
 			$content  = @file_get_contents($file_attempts);
 			if(preg_match("/### BEGIN: DOS Attempts ###[\S\s.]*[\r\n]+# $ip_quote => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\S\s.]*### END: DOS Attempts ###/i", $content, $attemps)) {
 				$content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)([\r\n]+# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i", "$1$3", $content);
@@ -1716,7 +1719,7 @@ namespace marcocesarato\security {
 					if(!empty($attemp[0])) {
 						preg_match($pattern, $attemp[0], $attemp);
 						if(!empty($attemp)) {
-							$ip_quote = preg_quote($attemp[1]);
+							$ip_quote = preg_quote($attemp[1], '/');
 							if($time > $attemp[5] + $time_expire || $time > $attemp[8] + $time_expire) {
 								$content = preg_replace("/(### BEGIN: DOS Attempts ###[\S\s.]*)([\r\n]+# $ip_quote => [0-9]+:[0-9]+:[0-9]+:[0-9]+)([\S\s.]*### END: DOS Attempts ###)/i", "$1$3", $content);
 							}
@@ -1894,10 +1897,10 @@ namespace marcocesarato\security {
 				$new_astr = array();
 
 				foreach($astr as $i => $char) {
-					$char = rand(0, 100) > 50 ? strtoupper($char) : $char;
+					$char = mt_rand(0, 100) > 50 ? strtoupper($char) : $char;
 					if($strong_lv > 0 &&
-					   (!empty($astr[$i - 1]) && ($new_astr[$i - 1] == $astr[$i - 1] || $astr[$i] == $astr[$i - 1]) ||
-					    !empty($astr[$i + 1]) && $astr[$i] == $astr[$i + 1])) {
+					   ((!empty($astr[$i - 1]) && ($new_astr[$i - 1] == $astr[$i - 1] || $astr[$i] == $astr[$i - 1])) ||
+                        (!empty($astr[$i + 1]) && $astr[$i] == $astr[$i + 1]))) {
 						if($strong_lv > 1) {
 							$char = str_replace(array_keys($numeric_replace), $numeric_replace, $char);
 						}
@@ -1912,7 +1915,7 @@ namespace marcocesarato\security {
 
 			shuffle($estr);
 			$string = implode(' ', $estr);
-			$string = str_replace(' ', $special[rand(0, strlen($special) - 1)], $string);
+			$string = str_replace(' ', $special[mt_rand(0, strlen($special) - 1)], $string);
 
 			return $string;
 		}
@@ -2052,7 +2055,7 @@ namespace marcocesarato\security {
 				return false;
 			}
 			$status = 0;
-			for($i = 0; $i < strlen($ret); $i ++) {
+			for($i = 0, $iMax = strlen($ret); $i < $iMax; $i ++) {
 				$status |= (ord($ret[$i]) ^ ord($hash[$i]));
 			}
 
