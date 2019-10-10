@@ -256,3 +256,7 @@ $error_template = '<html><head><title>${ERROR_TITLE}</title></head><body>${ERROR
 | compressJS     | $js                                                          | String | Compression of JS                                            |
 | compressCSS    | $css                                                         | String | Compression of CSS                                           |
 | error          | \$code = 404, \$message = "Not found!", \$title = 'Error'    | Void   | Error <br />(use \$error_template and \$error_callback)      |
+
+## Screenshots
+
+![XSSBlock](screenshots/xssblock_screen.png)
