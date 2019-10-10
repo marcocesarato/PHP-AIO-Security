@@ -21,6 +21,8 @@
     "ext-libxml": "*",
     "ext-gd": "*",
     "ext-fileinfo": "*",
-    "ext-openssl": "*"
+    "ext-openssl": "*",
+    "ext-json": "*",
+    "ext-pdo": "*"
   }
 }
