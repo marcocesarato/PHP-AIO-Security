@@ -1,6 +1,8 @@
 <?php
+
 require_once '../src/Security.php';
 use marcocesarato\security\Security;
+
 Security::putInSafety();
 
 $attempts = $_SESSION['DOS_ATTEMPTS'];
@@ -15,4 +17,3 @@ ATTEMPTS TIMER: $attempts_timer<br>
 TIMER: $timer<br>
 COUNTER: $couter<br>
 HTML;
-?>

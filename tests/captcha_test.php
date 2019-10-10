@@ -1,6 +1,8 @@
 <?php
+
 require_once '../src/Security.php';
 use marcocesarato\security\Security;
+
 Security::putInSafety();
 Security::cleanGlobals();
 
@@ -47,19 +49,18 @@ echo <<<HTML
 HTML;
 
 if (isset($_POST['submit'])) {
-	echo "<h3>Result</h3>";
-	echo "VERIFY CAPTCHA:<br>";
-	echo "<pre>";
-	var_dump($verify_captcha);
-	echo "</pre>";
-	echo "FORM DATA:<br>";
-	echo "<pre>";
-	var_dump($_POST);
-	echo "</pre>";
-	echo "OLD CAPTCHA CODE: ".$old_captcha_code."<br>";
-	echo "NEW CAPTCHA CODE: ".$new_captcha_code;
+    echo '<h3>Result</h3>';
+    echo 'VERIFY CAPTCHA:<br>';
+    echo '<pre>';
+    var_dump($verify_captcha);
+    echo '</pre>';
+    echo 'FORM DATA:<br>';
+    echo '<pre>';
+    var_dump($_POST);
+    echo '</pre>';
+    echo 'OLD CAPTCHA CODE: ' . $old_captcha_code . '<br>';
+    echo 'NEW CAPTCHA CODE: ' . $new_captcha_code;
 }
 
 $output = Security::output(ob_get_clean());
 echo $output;
-?>

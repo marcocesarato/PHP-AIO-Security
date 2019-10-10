@@ -1,14 +1,16 @@
 <?php
+
 require_once '../src/Security.php';
 use marcocesarato\security\Security;
+
 Security::putInSafety();
 
-if(!isset($_COOKIE['TEST']))
-	Security::setCookie('TEST', 'Test Message');
+if (!isset($_COOKIE['TEST'])) {
+    Security::setCookie('TEST', 'Test Message');
+}
 
-echo "<h1>Cookies Test</h1>";
+echo '<h1>Cookies Test</h1>';
 echo "Check on your browser the real value of the cookies through a plugin as <a href='https://chrome.google.com/webstore/detail/cookie-inspector/jgbbilmfbammlbbhmmgaagdkbkepnijn'>Cookie Inspector</a> (chrome) or <a href='https://addons.mozilla.org/en-US/firefox/addon/cookies-manager-plus/'>Cookie Manager</a> (firefox)";
-echo "<pre>";
+echo '<pre>';
 var_dump($_COOKIE);
-echo "</pre>";
-?>
+echo '</pre>';

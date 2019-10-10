@@ -1,4 +1,5 @@
 <?php
+
 require_once '../src/Security.php';
 use marcocesarato\security\Security;
 
@@ -31,4 +32,3 @@ echo <<<HTML
 HTML;
 var_dump($check_false);
 echo '</pre>';
-?>

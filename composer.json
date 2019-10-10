@@ -15,6 +15,12 @@
       "marcocesarato\\security\\": "src"
     }
   },
+  "scripts": {
+    "fix-cs": "vendor/bin/php-cs-fixer fix --config=.php_cs"
+  },
+  "require-dev": {
+    "friendsofphp/php-cs-fixer": "^2.15"
+  },
   "require": {
     "php": ">=5.1.2",
     "ext-dom": "*",

@@ -1,6 +1,8 @@
 <?php
+
 require_once '../src/Security.php';
 use marcocesarato\security\Security;
+
 Security::putInSafety();
 Security::cleanGlobals();
 
@@ -13,4 +15,3 @@ PS: On \$_GET & \$_COOKIE html is not permitted<br><br>
 $debug
 </pre>
 HTML;
-?>

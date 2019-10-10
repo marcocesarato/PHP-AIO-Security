@@ -1,6 +1,8 @@
 <?php
+
 require_once '../src/Security.php';
 use marcocesarato\security\Security;
+
 Security::putInSafety();
 Security::cleanGlobals();
 
@@ -27,13 +29,12 @@ echo <<<HTML
 </html>
 HTML;
 
-if(isset($_POST['submit'])){
-  echo "<h3>Result</h3>";
-  echo "<pre>";
-  var_dump($_POST);
-  echo "</pre>";
+if (isset($_POST['submit'])) {
+    echo '<h3>Result</h3>';
+    echo '<pre>';
+    var_dump($_POST);
+    echo '</pre>';
 }
 
 $output = Security::output(ob_get_clean());
 echo $output;
-?>
