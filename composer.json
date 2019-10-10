@@ -16,6 +16,11 @@
     }
   },
   "require": {
-    "php": ">=5.1.2"
+    "php": ">=5.1.2",
+    "ext-dom": "*",
+    "ext-libxml": "*",
+    "ext-gd": "*",
+    "ext-fileinfo": "*",
+    "ext-openssl": "*"
   }
 }
