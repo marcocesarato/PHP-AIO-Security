@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2019
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.180
+ * @version   0.2.8.181
  */
 
 namespace marcocesarato\security {
@@ -223,39 +223,39 @@ namespace marcocesarato\security {
 
 			$compress_output = (self::$compress_output && $compress);
 
-			if($type == 'html' && self::isHTML($buffer)) {
+			if($type === 'html' && self::isHTML($buffer)) {
 				header("Content-Type: text/html");
 				$buffer = self::secureHTML($buffer);
 				if($compress_output) {
 					$buffer = self::compressHTML($buffer);
 				}
-			} elseif($type == 'css') {
+			} elseif($type === 'css') {
 				header("Content-type: text/css");
 				if($compress_output) {
 					$buffer = self::compressCSS($buffer);
 				}
-			} elseif($type == 'csv') {
+			} elseif($type === 'csv') {
 				header("Content-type: text/csv");
 				header("Content-Disposition: attachment; filename=file.csv");
 				if($compress_output) {
 					$buffer = self::compressOutput($buffer);
 				}
-			} elseif($type == 'js' || $type == 'javascript') {
+			} elseif($type === 'js' || $type === 'javascript') {
 				header('Content-Type: application/javascript');
 				if($compress_output) {
 					$buffer = self::compressJS($buffer);
 				}
-			} elseif($type == 'json' && json_decode($buffer) != false) {
+			} elseif($type === 'json' && json_decode($buffer) != false) {
 				header('Content-Type: application/json');
 				if($compress_output) {
 					$buffer = self::compressOutput($buffer);
 				}
-			} elseif($type == 'xml') {
+			} elseif($type === 'xml') {
 				header('Content-Type: text/xml');
 				if($compress_output) {
 					$buffer = self::compressHTML($buffer);
 				}
-			} elseif($type == 'text' || $type == 'txt') {
+			} elseif($type === 'text' || $type === 'txt') {
 				header("Content-Type: text/plain");
 				if($compress_output) {
 					$buffer = self::compressOutput($buffer);
@@ -313,7 +313,7 @@ namespace marcocesarato\security {
 			$days_to_cache = (($cache_days == null) ? self::$headers_cache_days : $cache_days) * (60 * 60 * 24);
 			$ts            = gmdate("D, d M Y H:i:s", time() + $days_to_cache) . " GMT";
 			@header("Expires: $ts");
-			@header("Pragma" . ($days_to_cache > 0) ? "cache" : "no-cache");
+			@header("Pragma" . (($days_to_cache > 0) ? "cache" : "no-cache"));
 			@header("Cache-Control: max-age=$days_to_cache, must-revalidate");
 		}
 
@@ -373,7 +373,7 @@ namespace marcocesarato\security {
 		 * Secure Form Request check if the referer is equal to the origin
 		 */
 		public static function secureFormRequest() {
-			if($_SERVER["REQUEST_METHOD"] == "POST") {
+			if($_SERVER["REQUEST_METHOD"] === "POST") {
 				$referer = $_SERVER["HTTP_REFERER"];
 				if(!isset($referer) || strpos($_SERVER["SERVER_NAME"], $referer) != 0) {
 					self::error(403, 'Permission denied!');
@@ -547,7 +547,7 @@ namespace marcocesarato\security {
 			$tags = $doc->getElementsByTagName('form');
 			foreach($tags as $tag) {
 				$tag->setAttribute("autocomplete", "off");
-				if($tags->hasAttribute("method") && strtolower($tags->getAttribute("method")) != 'get') {
+				if($tags->hasAttribute("method") && strtolower($tags->getAttribute("method")) !== 'get') {
 					// CSRF
 					$token = $_SESSION[self::$csrf_session];
 					$item  = $doc->createElement("input");
@@ -564,9 +564,7 @@ namespace marcocesarato\security {
 				$tag->setAttribute("rel", $tag->getAttribute("rel") . " noopener noreferrer");
 			}
 
-			$output = $doc->saveHTML();
-
-			return $output;
+            return $doc->saveHTML();
 		}
 
 		/**
@@ -837,7 +835,7 @@ namespace marcocesarato\security {
 		 * CSRF token compare only on POST REQUEST
 		 */
 		public static function secureCSRF() {
-			if($_SERVER["REQUEST_METHOD"] == "POST") {
+			if($_SERVER["REQUEST_METHOD"] === "POST") {
 				if(!self::secureCSRFCompare()) {
 					$_POST = array();
 				}
@@ -865,12 +863,8 @@ namespace marcocesarato\security {
 			$GLOBALS[self::$csrf_session . $csrf_key] = $_SESSION[self::$csrf_session . $csrf_key];
 			$token                                    = $GLOBALS[self::$csrf_session . $csrf_key];
 
-			if(!empty($token) && $_POST[empty($formtoken) ? self::$csrf_formtoken : $formtoken] == $token) {
-				return true;
-			} else {
-				return false;
-			}
-		}
+            return !empty($token) && $_POST[empty($formtoken) ? self::$csrf_formtoken : $formtoken] == $token;
+        }
 
 		/**
 		 * Generate CSRF Token
@@ -889,9 +883,7 @@ namespace marcocesarato\security {
 		 * @return mixed
 		 */
 		public static function secureCSRFToken($csrf_key = "") {
-			$token = $_SESSION[self::$csrf_session . $csrf_key];
-
-			return $token;
+            return $_SESSION[self::$csrf_session . $csrf_key];
 		}
 
 		/**
@@ -917,7 +909,7 @@ namespace marcocesarato\security {
 				$dns = dns_get_record($torExitNode, DNS_A);
 
 				if(array_key_exists(0, $dns) && array_key_exists('ip', $dns[0])) {
-					if($dns[0]['ip'] == '127.0.0.2') {
+					if($dns[0]['ip'] === '127.0.0.2') {
 						return true;
 					}
 				}
@@ -971,7 +963,7 @@ namespace marcocesarato\security {
 						if(preg_match('/^::ffff:(\d+\.\d+\.\d+\.\d+)$/', $ip, $matches)) {
 							$ip = $matches[1];
 						}
-						if($ip == "::1") {
+						if($ip === "::1") {
 							$ips[] = "127.0.0.1";
 						} else if(self::validateIPAddress($ip)) {
 							$ips[] = $ip;
@@ -1013,12 +1005,12 @@ namespace marcocesarato\security {
 						if(preg_match('/^::ffff:(\d+\.\d+\.\d+\.\d+)$/', $ip, $matches)) {
 							$ip = $matches[1];
 						}
-						if($ip == "::1") {
+						if($ip === "::1") {
 							$ip = "127.0.0.1";
 						}
-						if($ip == '127.0.0.1' || self::isPrivateIP($ip)) {
+						if($ip === '127.0.0.1' || self::isPrivateIP($ip)) {
 							$ip = $_SERVER['REMOTE_ADDR'];
-							if($ip == "::1") {
+							if($ip === "::1") {
 								$ip = "127.0.0.1";
 							}
 
@@ -1172,10 +1164,10 @@ namespace marcocesarato\security {
 
 			$background_color = imagecolorallocate($image, 0, 0, 0);
 			$text_color       = imagecolorallocate($image, 233, 233, 233);
-			$strange1_color   = imagecolorallocate($image, rand(100, 255), rand(100, 255), rand(100, 255));
-			$strange2_color   = imagecolorallocate($image, rand(100, 255), rand(100, 255), rand(100, 255));
-			$shape1_color     = imagecolorallocate($image, rand(100, 255), rand(100, 255), rand(100, 255));
-			$shape2_color     = imagecolorallocate($image, rand(100, 255), rand(100, 255), rand(100, 255));
+			$strange1_color   = imagecolorallocate($image, mt_rand(100, 255), mt_rand(100, 255), mt_rand(100, 255));
+			$strange2_color   = imagecolorallocate($image, mt_rand(100, 255), mt_rand(100, 255), mt_rand(100, 255));
+			$shape1_color     = imagecolorallocate($image, mt_rand(100, 255), mt_rand(100, 255), mt_rand(100, 255));
+			$shape2_color     = imagecolorallocate($image, mt_rand(100, 255), mt_rand(100, 255), mt_rand(100, 255));
 
 			imagefill($image, 0, 0, $background_color);
 
@@ -1194,14 +1186,14 @@ namespace marcocesarato\security {
 				imagedestroy($image);
 
 				return $png;
-			} else {
-				header("Content-Type: image/png");
-				ob_clean();
-				imagepng($image);
-				imagedestroy($image);
-				die();
 			}
-		}
+
+            header("Content-Type: image/png");
+            ob_clean();
+            imagepng($image);
+            imagedestroy($image);
+            die();
+        }
 
 		/**
 		 * Return the captcha input code
@@ -1231,13 +1223,9 @@ namespace marcocesarato\security {
 		 * @return bool
 		 */
 		public static function captchaVerify($input_name = 'captcha') {
-			if($_SERVER["REQUEST_METHOD"] == "POST") {
-				if(strtolower($_POST[$input_name]) == strtolower($_SESSION["CAPTCHA_CODE"]) && !empty($_SESSION["CAPTCHA_CODE"])) {
-					return true;
-				}
-
-				return false;
-			}
+			if($_SERVER["REQUEST_METHOD"] === "POST") {
+                return strtolower($_POST[$input_name]) == strtolower($_SESSION["CAPTCHA_CODE"]) && !empty($_SESSION["CAPTCHA_CODE"]);
+            }
 
 			return true;
 		}
@@ -1387,7 +1375,7 @@ namespace marcocesarato\security {
 				finfo_close($finfo);
 			}
 
-			if(preg_match("/^text/i", $mime_type)) {
+			if(0 === stripos($mime_type, "text")) {
 				foreach(self::$SCAN_EXPLOITS as $key => $pattern) {
 					if(preg_match($pattern, $fc, $match, PREG_OFFSET_CAPTURE)) {
 						return true;
@@ -1627,8 +1615,7 @@ namespace marcocesarato\security {
 			if(empty(self::$error_callback)) {
 				ob_clean();
 				http_response_code($code);
-				$output = str_replace('${ERROR_TITLE}', $title, self::$error_template);
-				$output = str_replace('${ERROR_BODY}', $message, $output);
+                $output = str_replace(array('${ERROR_TITLE}', '${ERROR_BODY}'), array($title, $message), self::$error_template);
 				die($output);
 			}
 			call_user_func(self::$error_callback, $code, $message, $title);
@@ -1657,7 +1644,7 @@ namespace marcocesarato\security {
 		public static function checkHTTPS() {
 			if(isset($_SERVER['HTTP_HOST'])) {
 				if(((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443)
-                   || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') || !empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on') {
+                   || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') || (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on')) {
 					return true;
 				}
 
@@ -1736,7 +1723,7 @@ namespace marcocesarato\security {
 		 * @param $content
 		 */
 		protected static function secureDOSReadAttempts($ip, $content) {
-			$ip_quote = preg_quote($ip);
+			$ip_quote = preg_quote($ip, '/');
 			if(preg_match("/### BEGIN: DOS Attempts ###[\S\s.]*[\r\n]+# $ip_quote => ([0-9]+):([0-9]+):([0-9]+):([0-9]+)[\S\s.]*### END: DOS Attempts ###/i", $content, $attemps)) {
 				$_SESSION['DOS_ATTEMPTS_TIMER'] = $attemps[1];
 				$_SESSION['DOS_ATTEMPTS']       = $attemps[2];
@@ -1935,7 +1922,7 @@ namespace marcocesarato\security {
 			$number    = preg_match('/[0-9]/', $password);
 			$special_1 = preg_match('/[\-\_\=\+\&\!\?\;\.\,]/', $password);
 			$special_2 = preg_match('/[\#\%\@\*\\\'\>\>\\\\\/\$\[\]\(\)\{\}\|]/', $password);
-			$special_3 = preg_match('/[\^\`\~\±\§]/', $password);
+			$special_3 = preg_match('/[\^\`\~\±\§]/u', $password);
 
 			// Length
 			if(strlen($password) >= 6) {
@@ -2020,7 +2007,7 @@ namespace marcocesarato\security {
 				return false;
 			}
 
-			if(is_null($password) || is_int($password)) {
+			if($password === null || is_int($password)) {
 				$password = (string) $password;
 			}
 			if($cost < 4 || $cost > 31) {
@@ -2527,7 +2514,7 @@ namespace marcocesarato\security {
 		 * @return string
 		 */
 		private function getNextMinificationPlaceholder() {
-			return '<-!!-' . sizeof($this->minificationStore) . '-!!->';
+			return '<-!!-' . count($this->minificationStore) . '-!!->';
 		}
 
 		/**
@@ -2615,7 +2602,7 @@ namespace marcocesarato\security {
 				$this->end_idx = $this->start_idx + 1;
 				while($this->end_idx < strlen($string)) {
 					// find number of escapes before endquote
-					if(preg_match('/(\\\\*)(' . preg_quote($this->type) . ')/', $string, $match, PREG_OFFSET_CAPTURE, $this->end_idx)) {
+					if(preg_match('/(\\\\*)(' . preg_quote($this->type, '/') . ')/', $string, $match, PREG_OFFSET_CAPTURE, $this->end_idx)) {
 						$this->end_idx = $match[2][1] + 1;
 						// if odd number of escapes before endquote, endquote is escaped. Keep going
 						if(!isset($match[1][0]) || strlen($match[1][0]) % 2 == 0) {
