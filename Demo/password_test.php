@@ -1,5 +1,6 @@
 <?php
-require_once '../security.class.php';
+require_once '../src/Security.php';
+use marcocesarato\security\Security;
 
 $password = Security::generatePassword(15);
 $guid = Security::generateGUID();
