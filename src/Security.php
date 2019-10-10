@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2014-2019
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
  * @link      https://github.com/marcocesarato/PHP-AIO-Security-Class
- * @version   0.2.8.181
+ * @version   0.2.8.182
  */
 
 namespace marcocesarato\security {
@@ -47,7 +47,7 @@ namespace marcocesarato\security {
 		public static $auto_cookies_decrypt = false; // Auto encrypt cookies [PHP 5.3+]
 
 		public static $auto_block_tor = true; // If you want block TOR clients
-        public static $auto_csrf = false; // If you want enable CSRF (need use output)
+        public static $auto_csrf = false; // If you want enable CSRF (need use output method)
 		public static $auto_clean_global = false; // Global clean at start
 		public static $auto_antidos = true; // Block the client ip when there are too many requests
 
@@ -544,19 +544,21 @@ namespace marcocesarato\security {
 				}
 			}
 
-			$tags = $doc->getElementsByTagName('form');
-			foreach($tags as $tag) {
-				$tag->setAttribute("autocomplete", "off");
-				if($tags->hasAttribute("method") && strtolower($tags->getAttribute("method")) !== 'get') {
-					// CSRF
-					$token = $_SESSION[self::$csrf_session];
-					$item  = $doc->createElement("input");
-					$item->setAttribute("name", self::$csrf_formtoken);
-					$item->setAttribute("type", "hidden");
-					$item->setAttribute("value", self::escapeSQL($token));
-					$tag->appendChild($item);
-				}
-			}
+			if(!empty($_SESSION[self::$csrf_session])) {
+                $tags = $doc->getElementsByTagName('form');
+                foreach ($tags as $tag) {
+                    $tag->setAttribute("autocomplete", "off");
+                    if ($tag->hasAttribute("method") && strtolower($tag->getAttribute("method")) !== 'get') {
+                        // CSRF
+                        $token = $_SESSION[self::$csrf_session];
+                        $item  = $doc->createElement("input");
+                        $item->setAttribute("name", self::$csrf_formtoken);
+                        $item->setAttribute("type", "hidden");
+                        $item->setAttribute("value", self::escapeSQL($token));
+                        $tag->appendChild($item);
+                    }
+                }
+            }
 
 			// Prevent Phishing by Navigating Browser Tabs
 			$tags = $doc->getElementsByTagName('a');
@@ -841,7 +843,7 @@ namespace marcocesarato\security {
 				}
 			}
 			if(!isset($_SESSION[self::$csrf_session])) {
-				self::secureCSRFGenerate();
+                $_SESSION[self::$csrf_session] = self::secureCSRFGenerate();
 			}
 		}
 
@@ -860,10 +862,16 @@ namespace marcocesarato\security {
 				return false;
 			}
 
-			$GLOBALS[self::$csrf_session . $csrf_key] = $_SESSION[self::$csrf_session . $csrf_key];
-			$token                                    = $GLOBALS[self::$csrf_session . $csrf_key];
+			$key = self::$csrf_session . $csrf_key;
 
-            return !empty($token) && $_POST[empty($formtoken) ? self::$csrf_formtoken : $formtoken] == $token;
+			if(isset($_SESSION[$key])) {
+                $GLOBALS[$key] = $_SESSION[$key];
+                $token         = $GLOBALS[$key];
+
+                return !empty($token) && $_POST[empty($formtoken) ? self::$csrf_formtoken : $formtoken] == $token;
+            }
+
+			return true;
         }
 
 		/**

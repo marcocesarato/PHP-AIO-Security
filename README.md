@@ -1,6 +1,6 @@
 # PHP AIO Security Class
 
-**Version:** 0.2.8.181 beta
+**Version:** 0.2.8.182 beta
 
 **Github:** https://github.com/marcocesarato/PHP-AIO-Security-Class
 
@@ -165,7 +165,7 @@ Security::$session_name = "MYSESSID";
 |  $auto_session_manager | Run session at start | TRUE |
 |  $auto_cookies_decrypt | Auto encrypt cookies \[PHP 5.3+\] | FALSE |
 |  $auto_block_tor | If you want block TOR clients | TRUE |
-|  $auto_csrf | If you want enable CSRF | FALSE |
+|  $auto_csrf | If you want enable CSRF (need use ::output method) | FALSE |
 |  $auto_clean_global | Global clean at start | FALSE |
 |  $auto_antidos | Block the client ip when there are too many requests | TRUE |
 
