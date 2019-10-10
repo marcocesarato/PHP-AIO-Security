@@ -120,8 +120,7 @@ ob_start()
     
 // ... Your code ...
     
-$output = Security::output(ob_get_clean());
-echo = $output; 
+echo Security::output(ob_get_clean());
 ```
 
 Enjoy!
@@ -132,7 +131,7 @@ These are the options availables:
 __PS:__ *You can change the configuration as following for each parameters or simply editing the var directly on the class file:*
 
 ```php
-Security::$session_name = "MYSESSID"
+Security::$session_name = "MYSESSID";
 ```
 
 
