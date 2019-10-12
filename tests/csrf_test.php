@@ -22,7 +22,7 @@ Security::cleanGlobals();
     <form action="#" method="POST">
         <div>
             <label>Author:</label>
-            <input type = "text" name="author" placeholder="Author's Name" />
+            <input type="text" name="author" placeholder="Author's Name" />
         </div>
 
         <input type="submit" name="submit" value="Submit">
