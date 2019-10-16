@@ -171,16 +171,18 @@ namespace marcocesarato\security {
 
             $session_hash = 'sha512';
 
-            ini_set('session.use_cookies', 1);
-            ini_set('session.use_only_cookies', 1);
-            ini_set('session.cookie_httponly', 1);
-            ini_set('session.use_trans_sid', 0);
-            ini_set('session.cookie_secure', self::checkHTTPS() ? 1 : 0);
-            ini_set('session.gc_maxlifetime', self::$session_lifetime);
+            @ini_set('session.use_cookies', 1);
+            @ini_set('session.use_only_cookies', 1);
+            @ini_set('session.cookie_httponly', 1);
+            @ini_set('session.use_trans_sid', 0);
+            @ini_set('session.cookie_secure', self::checkHTTPS() ? 1 : 0);
+            @ini_set('session.gc_maxlifetime', self::$session_lifetime);
             if (in_array($session_hash, hash_algos())) {
-                ini_set('session.hash_function', $session_hash);
+                @ini_set('session.hash_function', $session_hash);
+                @ini_set('session.sid_bits_per_character', 5);
+                @ini_set('session.sid_length', 512);
             }
-            ini_set('session.hash_bits_per_character', 8);
+            @ini_set('session.hash_bits_per_character', 5);
 
             session_name(self::$session_name);
 
