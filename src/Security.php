@@ -169,7 +169,7 @@ namespace marcocesarato\security {
         {
             self::unsetCookie('PHPSESSID');
 
-            $session_hash = 'sha512';
+            $session_hash = 'sha256';
 
             @ini_set('session.use_cookies', 1);
             @ini_set('session.use_only_cookies', 1);
@@ -180,7 +180,7 @@ namespace marcocesarato\security {
             if (in_array($session_hash, hash_algos())) {
                 @ini_set('session.hash_function', $session_hash);
                 @ini_set('session.sid_bits_per_character', 5);
-                @ini_set('session.sid_length', 512);
+                @ini_set('session.sid_length', 256);
             }
             @ini_set('session.hash_bits_per_character', 5);
 
