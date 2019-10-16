@@ -169,7 +169,7 @@ namespace marcocesarato\security {
         {
             self::unsetCookie('PHPSESSID');
 
-            $session_hash = 'sha256';
+            $session_hash = "sha256";
 
             @ini_set('session.use_cookies', 1);
             @ini_set('session.use_only_cookies', 1);
@@ -177,12 +177,15 @@ namespace marcocesarato\security {
             @ini_set('session.use_trans_sid', 0);
             @ini_set('session.cookie_secure', self::checkHTTPS() ? 1 : 0);
             @ini_set('session.gc_maxlifetime', self::$session_lifetime);
-            if (in_array($session_hash, hash_algos())) {
-                @ini_set('session.hash_function', $session_hash);
+            if (version_compare(PHP_VERSION, '7.1.0') < 0) {
+                if (in_array($session_hash, hash_algos())) {
+                    @ini_set('session.hash_function', $session_hash);
+                }
+                @ini_set('session.hash_bits_per_character', 5);
+            } else {
                 @ini_set('session.sid_bits_per_character', 5);
-                @ini_set('session.sid_length', 256);
+                @ini_set('session.sid_length', 128);
             }
-            @ini_set('session.hash_bits_per_character', 5);
 
             session_name(self::$session_name);
 
