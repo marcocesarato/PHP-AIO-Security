@@ -124,4 +124,4 @@ Security::cleanGlobals();
 
 <?php
 
-die(Security::output(ob_get_clean()));
+exit(Security::output(ob_get_clean()));

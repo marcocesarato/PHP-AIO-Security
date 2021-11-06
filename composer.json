@@ -22,7 +22,7 @@
     "friendsofphp/php-cs-fixer": "^2.15"
   },
   "require": {
-    "php": ">=5.1.2",
+    "php": ">=7.0",
     "ext-dom": "*",
     "ext-libxml": "*",
     "ext-gd": "*",
