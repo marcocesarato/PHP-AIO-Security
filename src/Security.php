@@ -200,7 +200,7 @@ namespace marcocesarato\security {
                     array(__CLASS__, '_session_gc')
                 );
 
-                if (!in_array('sessions', self::$database->getTables())) {
+                if (!in_array('sessions', self::getDatabaseTables())) {
                     self::$database->query(
                         'CREATE TABLE sessions (
 								id VARCHAR(128) NOT NULL,
@@ -219,6 +219,19 @@ namespace marcocesarato\security {
             if (self::$session_regenerate_id) {
                 session_regenerate_id(true);
             }
+        }
+
+        /**
+         * Get database tables.
+         */
+        public static function getDatabaseTables()
+        {
+            $sql = 'SHOW TABLES';
+            if(self::$database) {
+                $query = self::$database->query($sql);
+                return $query->fetchAll(\PDO::FETCH_COLUMN);
+            }
+            return [];
         }
 
         /**
