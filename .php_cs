@@ -13,7 +13,7 @@ return PhpCsFixer\Config::create()
                             'align_multiline_comment'      => ['comment_type' => 'phpdocs_only'], // PSR-5
                             'phpdoc_to_comment'            => false,
                             'array_indentation'            => true,
-                            'array_syntax'                 => ['syntax' => 'long'],
+                            'array_syntax'                 => ['syntax' => 'short'],
                             'cast_spaces'                  => ['space' => 'none'],
                             'concat_space'                 => ['spacing' => 'one'],
                             'compact_nullable_typehint'    => true,
