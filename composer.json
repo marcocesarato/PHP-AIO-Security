@@ -19,7 +19,7 @@
     "fix-cs": "vendor/bin/php-cs-fixer fix --config=.php_cs"
   },
   "require-dev": {
-    "friendsofphp/php-cs-fixer": "^2.15"
+    "friendsofphp/php-cs-fixer": "^3.0"
   },
   "require": {
     "php": ">=7.0",
